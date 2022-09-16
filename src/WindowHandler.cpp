@@ -96,7 +96,7 @@ bool WindowHandler::init() {
 }
 
 bool WindowHandler::loadMedia() {
-    mFont = TTF_OpenFont("/home/blacktack2/Documents/Rep/LifeSimulationC/OpenSans-Regular.ttf", 20);
+    mFont = TTF_OpenFont("resources/OpenSans-Regular.ttf", 20);
     if (mFont == nullptr) {
         fprintf(stderr, "Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
         return false;
