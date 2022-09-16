@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
 
-file(GLOB SRC CONFIGURE_DEPENDS "src/*.h" "src/*.cpp")
+file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "src/*.h" "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SRC})
 
 target_include_directories(${PROJECT_NAME} PRIVATE

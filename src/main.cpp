@@ -1,9 +1,7 @@
 #include "main.h"
-#include "WindowHandler.h"
+#include "view/WindowHandler.h"
 
 #include <cstdio>
-#include <fstream>
-
 
 int main(int argc, char* args[]) {
     {

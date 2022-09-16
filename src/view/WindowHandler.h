@@ -1,9 +1,9 @@
 #ifndef LIFESIMULATIONC_WINDOWHANDLER_H
 #define LIFESIMULATIONC_WINDOWHANDLER_H
 
-#include "LifeSimulationHandler.h"
+#include "../control/LifeSimulationHandler.h"
 #include "LifeSimulationRenderer.h"
-#include "SDLUtils.h"
+#include "../control/SDLUtils.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>

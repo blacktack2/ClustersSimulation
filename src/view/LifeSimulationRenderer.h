@@ -1,8 +1,8 @@
 #ifndef LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
 #define LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
 
-#include "LifeSimulationHandler.h"
-#include "SDLUtils.h"
+#include "../control/LifeSimulationHandler.h"
+#include "../control/SDLUtils.h"
 
 #include <SDL2/SDL.h>
 #include <cstdio>
