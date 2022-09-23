@@ -1,22 +1,90 @@
-
 cmake_minimum_required(VERSION 3.17)
+
 project(ClustersSimulation)
 
-INCLUDE(FindPkgConfig)
-PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2>=2.0.0)
-PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
-PKG_SEARCH_MODULE(SDL2TTF REQUIRED SDL2_ttf>=2.0.0)
-
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
 
+find_package(OpenGL REQUIRED)
+
+if (WIN32)
+    set(WHERE-IS-SDL "c:/programs/sdl/lib/x64")
+    set(WHERE-IS-SDL-HEADERS "c:/programs/sdl/include")
+    set(WHERE-IS-GLAD "c:/programs/glad/src/glad.c")
+    set(WHERE-IS-GLAD-HEADERS "c:/programs/glad/include")
+endif()
+
+if (UNIX)
+    set(WHERE-IS-GLAD "~/programs/glad/src/glad.c")
+    set(WHERE-IS-GLAD-HEADERS "~/programs/glad/include")
+
+    if (APPLE)
+        set(WHERE-IS-SDL "${CMAKE_SOURCE_DIR}/lib")
+        set(WHERE-IS-SDL-HEADERS "${CMAKE_SOURCE_DIR}/lib/SDL2.framework/Versions/Current/Headers")
+    endif()
+
+    if(NOT APPLE)
+        find_package(SDL2 REQUIRED)
+        include_directories(${SDL2_INCLUDE_DIRS})
+    endif()
+endif()
+
+#message(${WHERE-IS-SDL})
+#message(${WHERE-IS-SDL-HEADERS})
+#message(${WHERE-IS-GLAD})
+#message(${WHERE-IS-GLAD-HEADERS})
+
+if (WIN32 OR APPLE)
+    find_library(SDL SDL2 PATHS ${WHERE-IS-SDL})
+    if (WIN32)
+        find_library(SDLmain SDL2main PATHS ${WHERE-IS-SDL})
+    endif()
+
+    include_directories(
+            "${WHERE-IS-SDL-HEADERS}"
+    )
+endif()
+
+add_library("glad" ${WHERE-IS-GLAD})
+include_directories(
+        "${WHERE-IS-GLAD-HEADERS}"
+)
+
 file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "src/*.h" "src/*.cpp")
-add_executable(${PROJECT_NAME} ${SRC})
+file(GLOB_RECURSE IMGUI_SRC CONFIGURE_DEPENDS "imgui/*.h" "imgui/*.cpp")
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-        include ${SDL2_INCLUDE_DIRS} ${SDL2IMAGE_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIRS})
+if (WIN32)
+    add_executable(${CMAKE_PROJECT_NAME} WIN32 ${SRC} ${IMGUI_SRC})
+    target_link_libraries(${CMAKE_PROJECT_NAME}
+            "glad"
+            ${SDL}
+            ${SDLmain}
+            ${OPENGL_gl_LIBRARY}
+            )
+else()
+    add_executable(${CMAKE_PROJECT_NAME} ${SRC} ${IMGUI_SRC})
+    target_link_libraries(${CMAKE_PROJECT_NAME}
+            "glad"
+            ${OPENGL_gl_LIBRARY}
+            )
+    if (APPLE)
+        target_link_libraries(${CMAKE_PROJECT_NAME}
+                ${SDL}
+                )
+    endif()
+    if (UNIX AND NOT APPLE)
+        target_link_libraries(${CMAKE_PROJECT_NAME}
+                ${SDL2_LIBRARIES}
+                ${CMAKE_DL_LIBS}
+                )
+    endif()
+endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-        ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES} ${SDL2TTF_LIBRARIES})
+# copy font file to the build directory
+add_custom_command(
+        TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/verdana.ttf
+        ${CMAKE_CURRENT_BINARY_DIR}/verdana.ttf
+)
