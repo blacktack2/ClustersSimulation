@@ -3,7 +3,7 @@
 static uint idCounter = 0;
 
 AtomType::AtomType() : mId(idCounter++) {
-    mColor = {0x00, 0x00, 0x00, 0xFF};
+    mColor = {0.0f, 0.0f, 0.0f};
     mQuantity = 500u;
 
     mFriendlyName = std::to_string(mId);
@@ -17,11 +17,11 @@ uint AtomType::getId() const {
     return mId;
 }
 
-SDL_Color AtomType::getColor() {
+Color AtomType::getColor() {
     return mColor;
 }
 
-void AtomType::setColor(SDL_Color color) {
+void AtomType::setColor(Color color) {
     mColor = color;
 }
 

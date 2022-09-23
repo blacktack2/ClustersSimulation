@@ -1,20 +1,28 @@
 #include "LifeSimulationRenderer.h"
+#include "../../imgui/imgui.h"
 
-LifeSimulationRenderer::LifeSimulationRenderer(LifeSimulationHandler *handler, SDL_Renderer *renderer) {
+LifeSimulationRenderer::LifeSimulationRenderer(LifeSimulationHandler *handler) {
     mHandler = handler;
-    mRenderer = renderer;
 }
 
 LifeSimulationRenderer::~LifeSimulationRenderer() {
     mHandler = nullptr;
-    mRenderer = nullptr;
 }
 
-void LifeSimulationRenderer::drawSimulation() {
+void LifeSimulationRenderer::drawSimulation(float startX, float startY, float width, float height) {
     std::vector<Atom*>* atoms = mHandler->getAtoms();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    float scaleX = static_cast<float>(width) / mHandler->getWidth();
+    float scaleY = static_cast<float>(height) / mHandler->getHeight();
+    float atomSize = 3 * scaleX;
+
     for (auto atom : *atoms) {
-        SetRenderDrawColor(mRenderer, atom->getAtomType()->getColor());
-        SDL_Rect fillRect = {(int) atom->mX, (int) atom->mY, 3, 3};
-        SDL_RenderFillRect(mRenderer, &fillRect);
+        AtomType* at = atom->getAtomType();
+        Color c = at->getColor();
+        float x = startX + atom->mX * scaleX;
+        float y = startY + atom->mY * scaleY;
+        drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + atomSize, y + atomSize),
+                          ImColor(ImVec4(c.r, c.g, c.b, 1.0f)));
     }
 }

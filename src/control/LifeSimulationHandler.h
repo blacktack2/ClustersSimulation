@@ -12,6 +12,8 @@ public:
     ~LifeSimulationHandler();
 
     void setBounds(float simWidth, float simHeight);
+    float getWidth() const;
+    float getHeight() const;
 
     /**
      * Remove AtomType matching \p id and all relevant interaction values.<br>

@@ -6,6 +6,12 @@
 #include <vector>
 #include <unordered_map>
 
+struct Color {
+    float r;
+    float g;
+    float b;
+};
+
 class AtomType {
 public:
     AtomType();
@@ -13,8 +19,8 @@ public:
 
     uint getId() const;
 
-    SDL_Color getColor();
-    void setColor(SDL_Color color);
+    Color getColor();
+    void setColor(Color color);
 
     uint getQuantity() const;
     void setQuantity(uint quantity);
@@ -26,7 +32,7 @@ public:
 private:
     const uint mId;
 
-    SDL_Color mColor{};
+    Color mColor{};
     uint mQuantity = 0;
 
     std::string mFriendlyName;

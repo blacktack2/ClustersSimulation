@@ -2,20 +2,18 @@
 #define LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
 
 #include "../control/LifeSimulationHandler.h"
-#include "../control/SDLUtils.h"
 
 #include <SDL2/SDL.h>
 #include <cstdio>
 
 class LifeSimulationRenderer {
 public:
-    LifeSimulationRenderer(LifeSimulationHandler* handler, SDL_Renderer* renderer);
+    LifeSimulationRenderer(LifeSimulationHandler* handler);
     ~LifeSimulationRenderer();
 
-    void drawSimulation();
+    void drawSimulation(float startX, float startY, float width, float height);
 private:
     LifeSimulationHandler* mHandler = nullptr;
-    SDL_Renderer* mRenderer = nullptr;
 };
 
 

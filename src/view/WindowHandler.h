@@ -3,11 +3,9 @@
 
 #include "../control/LifeSimulationHandler.h"
 #include "LifeSimulationRenderer.h"
-#include "../control/SDLUtils.h"
+#include "../../imgui/imgui.h"
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
 
 /**
  * Handler class for creation and handling of the application window, and user input.
@@ -22,7 +20,6 @@ public:
      *          <c>true</c> if initialization succeeded.
      */
     bool init();
-    bool loadMedia();
     /**
      * Start the applications main loop.
      */
@@ -37,32 +34,17 @@ public:
 
     int getWidth();
     int getHeight();
-
-    bool hasMouseFocus();
-    bool hasKeyboardFocus();
-    bool isFullscreen();
-    bool isMinimized();
-
-    void freeTexture();
-    bool loadFromRenderedText(std::string textureText, SDL_Color textColor);
 private:
     void handleEvent(SDL_Event& e);
 
-    int mScreenWidth = 0;
-    int mScreenHeight = 0;
+    int mWindowWidth = 0;
+    int mWindowHeight = 0;
 
     bool mRunning = false;
 
-    bool mMouseFocus = false;
-    bool mKeyboardFocus = false;
-    bool mFullscreen = false;
-    bool mMinimized = false;
-
-    TTF_Font* mFont = nullptr;
-    SDL_Texture* mTexture = nullptr;
-
     SDL_Window* mWindow = nullptr;
-    SDL_Renderer* mRenderer = nullptr;
+    SDL_GLContext mGlContext{};
+    ImGuiIO mIo;
 
     LifeSimulationHandler* mLSHandler{};
     LifeSimulationRenderer* mLSRenderer{};

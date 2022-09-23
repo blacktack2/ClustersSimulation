@@ -10,12 +10,12 @@ LifeSimulationHandler::LifeSimulationHandler() {
     mAtoms.clear();
 
     AtomType* red = new AtomType();
-    red->setColor({0xFF, 0x00, 0x00, 0xFF});
+    red->setColor({1.0f, 0.0f, 0.0f});
     red->setFriendlyName("Red");
     mLSRules.addAtomType(red);
 
     AtomType* green = new AtomType();
-    green->setColor({0x00, 0xFF, 0x00, 0xFF});
+    green->setColor({0.0f, 1.0f, 0.0f});
     green->setFriendlyName("Green");
     mLSRules.addAtomType(green);
 
@@ -31,6 +31,14 @@ LifeSimulationHandler::~LifeSimulationHandler() {
 void LifeSimulationHandler::setBounds(float simWidth, float simHeight) {
     mSimWidth = simWidth;
     mSimHeight = simHeight;
+}
+
+float LifeSimulationHandler::getWidth() const {
+    return mSimWidth;
+}
+
+float LifeSimulationHandler::getHeight() const {
+    return mSimHeight;
 }
 
 void LifeSimulationHandler::removeAtomType(uint id) {
