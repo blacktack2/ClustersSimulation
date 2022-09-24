@@ -32,22 +32,22 @@ public:
      */
     void setSize(int screenWidth, int screenHeight);
 
-    int getWidth();
-    int getHeight();
+    [[nodiscard]] int getWidth() const;
+    [[nodiscard]] int getHeight() const;
 private:
     void handleEvent(SDL_Event& e);
 
-    int mWindowWidth = 0;
-    int mWindowHeight = 0;
+    int mWindowWidth;
+    int mWindowHeight;
 
-    bool mRunning = false;
+    bool mRunning;
 
-    SDL_Window* mWindow = nullptr;
+    SDL_Window* mWindow;
     SDL_GLContext mGlContext{};
     ImGuiIO mIo;
 
-    LifeSimulationHandler* mLSHandler{};
-    LifeSimulationRenderer* mLSRenderer{};
+    LifeSimulationHandler* mLSHandler;
+    LifeSimulationRenderer* mLSRenderer;
 };
 
 

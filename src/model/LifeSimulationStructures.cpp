@@ -2,11 +2,9 @@
 
 static uint idCounter = 0;
 
-AtomType::AtomType() : mId(idCounter++) {
-    mColor = {0.0f, 0.0f, 0.0f};
-    mQuantity = 500u;
+AtomType::AtomType() :
+mId(idCounter++), mColor({0.0f, 0.0f, 0.0f}), mQuantity(500u), mFriendlyName(std::to_string(mId)) {
 
-    mFriendlyName = std::to_string(mId);
 }
 
 AtomType::~AtomType() {
@@ -41,22 +39,18 @@ void AtomType::setFriendlyName(std::string friendlyName) {
     mFriendlyName = std::move(friendlyName);
 }
 
-Atom::Atom(AtomType* atomType) {
-    mAtomType = atomType;
+Atom::Atom(AtomType* atomType) :
+mAtomType(atomType), mX(0.0f), mY(0.0f), mVX(0.0f), mVY(0.0f){
 
-    mX = 0.0f;
-    mY = 0.0f;
-
-    mVX = 0.0f;
-    mVY = 0.0f;
 }
 
 AtomType *Atom::getAtomType() {
     return mAtomType;
 }
 
-LifeSimulationRules::LifeSimulationRules() {
-    mAtomTypes.clear();
+LifeSimulationRules::LifeSimulationRules() :
+mAtomTypes(), mInteractions() {
+
 }
 
 LifeSimulationRules::~LifeSimulationRules() {

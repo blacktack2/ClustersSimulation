@@ -17,38 +17,36 @@ public:
     AtomType();
     ~AtomType();
 
-    uint getId() const;
+    [[nodiscard]] uint getId() const;
 
     Color getColor();
     void setColor(Color color);
 
-    uint getQuantity() const;
+    [[nodiscard]] uint getQuantity() const;
     void setQuantity(uint quantity);
 
     std::string getFriendlyName();
     void setFriendlyName(std::string friendlyName);
-
-    void toString();
 private:
     const uint mId;
 
-    Color mColor{};
-    uint mQuantity = 0;
+    Color mColor;
+    uint mQuantity;
 
     std::string mFriendlyName;
 };
 
 class Atom {
 public:
-    Atom(AtomType* atomType);
+    explicit Atom(AtomType* atomType);
 
     AtomType* getAtomType();
 
-    float mX = 0.0f;
-    float mY = 0.0f;
+    float mX;
+    float mY;
 
-    float mVX = 0.0f;
-    float mVY = 0.0f;
+    float mVX;
+    float mVY;
 private:
     AtomType* mAtomType;
 };

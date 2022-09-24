@@ -1,8 +1,9 @@
 #include "LifeSimulationHandler.h"
 
-#include <ctime>
+#include <random>
 
-LifeSimulationHandler::LifeSimulationHandler() {
+LifeSimulationHandler::LifeSimulationHandler() :
+mSimWidth(0), mSimHeight(0), mLSRules(), mAtoms() {
     mSimWidth = 0;
     mSimHeight = 0;
 
@@ -39,10 +40,6 @@ float LifeSimulationHandler::getWidth() const {
 
 float LifeSimulationHandler::getHeight() const {
     return mSimHeight;
-}
-
-void LifeSimulationHandler::removeAtomType(uint id) {
-    mLSRules.removeAtomType(id);
 }
 
 void LifeSimulationHandler::initSimulation() {
@@ -121,24 +118,27 @@ void LifeSimulationHandler::iterateSimulation() {
 }
 
 void LifeSimulationHandler::shuffleAtomPositions() {
-    srand(time(nullptr));
-
-    float rangeX = static_cast<float>(mSimWidth) / (static_cast<float>(RAND_MAX));
-    float rangeY = static_cast<float>(mSimHeight) / (static_cast<float>(RAND_MAX));
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> rangeX(0, mSimWidth);
+    std::uniform_real_distribution<float> rangeY(0, mSimWidth);
 
     for (Atom* atom : mAtoms) {
-        atom->mX = static_cast<float>(rand()) * rangeX;
-        atom->mY = static_cast<float>(rand()) * rangeY;
+        atom->mX = rangeX(mt);
+        atom->mY = rangeY(mt);
     }
 }
 
 void LifeSimulationHandler::shuffleAtomInteractions() {
-    float range = 2.0f / (static_cast<float>(RAND_MAX));
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> range(-1.0f, 1.0f);
+
     std::vector<AtomType*>* atomTypes = mLSRules.getAtomTypes();
 
     for (auto & atomTypeA : *atomTypes) {
         for (auto & atomTypeB : *atomTypes) {
-            mLSRules.setInteraction(atomTypeA->getId(), atomTypeB->getId(), rand() * range - 1.0f);
+            mLSRules.setInteraction(atomTypeA->getId(), atomTypeB->getId(), range(mt));
 //            mLSRules.setInteraction(atomTypeA->getId(), atomTypeB->getId(), 1.0f);
         }
     }

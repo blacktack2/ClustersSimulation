@@ -27,14 +27,23 @@
 
 #define WINDOW_HEIGHT_MIN SIM_PANEL_HEIGHT_MIN + PANEL_MARGINS * 2
 
-WindowHandler::WindowHandler() {
-    mWindowWidth = 0;
-    mWindowHeight = 0;
+WindowHandler::WindowHandler() :
+mWindowWidth(0), mWindowHeight(0), mRunning(false),
+mWindow(nullptr), mLSHandler(nullptr), mLSRenderer(nullptr) {
 
-    mRunning = false;
 }
 
 WindowHandler::~WindowHandler() {
+    if (mLSHandler != nullptr) {
+        delete mLSHandler;
+        mLSHandler = nullptr;
+    }
+
+    if (mLSRenderer != nullptr) {
+        delete mLSRenderer;
+        mLSRenderer = nullptr;
+    }
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
@@ -45,11 +54,6 @@ WindowHandler::~WindowHandler() {
         SDL_DestroyWindow(mWindow);
         mWindow = nullptr;
     }
-
-    delete mLSHandler;
-    mLSHandler = nullptr;
-    delete mLSRenderer;
-    mLSRenderer = nullptr;
 
     SDL_Quit();
 }
@@ -265,11 +269,11 @@ void WindowHandler::setSize(int width, int height) {
     mWindowHeight = height;
 }
 
-int WindowHandler::getWidth() {
+int WindowHandler::getWidth() const {
     return mWindowWidth;
 }
 
-int WindowHandler::getHeight() {
+int WindowHandler::getHeight() const {
     return mWindowHeight;
 }
 

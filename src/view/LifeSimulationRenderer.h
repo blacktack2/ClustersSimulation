@@ -8,12 +8,12 @@
 
 class LifeSimulationRenderer {
 public:
-    LifeSimulationRenderer(LifeSimulationHandler* handler);
+    explicit LifeSimulationRenderer(LifeSimulationHandler* handler);
     ~LifeSimulationRenderer();
 
     void drawSimulation(float startX, float startY, float width, float height);
 private:
-    LifeSimulationHandler* mHandler = nullptr;
+    LifeSimulationHandler* mHandler;
 };
 
 

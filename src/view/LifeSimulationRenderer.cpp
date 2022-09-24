@@ -1,8 +1,9 @@
 #include "LifeSimulationRenderer.h"
 #include "../../imgui/imgui.h"
 
-LifeSimulationRenderer::LifeSimulationRenderer(LifeSimulationHandler *handler) {
-    mHandler = handler;
+LifeSimulationRenderer::LifeSimulationRenderer(LifeSimulationHandler *handler) :
+mHandler(handler) {
+
 }
 
 LifeSimulationRenderer::~LifeSimulationRenderer() {

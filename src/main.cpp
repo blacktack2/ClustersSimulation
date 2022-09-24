@@ -3,7 +3,7 @@
 
 #include <cstdio>
 
-int main(int argc, char* args[]) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* args[]) {
     {
         WindowHandler windowHandler;
         windowHandler.setSize(800, 600);
