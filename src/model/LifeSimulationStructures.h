@@ -22,6 +22,10 @@ public:
     Color getColor();
     void setColor(Color color);
 
+    void setColorR(float r);
+    void setColorG(float g);
+    void setColorB(float b);
+
     [[nodiscard]] uint getQuantity() const;
     void setQuantity(uint quantity);
 
@@ -64,6 +68,7 @@ public:
 
     void clear();
 
+    void newAtomType();
     void addAtomType(AtomType* atomType);
     AtomType* getAtomType(uint atomTypeId);
     void removeAtomType(uint atomTypeId);
@@ -73,6 +78,8 @@ public:
     void setInteraction(uint aId, uint bId, float interaction);
     float getInteraction(uint aId, uint bId);
 private:
+    Color hslToColor(float h, float s, float l);
+
     std::vector<AtomType*> mAtomTypes;
     std::vector<InteractionSet> mInteractions;
 };

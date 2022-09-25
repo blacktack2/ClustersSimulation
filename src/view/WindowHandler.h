@@ -38,7 +38,7 @@ private:
     void handleEvent(SDL_Event& e);
 
     void drawDebugPanel(float fps);
-    void drawIOPanel();
+    void drawIOPanel(float x, float y, float width, float height);
 
     int mWindowWidth;
     int mWindowHeight;

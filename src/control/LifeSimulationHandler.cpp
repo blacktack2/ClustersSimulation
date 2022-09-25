@@ -24,9 +24,7 @@ mSimWidth(0), mSimHeight(0), mLSRules(), mAtoms() {
 }
 
 LifeSimulationHandler::~LifeSimulationHandler() {
-    for (auto atom : mAtoms) {
-        delete atom;
-    }
+    clearSimulation();
 }
 
 void LifeSimulationHandler::setBounds(float simWidth, float simHeight) {
@@ -42,8 +40,16 @@ float LifeSimulationHandler::getHeight() const {
     return mSimHeight;
 }
 
-void LifeSimulationHandler::initSimulation() {
+void LifeSimulationHandler::clearSimulation() {
+    for (auto atom : mAtoms) {
+        delete atom;
+    }
     mAtoms.clear();
+}
+
+void LifeSimulationHandler::initSimulation() {
+    clearSimulation();
+
     for (auto const& atomType : *mLSRules.getAtomTypes()) {
         uint quantity = atomType->getQuantity();
         for (int i = 0; i < quantity; i++) {
@@ -148,4 +154,8 @@ void LifeSimulationHandler::shuffleAtomInteractions() {
 
 std::vector<Atom*>* LifeSimulationHandler::getAtoms() {
     return &mAtoms;
+}
+
+LifeSimulationRules *LifeSimulationHandler::getLSRules() {
+    return &mLSRules;
 }

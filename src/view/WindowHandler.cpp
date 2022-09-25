@@ -2,6 +2,7 @@
 
 #include "../../imgui/imgui_impl_sdl.h"
 #include "../../imgui/imgui_impl_opengl3.h"
+#include "../../imgui/imgui_stdlib.h"
 
 #include <cstdio>
 #include <chrono>
@@ -239,7 +240,7 @@ void WindowHandler::mainloop() {
 
             ImGui::Begin("Parameters", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-            drawIOPanel();
+            drawIOPanel(ioPanelBounds.x, ioPanelBounds.y, ioPanelBounds.z, ioPanelBounds.w);
 
             ImGui::End();
 
@@ -304,6 +305,7 @@ void WindowHandler::handleEvent(SDL_Event& e) {
         case SDL_KEYDOWN:
             switch (e.key.keysym.sym) {
                 case SDLK_SPACE:
+                    mSimulationRunning = !mSimulationRunning;
                     break;
             }
             break;
@@ -311,15 +313,19 @@ void WindowHandler::handleEvent(SDL_Event& e) {
 }
 
 void WindowHandler::drawDebugPanel(float fps) {
-    static ImVec4 fpsTextColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+    const ImVec4 debugTextColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
     ImGui::TextColored(
-            fpsTextColor,
+            debugTextColor,
             "[FPS: %f]", fps
+    );
+    ImGui::TextColored(
+            debugTextColor,
+            "Atom Count: %zu", mLSHandler->getAtoms()->size()
     );
 }
 
-void WindowHandler::drawIOPanel() {
+void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
     if (mSimulationRunning) {
         if (ImGui::Button("Pause")) {
             mSimulationRunning = false;
@@ -329,10 +335,68 @@ void WindowHandler::drawIOPanel() {
             mSimulationRunning = true;
         }
     }
+    if (ImGui::Button("Re-Init Simulation")) {
+        mLSHandler->initSimulation();
+    }
+    if (ImGui::Button("Clear Simulation")) {
+        mLSHandler->clearSimulation();
+    }
     if (ImGui::Button("Randomize Positions")) {
         mLSHandler->shuffleAtomPositions();
     }
     if (ImGui::Button("Shuffle Interactions")) {
         mLSHandler->shuffleAtomInteractions();
+    }
+
+    LifeSimulationRules* rules = mLSHandler->getLSRules();
+
+    if (ImGui::Button("Add Atom Type")) {
+        rules->newAtomType();
+    }
+    std::vector<AtomType*>* atomTypes = rules->getAtomTypes();
+    for (auto at : *atomTypes) {
+        Color c = at->getColor();
+
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(c.r, c.g, c.b, 1.0));
+        // Textbox for the friendly name of each AtomType
+        std::string friendlyName = at->getFriendlyName();
+        if (ImGui::InputText(("##FN-" + std::to_string(at->getId())).c_str(), &friendlyName)) {
+            at->setFriendlyName(friendlyName);
+        }
+        ImGui::PopStyleColor(1);
+
+        // Three 0.0-1.0 float inputs for the rgb color of each AtomType
+        float r = c.r;
+        float g = c.g;
+        float b = c.b;
+        ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
+        if (ImGui::SliderFloat(("##CR-" + std::to_string(at->getId())).c_str(), &r, 0.0f, 1.0f)) {
+            at->setColorR(r);
+        }
+        ImGui::SameLine();
+        if (ImGui::SliderFloat(("##CG-" + std::to_string(at->getId())).c_str(), &g, 0.0f, 1.0f)) {
+            at->setColorG(g);
+        }
+        ImGui::SameLine();
+        if (ImGui::SliderFloat(("##CB-" + std::to_string(at->getId())).c_str(), &b, 0.0f, 1.0f)) {
+            at->setColorB(b);
+        }
+        ImGui::PopItemWidth();
+
+        int atomCount = at->getQuantity();
+        if (ImGui::InputInt(("Quantity##AC-" + std::to_string(at->getId())).c_str(), &atomCount)) {
+            at->setQuantity(atomCount);
+        }
+
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2);
+        for (auto at2 : *atomTypes) {
+            float interaction = rules->getInteraction(at->getId(), at2->getId());
+            std::string label = at->getFriendlyName() + "->" + at2->getFriendlyName() + "##IN-"
+                    + std::to_string(at->getId()) + "-" + std::to_string(at->getId());
+            if (ImGui::SliderFloat(label.c_str(), &interaction, -1.0f, 1.0f)) {
+                rules->setInteraction(at->getId(), at2->getId(), interaction);
+            }
+        }
+        ImGui::PopItemWidth();
     }
 }

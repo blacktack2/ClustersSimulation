@@ -1,3 +1,4 @@
+#include <random>
 #include "LifeSimulationStructures.h"
 
 static uint idCounter = 0;
@@ -21,6 +22,18 @@ Color AtomType::getColor() {
 
 void AtomType::setColor(Color color) {
     mColor = color;
+}
+
+void AtomType::setColorR(float r) {
+    mColor.r = std::min(std::max(r, 0.0f), 1.0f);
+}
+
+void AtomType::setColorG(float g) {
+    mColor.g = std::min(std::max(g, 0.0f), 1.0f);
+}
+
+void AtomType::setColorB(float b) {
+    mColor.b = std::min(std::max(b, 0.0f), 1.0f);
 }
 
 uint AtomType::getQuantity() const {
@@ -63,6 +76,17 @@ void LifeSimulationRules::clear() {
     }
     mAtomTypes.clear();
     mInteractions.clear();
+}
+
+void LifeSimulationRules::newAtomType() {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> range01(0.0f, 1.0f);
+    std::uniform_real_distribution<float> range360(0.0f, 360.0f);
+
+    AtomType* at = new AtomType();
+    at->setColor(hslToColor(range360(mt), range01(mt), range01(mt)));
+    addAtomType(at);
 }
 
 void LifeSimulationRules::addAtomType(AtomType *atomType) {
@@ -127,4 +151,18 @@ float LifeSimulationRules::getInteraction(uint aId, uint bId) {
         }
     }
     return 0.0f;
+}
+
+Color LifeSimulationRules::hslToColor(float h, float s, float l) {
+    l /= 100.0f;
+    float a = s * std::min(l, 1 - l) / 100.0f;
+
+    float kr = std::fmod((0.0f + h / 30.0f), 12.0f);
+    float r = l - a * std::max(std::min(kr - 3.0f, 9.0f - kr), -1.0f);
+    float kg = std::fmod((0.0f + h / 30.0f), 12.0f);
+    float g = l - a * std::max(std::min(kg - 3.0f, 9.0f - kg), -1.0f);
+    float kb = std::fmod((0.0f + h / 30.0f), 12.0f);
+    float b = l - a * std::max(std::min(kb - 3.0f, 9.0f - kb), -1.0f);
+
+    return {r, g, b};
 }

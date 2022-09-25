@@ -15,6 +15,7 @@ public:
     [[nodiscard]] float getWidth() const;
     [[nodiscard]] float getHeight() const;
 
+    void clearSimulation();
     void initSimulation();
     void iterateSimulation();
 
@@ -22,6 +23,7 @@ public:
     void shuffleAtomInteractions();
 
     std::vector<Atom*>* getAtoms();
+    LifeSimulationRules* getLSRules();
 private:
     float mSimWidth;
     float mSimHeight;
