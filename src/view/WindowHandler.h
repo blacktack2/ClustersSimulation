@@ -37,10 +37,14 @@ public:
 private:
     void handleEvent(SDL_Event& e);
 
+    void drawDebugPanel(float fps);
+    void drawIOPanel();
+
     int mWindowWidth;
     int mWindowHeight;
 
     bool mRunning;
+    bool mSimulationRunning;
 
     SDL_Window* mWindow;
     SDL_GLContext mGlContext{};

@@ -16,19 +16,23 @@
 #define IO_PANEL_WIDTH_MIN  200
 #define IO_PANEL_HEIGHT_MIN 400
 
-#define SIM_PANEL_WIDTH_MIN  500
-#define SIM_PANEL_HEIGHT_MIN 500
+#define SIM_PANEL_WIDTH_MIN  500 + PANEL_PADDING * 2
+#define SIM_PANEL_HEIGHT_MIN 500 + PANEL_PADDING * 2
 
 #if (DEBUG_PANEL_WIDTH_MIN > IO_PANEL_WIDTH_MIN)
-#define WINDOW_WIDTH_MIN DEBUG_PANEL_WIDTH_MIN + DEBUG_PANEL_WIDTH_MIN + PANEL_MARGINS * 2
+#define WINDOW_WIDTH_MIN DEBUG_PANEL_WIDTH_MIN + DEBUG_PANEL_WIDTH_MIN + PANEL_MARGINS * 4
 #else
-#define WINDOW_WIDTH_MIN DEBUG_PANEL_WIDTH_MIN + SIM_PANEL_WIDTH_MIN + PANEL_MARGINS * 2
+#define WINDOW_WIDTH_MIN DEBUG_PANEL_WIDTH_MIN + SIM_PANEL_WIDTH_MIN + PANEL_MARGINS * 4
 #endif
 
+#if (DEBUG_PANEL_HEIGHT_MIN + IO_PANEL_HEIGHT_MIN + PANEL_MARGINS * 2 > SIM_PANEL_HEIGHT_MIN)
+#define WINDOW_HEIGHT_MIN DEBUG_PANEL_HEIGHT_MIN + IO_PANEL_HEIGHT_MIN + PANEL_MARGINS * 4
+#else
 #define WINDOW_HEIGHT_MIN SIM_PANEL_HEIGHT_MIN + PANEL_MARGINS * 2
+#endif
 
 WindowHandler::WindowHandler() :
-mWindowWidth(0), mWindowHeight(0), mRunning(false),
+mWindowWidth(0), mWindowHeight(0), mRunning(false), mSimulationRunning(false),
 mWindow(nullptr), mLSHandler(nullptr), mLSRenderer(nullptr) {
 
 }
@@ -155,7 +159,11 @@ void WindowHandler::mainloop() {
 
     int lastFpsCheck = 0;
 
-    ImVec4 fpsTextColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+    ImGui::PushStyleVar(
+            ImGuiStyleVar_WindowPadding,
+            ImVec2(static_cast<float>(PANEL_PADDING), static_cast<float>(PANEL_PADDING))
+            );
+
     while (mRunning) {
         int currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         if (currentTime - lastFpsCheck >= 1000) {
@@ -189,19 +197,19 @@ void WindowHandler::mainloop() {
             ImVec4 debugPanelBounds = ImVec4(
                     static_cast<float>(PANEL_MARGINS),
                     static_cast<float>(PANEL_MARGINS),
-                    std::max(sdlWidth * 2 / 7 - PANEL_MARGINS * 2, DEBUG_PANEL_WIDTH_MIN),
-                    std::max(sdlHeight / 5 - PANEL_MARGINS * 2, DEBUG_PANEL_HEIGHT_MIN)
+                    std::max((sdlWidth - PANEL_MARGINS * 4) * 2 / 7, DEBUG_PANEL_WIDTH_MIN),
+                    std::max((sdlHeight - PANEL_MARGINS * 4) / 5, DEBUG_PANEL_HEIGHT_MIN)
                     );
             ImVec4 ioPanelBounds = ImVec4(
                     static_cast<float>(PANEL_MARGINS),
                     static_cast<float>(debugPanelBounds.y + debugPanelBounds.w + PANEL_MARGINS * 2),
-                    std::max(sdlWidth * 2 / 7 - PANEL_MARGINS * 2, IO_PANEL_WIDTH_MIN),
-                    std::max(sdlHeight * 4 / 5 - PANEL_MARGINS * 2, IO_PANEL_HEIGHT_MIN)
+                    std::max((sdlWidth - PANEL_MARGINS * 4) * 2 / 7, IO_PANEL_WIDTH_MIN),
+                    std::max((sdlHeight - PANEL_MARGINS * 4) * 4 / 5, IO_PANEL_HEIGHT_MIN)
             );
             ImVec4 simPanelBounds = ImVec4(
                     static_cast<float>(std::max(debugPanelBounds.x + debugPanelBounds.z, ioPanelBounds.x + ioPanelBounds.z) + PANEL_MARGINS * 2),
                     static_cast<float>(PANEL_MARGINS),
-                    std::max(sdlWidth * 5 / 7 - PANEL_MARGINS * 2, SIM_PANEL_WIDTH_MIN),
+                    std::max((sdlWidth - PANEL_MARGINS * 4) * 5 / 7, SIM_PANEL_WIDTH_MIN),
                     std::max(sdlHeight - PANEL_MARGINS * 2, SIM_PANEL_HEIGHT_MIN)
             );
 
@@ -214,13 +222,9 @@ void WindowHandler::mainloop() {
                     ImGuiCond_Always
                     );
 
-            ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoResize);
+            ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-            ImGui::Dummy(ImVec2(0.0f, 1.0f));
-            ImGui::TextColored(
-                    fpsTextColor,
-                    "[FPS: %f]", static_cast<float>(fpsTotal) / 10.0f
-                    );
+            drawDebugPanel(static_cast<float>(fpsTotal) / 10.0f);
 
             ImGui::End();
 
@@ -233,7 +237,9 @@ void WindowHandler::mainloop() {
                     ImGuiCond_Always
             );
 
-            ImGui::Begin("Parameters", nullptr, ImGuiWindowFlags_NoResize);
+            ImGui::Begin("Parameters", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+            drawIOPanel();
 
             ImGui::End();
 
@@ -246,7 +252,7 @@ void WindowHandler::mainloop() {
                     ImGuiCond_Always
             );
 
-            ImGui::Begin("Simulation", nullptr, ImGuiWindowFlags_NoResize);
+            ImGui::Begin("Simulation", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
             mLSRenderer->drawSimulation(simPanelBounds.x, simPanelBounds.y, simPanelBounds.z, simPanelBounds.w);
 
@@ -260,7 +266,9 @@ void WindowHandler::mainloop() {
 
         fpsCounter++;
 
-        mLSHandler->iterateSimulation();
+        if (mSimulationRunning) {
+            mLSHandler->iterateSimulation();
+        }
     }
 }
 
@@ -278,6 +286,8 @@ int WindowHandler::getHeight() const {
 }
 
 void WindowHandler::handleEvent(SDL_Event& e) {
+    ImGui_ImplSDL2_ProcessEvent(&e);
+
     switch (e.type) {
         case SDL_QUIT:
             mRunning = false;
@@ -297,5 +307,32 @@ void WindowHandler::handleEvent(SDL_Event& e) {
                     break;
             }
             break;
+    }
+}
+
+void WindowHandler::drawDebugPanel(float fps) {
+    static ImVec4 fpsTextColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+
+    ImGui::TextColored(
+            fpsTextColor,
+            "[FPS: %f]", fps
+    );
+}
+
+void WindowHandler::drawIOPanel() {
+    if (mSimulationRunning) {
+        if (ImGui::Button("Pause")) {
+            mSimulationRunning = false;
+        }
+    } else {
+        if (ImGui::Button("Play")) {
+            mSimulationRunning = true;
+        }
+    }
+    if (ImGui::Button("Randomize Positions")) {
+        mLSHandler->shuffleAtomPositions();
+    }
+    if (ImGui::Button("Shuffle Interactions")) {
+        mLSHandler->shuffleAtomInteractions();
     }
 }

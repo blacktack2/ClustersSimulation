@@ -126,6 +126,8 @@ void LifeSimulationHandler::shuffleAtomPositions() {
     for (Atom* atom : mAtoms) {
         atom->mX = rangeX(mt);
         atom->mY = rangeY(mt);
+        atom->mVX = 0.0f;
+        atom->mVY = 0.0f;
     }
 }
 
