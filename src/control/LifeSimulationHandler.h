@@ -3,7 +3,6 @@
 
 #include "../model/LifeSimulationStructures.h"
 
-#include <SDL2/SDL.h>
 #include <vector>
 
 class LifeSimulationHandler {

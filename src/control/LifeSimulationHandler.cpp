@@ -51,7 +51,7 @@ void LifeSimulationHandler::initSimulation() {
     clearSimulation();
 
     for (auto const& atomType : *mLSRules.getAtomTypes()) {
-        uint quantity = atomType->getQuantity();
+        unsigned int quantity = atomType->getQuantity();
         for (int i = 0; i < quantity; i++) {
             Atom* atom = new Atom(atomType);
             mAtoms.push_back(atom);

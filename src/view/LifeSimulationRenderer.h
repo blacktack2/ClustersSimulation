@@ -3,7 +3,6 @@
 
 #include "../control/LifeSimulationHandler.h"
 
-#include <SDL2/SDL.h>
 #include <cstdio>
 
 class LifeSimulationRenderer {

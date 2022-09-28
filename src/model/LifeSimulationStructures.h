@@ -1,10 +1,8 @@
 #ifndef CLUSTERSSIMULATION_LIFESIMULATIONSTRUCTURES_H
 #define CLUSTERSSIMULATION_LIFESIMULATIONSTRUCTURES_H
 
-#include <SDL2/SDL.h>
-#include <map>
+#include <string>
 #include <vector>
-#include <unordered_map>
 
 struct Color {
     float r;
@@ -17,7 +15,7 @@ public:
     AtomType();
     ~AtomType();
 
-    [[nodiscard]] uint getId() const;
+    [[nodiscard]] unsigned int getId() const;
 
     Color getColor();
     void setColor(Color color);
@@ -26,16 +24,16 @@ public:
     void setColorG(float g);
     void setColorB(float b);
 
-    [[nodiscard]] uint getQuantity() const;
-    void setQuantity(uint quantity);
+    [[nodiscard]] unsigned int getQuantity() const;
+    void setQuantity(unsigned int quantity);
 
     std::string getFriendlyName();
     void setFriendlyName(std::string friendlyName);
 private:
-    const uint mId;
+    const unsigned int mId;
 
     Color mColor;
-    uint mQuantity;
+    unsigned int mQuantity;
 
     std::string mFriendlyName;
 };
@@ -56,8 +54,8 @@ private:
 };
 
 struct InteractionSet {
-    uint aId;
-    uint bId;
+    unsigned int aId;
+    unsigned int bId;
     float value;
 };
 
@@ -70,13 +68,13 @@ public:
 
     void newAtomType();
     void addAtomType(AtomType* atomType);
-    AtomType* getAtomType(uint atomTypeId);
-    void removeAtomType(uint atomTypeId);
+    AtomType* getAtomType(unsigned int atomTypeId);
+    void removeAtomType(unsigned int atomTypeId);
 
     std::vector<AtomType*>* getAtomTypes();
 
-    void setInteraction(uint aId, uint bId, float interaction);
-    float getInteraction(uint aId, uint bId);
+    void setInteraction(unsigned int aId, unsigned int bId, float interaction);
+    float getInteraction(unsigned int aId, unsigned int bId);
 private:
     Color hslToColor(float h, float s, float l);
 

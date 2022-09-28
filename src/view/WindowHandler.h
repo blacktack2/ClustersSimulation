@@ -3,6 +3,7 @@
 
 #include "../control/LifeSimulationHandler.h"
 #include "LifeSimulationRenderer.h"
+
 #include "../../imgui/imgui.h"
 
 #include <SDL2/SDL.h>

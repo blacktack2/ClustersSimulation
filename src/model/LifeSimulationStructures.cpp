@@ -1,7 +1,8 @@
-#include <random>
 #include "LifeSimulationStructures.h"
 
-static uint idCounter = 0;
+#include <random>
+
+static unsigned int idCounter = 0;
 
 AtomType::AtomType() :
 mId(idCounter++), mColor({0.0f, 0.0f, 0.0f}), mQuantity(500u), mFriendlyName(std::to_string(mId)) {
@@ -12,7 +13,7 @@ AtomType::~AtomType() {
 
 }
 
-uint AtomType::getId() const {
+unsigned int AtomType::getId() const {
     return mId;
 }
 
@@ -36,11 +37,11 @@ void AtomType::setColorB(float b) {
     mColor.b = std::min(std::max(b, 0.0f), 1.0f);
 }
 
-uint AtomType::getQuantity() const {
+unsigned int AtomType::getQuantity() const {
     return mQuantity;
 }
 
-void AtomType::setQuantity(uint quantity) {
+void AtomType::setQuantity(unsigned int quantity) {
     mQuantity = quantity;
 }
 
@@ -101,7 +102,7 @@ void LifeSimulationRules::addAtomType(AtomType *atomType) {
     mAtomTypes.push_back(atomType);
 }
 
-AtomType *LifeSimulationRules::getAtomType(uint atomTypeId) {
+AtomType *LifeSimulationRules::getAtomType(unsigned int atomTypeId) {
     for (auto & atomType : mAtomTypes) {
         if (atomType->getId() == atomTypeId) {
             return atomType;
@@ -110,23 +111,23 @@ AtomType *LifeSimulationRules::getAtomType(uint atomTypeId) {
     return nullptr;
 }
 
-void LifeSimulationRules::removeAtomType(uint atomTypeId) {
-    std::vector<uint> typesToRemove;
-    std::vector<uint> interactionsToRemove;
-    for (uint i = 0; i < mAtomTypes.size(); i++) {
+void LifeSimulationRules::removeAtomType(unsigned int atomTypeId) {
+    std::vector<unsigned int> typesToRemove;
+    std::vector<unsigned int> interactionsToRemove;
+    for (unsigned int i = 0; i < mAtomTypes.size(); i++) {
         if (mAtomTypes[i]->getId() == atomTypeId) {
             typesToRemove.push_back(i);
         }
     }
-    for (uint i = 0; i < mInteractions.size(); i++) {
+    for (unsigned int i = 0; i < mInteractions.size(); i++) {
         if (mInteractions[i].aId == atomTypeId || mInteractions[i].bId == atomTypeId) {
             interactionsToRemove.push_back(i);
         }
     }
-    for (uint i : typesToRemove) {
+    for (unsigned int i : typesToRemove) {
         mAtomTypes.erase(mAtomTypes.begin() + i);
     }
-    for (uint i : interactionsToRemove) {
+    for (unsigned int i : interactionsToRemove) {
         mInteractions.erase(mInteractions.begin() + i);
     }
 }
@@ -135,7 +136,7 @@ std::vector<AtomType*>* LifeSimulationRules::getAtomTypes() {
     return &mAtomTypes;
 }
 
-void LifeSimulationRules::setInteraction(uint aId, uint bId, float interaction) {
+void LifeSimulationRules::setInteraction(unsigned int aId, unsigned int bId, float interaction) {
     for (auto & mInteraction : mInteractions) {
         if (mInteraction.aId == aId && mInteraction.bId == bId) {
             mInteraction.value = interaction;
@@ -144,7 +145,7 @@ void LifeSimulationRules::setInteraction(uint aId, uint bId, float interaction) 
     }
 }
 
-float LifeSimulationRules::getInteraction(uint aId, uint bId) {
+float LifeSimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
     for (auto & interaction : mInteractions) {
         if (interaction.aId == aId && interaction.bId == bId) {
             return interaction.value;
