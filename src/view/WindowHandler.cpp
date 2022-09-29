@@ -367,6 +367,9 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         }
         ImGui::PopStyleColor(1);
 
+        ImGui::SameLine();
+        ImGui::Text(std::to_string(atomType->getId()).c_str());
+
         // Three 0.0-1.0 float inputs for the rgb color of each AtomType
         float r = c.r;
         float g = c.g;

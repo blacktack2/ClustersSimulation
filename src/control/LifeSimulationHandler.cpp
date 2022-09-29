@@ -4,12 +4,6 @@
 
 LifeSimulationHandler::LifeSimulationHandler() :
 mSimWidth(0), mSimHeight(0), mLSRules(), mAtoms() {
-    mSimWidth = 0;
-    mSimHeight = 0;
-
-    mLSRules.clear();
-    mAtoms.clear();
-
     AtomType* red = mLSRules.newAtomType();
     red->setColor({1.0f, 0.0f, 0.0f});
     red->setFriendlyName("Red");
@@ -19,8 +13,8 @@ mSimWidth(0), mSimHeight(0), mLSRules(), mAtoms() {
     green->setFriendlyName("Green");
 
     AtomType* blue = mLSRules.newAtomType();
-    green->setColor({0.0f, 0.0f, 1.0f});
-    green->setFriendlyName("Blue");
+    blue->setColor({0.0f, 0.0f, 1.0f});
+    blue->setFriendlyName("Blue");
 
     AtomType* cyan = mLSRules.newAtomType();
     cyan->setColor({0.0f, 1.0f, 1.0f});
