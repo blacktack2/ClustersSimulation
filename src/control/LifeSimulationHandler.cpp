@@ -18,6 +18,22 @@ mSimWidth(0), mSimHeight(0), mLSRules(), mAtoms() {
     green->setColor({0.0f, 1.0f, 0.0f});
     green->setFriendlyName("Green");
 
+    AtomType* blue = mLSRules.newAtomType();
+    green->setColor({0.0f, 0.0f, 1.0f});
+    green->setFriendlyName("Blue");
+
+    AtomType* cyan = mLSRules.newAtomType();
+    cyan->setColor({0.0f, 1.0f, 1.0f});
+    cyan->setFriendlyName("Cyan");
+
+    AtomType* magenta = mLSRules.newAtomType();
+    magenta->setColor({1.0f, 0.0f, 1.0f});
+    magenta->setFriendlyName("Magenta");
+
+    AtomType* yellow = mLSRules.newAtomType();
+    yellow->setColor({1.0f, 1.0f, 0.0f});
+    yellow->setFriendlyName("Yellow");
+
     shuffleAtomInteractions();
 }
 
