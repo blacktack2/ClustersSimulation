@@ -153,12 +153,12 @@ void WindowHandler::mainloop() {
 
     SDL_Event e;
 
-    int fpsHistory[] = {0, 0, 0, 0, 0};
+    unsigned int fpsHistory[] = {0, 0, 0, 0, 0};
     int fpsIndex = 0;
-    int fpsTotal = 0;
+    unsigned int fpsTotal = 0;
     int fpsCounter = 0;
 
-    int lastFpsCheck = 0;
+    unsigned int lastFpsCheck = 0;
 
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowPadding,
@@ -166,7 +166,7 @@ void WindowHandler::mainloop() {
             );
 
     while (mRunning) {
-        int currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        unsigned int currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         if (currentTime - lastFpsCheck >= 1000) {
             lastFpsCheck = currentTime;
             fpsIndex++;
