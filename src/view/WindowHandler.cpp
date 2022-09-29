@@ -326,6 +326,7 @@ void WindowHandler::drawDebugPanel(float fps) {
 }
 
 void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
+    std::string label;
     if (mSimulationRunning) {
         if (ImGui::Button("Pause")) {
             mSimulationRunning = false;
@@ -360,7 +361,8 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(c.r, c.g, c.b, 1.0));
         // Textbox for the friendly name of each AtomType
         std::string friendlyName = at->getFriendlyName();
-        if (ImGui::InputText(("##FN-" + std::to_string(at->getId())).c_str(), &friendlyName)) {
+        label = "##FriendlyNameText-" + std::to_string(at->getId());
+        if (ImGui::InputText(label.c_str(), &friendlyName)) {
             at->setFriendlyName(friendlyName);
         }
         ImGui::PopStyleColor(1);
@@ -370,29 +372,38 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         float g = c.g;
         float b = c.b;
         ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
-        if (ImGui::SliderFloat(("##CR-" + std::to_string(at->getId())).c_str(), &r, 0.0f, 1.0f)) {
+        label = "##ColorRedSlider-" + std::to_string(at->getId());
+        if (ImGui::SliderFloat(label.c_str(), &r, 0.0f, 1.0f)) {
             at->setColorR(r);
         }
         ImGui::SameLine();
-        if (ImGui::SliderFloat(("##CG-" + std::to_string(at->getId())).c_str(), &g, 0.0f, 1.0f)) {
+        label = "##ColorGreenSlider-" + std::to_string(at->getId());
+        if (ImGui::SliderFloat(label.c_str(), &g, 0.0f, 1.0f)) {
             at->setColorG(g);
         }
         ImGui::SameLine();
-        if (ImGui::SliderFloat(("##CB-" + std::to_string(at->getId())).c_str(), &b, 0.0f, 1.0f)) {
+        label = "##ColorBlueSlider-" + std::to_string(at->getId());
+        if (ImGui::SliderFloat(label.c_str(), &b, 0.0f, 1.0f)) {
             at->setColorB(b);
         }
         ImGui::PopItemWidth();
 
-        int atomCount = at->getQuantity();
-        if (ImGui::InputInt(("Quantity##AC-" + std::to_string(at->getId())).c_str(), &atomCount)) {
-            at->setQuantity(atomCount);
+        int quantity = at->getQuantity();
+        label = "Quantity##QuantityInt-" + std::to_string(at->getId());
+        if (ImGui::InputInt(label.c_str(), &quantity)) {
+            at->setQuantity(quantity);
         }
 
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2);
         for (auto at2 : *atomTypes) {
+            label = "0##ZeroButton-" + std::to_string(at->getId()) + "-" + std::to_string(at2->getId());
+            if (ImGui::Button(label.c_str())) {
+                rules->setInteraction(at->getId(), at2->getId(), 0);
+            }
+            ImGui::SameLine();
             float interaction = rules->getInteraction(at->getId(), at2->getId());
-            std::string label = at->getFriendlyName() + "->" + at2->getFriendlyName() + "##IN-"
-                    + std::to_string(at->getId()) + "-" + std::to_string(at->getId());
+            label = at->getFriendlyName() + "->" + at2->getFriendlyName() + "##InteractionSlider-"
+                    + std::to_string(at->getId()) + "-" + std::to_string(at2->getId());
             if (ImGui::SliderFloat(label.c_str(), &interaction, -1.0f, 1.0f)) {
                 rules->setInteraction(at->getId(), at2->getId(), interaction);
             }
