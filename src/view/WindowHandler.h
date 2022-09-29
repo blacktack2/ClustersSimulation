@@ -6,7 +6,11 @@
 
 #include "../../imgui/imgui.h"
 
+#ifdef _WIN32
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 
 /**
  * Handler class for creation and handling of the application window, and user input.
