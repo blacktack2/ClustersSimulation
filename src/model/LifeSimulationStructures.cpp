@@ -82,11 +82,12 @@ void LifeSimulationRules::clear() {
 AtomType* LifeSimulationRules::newAtomType() {
     std::random_device rd;
     std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> range01(0.0f, 1.0f);
-    std::uniform_real_distribution<float> range360(0.0f, 360.0f);
+    std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
+    std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
+    std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
 
     AtomType* atomType = new AtomType();
-    atomType->setColor(hslToColor(range360(mt), range01(mt), range01(mt)));
+    atomType->setColor(hslToColor(rangeH(mt), rangeS(mt), rangeL(mt)));
     
     return addAtomType(atomType);
 }
@@ -157,15 +158,39 @@ float LifeSimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
 }
 
 Color LifeSimulationRules::hslToColor(float h, float s, float l) {
-    l /= 100.0f;
-    float a = s * std::min(l, 1 - l) / 100.0f;
+    float c = (1 - std::abs(2 * l - 1)) * s;
+    float x = c * (1 - std::abs(std::fmodf(h / 60, 2) - 1));
+    float m = l - c / 2;
 
-    float kr = std::fmod((0.0f + h / 30.0f), 12.0f);
-    float r = l - a * std::max(std::min(kr - 3.0f, 9.0f - kr), -1.0f);
-    float kg = std::fmod((0.0f + h / 30.0f), 12.0f);
-    float g = l - a * std::max(std::min(kg - 3.0f, 9.0f - kg), -1.0f);
-    float kb = std::fmod((0.0f + h / 30.0f), 12.0f);
-    float b = l - a * std::max(std::min(kb - 3.0f, 9.0f - kb), -1.0f);
+    float r;
+    float g;
+    float b;
 
-    return {r, g, b};
+    if (0 <= h && h < 60) {
+        r = c;
+        g = x;
+        b = 0;
+    } else if (60 <= h && h < 120) {
+        r = x;
+        g = c;
+        b = 0;
+    } else if (120 <= h && h < 180) {
+        r = 0;
+        g = c;
+        b = x;
+    } else if (180 <= h && h < 240) {
+        r = 0;
+        g = x;
+        b = c;
+    } else if (240 <= h && h < 300) {
+        r = x;
+        g = 0;
+        b = c;
+    } else {
+        r = c;
+        g = 0;
+        b = x;
+    }
+
+    return {r + m, g + m, b + m};
 }
