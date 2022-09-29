@@ -2,17 +2,17 @@
 
 #include "../../imgui/imgui.h"
 
-LifeSimulationRenderer::LifeSimulationRenderer(LifeSimulationHandler *handler) :
+LifeSimulationRenderer::LifeSimulationRenderer(LifeSimulationHandler& handler) :
 mHandler(handler) {
 
 }
 
 LifeSimulationRenderer::~LifeSimulationRenderer() {
-    mHandler = nullptr;
+
 }
 
 void LifeSimulationRenderer::drawSimulation(float startX, float startY, float width, float height) {
-    std::vector<Atom*>* atoms = mHandler->getAtoms();
+    std::vector<Atom*>& atoms = mHandler.getAtoms();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
     drawList->AddRectFilled(
@@ -20,13 +20,13 @@ void LifeSimulationRenderer::drawSimulation(float startX, float startY, float wi
             ImColor(0.2f, 0.2f, 0.2f)
             );
 
-    float scaleX = static_cast<float>(width) / mHandler->getWidth();
-    float scaleY = static_cast<float>(height) / mHandler->getHeight();
+    float scaleX = static_cast<float>(width) / mHandler.getWidth();
+    float scaleY = static_cast<float>(height) / mHandler.getHeight();
     float atomSize = 3 * scaleX;
 
-    for (auto atom : *atoms) {
-        AtomType* at = atom->getAtomType();
-        Color c = at->getColor();
+    for (Atom* atom : atoms) {
+        AtomType* atomType = atom->getAtomType();
+        Color c = atomType->getColor();
         float x = startX + atom->mX * scaleX;
         float y = startY + atom->mY * scaleY;
         drawList->AddRectFilled(

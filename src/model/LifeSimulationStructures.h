@@ -66,12 +66,12 @@ public:
 
     void clear();
 
-    void newAtomType();
-    void addAtomType(AtomType* atomType);
+    AtomType* newAtomType();
+    AtomType* addAtomType(AtomType* atomType);
     AtomType* getAtomType(unsigned int atomTypeId);
     void removeAtomType(unsigned int atomTypeId);
 
-    std::vector<AtomType*>* getAtomTypes();
+    std::vector<AtomType*>& getAtomTypes();
 
     void setInteraction(unsigned int aId, unsigned int bId, float interaction);
     float getInteraction(unsigned int aId, unsigned int bId);

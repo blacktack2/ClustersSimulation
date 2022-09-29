@@ -124,7 +124,7 @@ bool WindowHandler::init() {
 
     if (!gladLoadGLLoader((GLADloadproc) SDL_GL_GetProcAddress)) {
         fprintf(stderr, "Failed to initialize glad!");
-        return -1;
+        return false;
     }
 
     glViewport(0, 0, mWindowWidth, mWindowHeight);
@@ -141,7 +141,7 @@ bool WindowHandler::init() {
     glClearColor(0, 0, 0, 1);
 
     mLSHandler = new LifeSimulationHandler();
-    mLSRenderer = new LifeSimulationRenderer(mLSHandler);
+    mLSRenderer = new LifeSimulationRenderer(*mLSHandler);
 
     mLSHandler->setBounds(static_cast<float>(mWindowWidth), static_cast<float>(mWindowHeight));
     mLSHandler->initSimulation();
@@ -321,7 +321,7 @@ void WindowHandler::drawDebugPanel(float fps) {
     );
     ImGui::TextColored(
             debugTextColor,
-            "Atom Count: %zu", mLSHandler->getAtoms()->size()
+            "Atom Count: %zu", mLSHandler->getAtoms().size()
     );
 }
 
@@ -349,21 +349,21 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         mLSHandler->shuffleAtomInteractions();
     }
 
-    LifeSimulationRules* rules = mLSHandler->getLSRules();
+    LifeSimulationRules& rules = mLSHandler->getLSRules();
 
     if (ImGui::Button("Add Atom Type")) {
-        rules->newAtomType();
+        rules.newAtomType();
     }
-    std::vector<AtomType*>* atomTypes = rules->getAtomTypes();
-    for (auto at : *atomTypes) {
-        Color c = at->getColor();
+    std::vector<AtomType*>& atomTypes = rules.getAtomTypes();
+    for (AtomType* atomType : atomTypes) {
+        Color c = atomType->getColor();
 
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(c.r, c.g, c.b, 1.0));
         // Textbox for the friendly name of each AtomType
-        std::string friendlyName = at->getFriendlyName();
-        label = "##FriendlyNameText-" + std::to_string(at->getId());
+        std::string friendlyName = atomType->getFriendlyName();
+        label = "##FriendlyNameText-" + std::to_string(atomType->getId());
         if (ImGui::InputText(label.c_str(), &friendlyName)) {
-            at->setFriendlyName(friendlyName);
+            atomType->setFriendlyName(friendlyName);
         }
         ImGui::PopStyleColor(1);
 
@@ -372,40 +372,40 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         float g = c.g;
         float b = c.b;
         ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
-        label = "##ColorRedSlider-" + std::to_string(at->getId());
+        label = "##ColorRedSlider-" + std::to_string(atomType->getId());
         if (ImGui::SliderFloat(label.c_str(), &r, 0.0f, 1.0f)) {
-            at->setColorR(r);
+            atomType->setColorR(r);
         }
         ImGui::SameLine();
-        label = "##ColorGreenSlider-" + std::to_string(at->getId());
+        label = "##ColorGreenSlider-" + std::to_string(atomType->getId());
         if (ImGui::SliderFloat(label.c_str(), &g, 0.0f, 1.0f)) {
-            at->setColorG(g);
+            atomType->setColorG(g);
         }
         ImGui::SameLine();
-        label = "##ColorBlueSlider-" + std::to_string(at->getId());
+        label = "##ColorBlueSlider-" + std::to_string(atomType->getId());
         if (ImGui::SliderFloat(label.c_str(), &b, 0.0f, 1.0f)) {
-            at->setColorB(b);
+            atomType->setColorB(b);
         }
         ImGui::PopItemWidth();
 
-        int quantity = at->getQuantity();
-        label = "Quantity##QuantityInt-" + std::to_string(at->getId());
+        int quantity = atomType->getQuantity();
+        label = "Quantity##QuantityInt-" + std::to_string(atomType->getId());
         if (ImGui::InputInt(label.c_str(), &quantity)) {
-            at->setQuantity(quantity);
+            atomType->setQuantity(quantity);
         }
 
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2);
-        for (auto at2 : *atomTypes) {
-            label = "0##ZeroButton-" + std::to_string(at->getId()) + "-" + std::to_string(at2->getId());
+        for (AtomType* atomType2 : atomTypes) {
+            label = "0##ZeroButton-" + std::to_string(atomType->getId()) + "-" + std::to_string(atomType2->getId());
             if (ImGui::Button(label.c_str())) {
-                rules->setInteraction(at->getId(), at2->getId(), 0);
+                rules.setInteraction(atomType->getId(), atomType2->getId(), 0);
             }
             ImGui::SameLine();
-            float interaction = rules->getInteraction(at->getId(), at2->getId());
-            label = at->getFriendlyName() + "->" + at2->getFriendlyName() + "##InteractionSlider-"
-                    + std::to_string(at->getId()) + "-" + std::to_string(at2->getId());
+            float interaction = rules.getInteraction(atomType->getId(), atomType2->getId());
+            label = atomType->getFriendlyName() + "->" + atomType2->getFriendlyName() + "##InteractionSlider-"
+                    + std::to_string(atomType->getId()) + "-" + std::to_string(atomType2->getId());
             if (ImGui::SliderFloat(label.c_str(), &interaction, -1.0f, 1.0f)) {
-                rules->setInteraction(at->getId(), at2->getId(), interaction);
+                rules.setInteraction(atomType->getId(), atomType2->getId(), interaction);
             }
         }
         ImGui::PopItemWidth();

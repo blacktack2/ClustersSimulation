@@ -10,15 +10,13 @@ mSimWidth(0), mSimHeight(0), mLSRules(), mAtoms() {
     mLSRules.clear();
     mAtoms.clear();
 
-    AtomType* red = new AtomType();
+    AtomType* red = mLSRules.newAtomType();
     red->setColor({1.0f, 0.0f, 0.0f});
     red->setFriendlyName("Red");
-    mLSRules.addAtomType(red);
 
-    AtomType* green = new AtomType();
+    AtomType* green = mLSRules.newAtomType();
     green->setColor({0.0f, 1.0f, 0.0f});
     green->setFriendlyName("Green");
-    mLSRules.addAtomType(green);
 
     shuffleAtomInteractions();
 }
@@ -41,7 +39,7 @@ float LifeSimulationHandler::getHeight() const {
 }
 
 void LifeSimulationHandler::clearSimulation() {
-    for (auto atom : mAtoms) {
+    for (Atom* atom : mAtoms) {
         delete atom;
     }
     mAtoms.clear();
@@ -50,7 +48,7 @@ void LifeSimulationHandler::clearSimulation() {
 void LifeSimulationHandler::initSimulation() {
     clearSimulation();
 
-    for (auto const& atomType : *mLSRules.getAtomTypes()) {
+    for (AtomType* atomType : mLSRules.getAtomTypes()) {
         unsigned int quantity = atomType->getQuantity();
         for (int i = 0; i < quantity; i++) {
             Atom* atom = new Atom(atomType);
@@ -61,17 +59,13 @@ void LifeSimulationHandler::initSimulation() {
 }
 
 void LifeSimulationHandler::iterateSimulation() {
-    Atom* atomA;
-    Atom* atomB;
-    for (int i = 0; i < mAtoms.size(); i++) {
-        atomA = mAtoms[i];
+    for (Atom* atomA : mAtoms) {
         float fX = 0;
         float fY = 0;
-        for (int j = 0; j < mAtoms.size(); j++) {
-            if (i == j) {
+        for (Atom* atomB : mAtoms) {
+            if (&atomA == &atomB) {
                 continue;
             }
-            atomB = mAtoms[j];
             float g = mLSRules.getInteraction(atomA->getAtomType()->getId(), atomB->getAtomType()->getId());
             if (g == 0) {
                 continue;
@@ -142,20 +136,20 @@ void LifeSimulationHandler::shuffleAtomInteractions() {
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> range(-1.0f, 1.0f);
 
-    std::vector<AtomType*>* atomTypes = mLSRules.getAtomTypes();
+    std::vector<AtomType*>& atomTypes = mLSRules.getAtomTypes();
 
-    for (auto & atomTypeA : *atomTypes) {
-        for (auto & atomTypeB : *atomTypes) {
+    for (AtomType* atomTypeA : atomTypes) {
+        for (AtomType* atomTypeB : atomTypes) {
             mLSRules.setInteraction(atomTypeA->getId(), atomTypeB->getId(), range(mt));
-//            mLSRules.setInteraction(atomTypeA->getId(), atomTypeB->getId(), 1.0f);
+//            mLSRules.setInteraction(atomTypeA.getId(), atomTypeB.getId(), 1.0f);
         }
     }
 }
 
-std::vector<Atom*>* LifeSimulationHandler::getAtoms() {
-    return &mAtoms;
+std::vector<Atom*>& LifeSimulationHandler::getAtoms() {
+    return mAtoms;
 }
 
-LifeSimulationRules *LifeSimulationHandler::getLSRules() {
-    return &mLSRules;
+LifeSimulationRules& LifeSimulationHandler::getLSRules() {
+    return mLSRules;
 }

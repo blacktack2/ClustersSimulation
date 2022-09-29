@@ -58,7 +58,7 @@ mAtomType(atomType), mX(0.0f), mY(0.0f), mVX(0.0f), mVY(0.0f){
 
 }
 
-AtomType *Atom::getAtomType() {
+AtomType* Atom::getAtomType() {
     return mAtomType;
 }
 
@@ -72,38 +72,40 @@ LifeSimulationRules::~LifeSimulationRules() {
 }
 
 void LifeSimulationRules::clear() {
-    for (auto & atomType : mAtomTypes) {
+    for (AtomType* atomType : mAtomTypes) {
         delete atomType;
     }
     mAtomTypes.clear();
     mInteractions.clear();
 }
 
-void LifeSimulationRules::newAtomType() {
+AtomType* LifeSimulationRules::newAtomType() {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> range01(0.0f, 1.0f);
     std::uniform_real_distribution<float> range360(0.0f, 360.0f);
 
-    AtomType* at = new AtomType();
-    at->setColor(hslToColor(range360(mt), range01(mt), range01(mt)));
-    addAtomType(at);
+    AtomType* atomType = new AtomType();
+    atomType->setColor(hslToColor(range360(mt), range01(mt), range01(mt)));
+    
+    return addAtomType(atomType);
 }
 
-void LifeSimulationRules::addAtomType(AtomType *atomType) {
-    for (auto & mAtomType : mAtomTypes) {
-        InteractionSet is1 = {mAtomType->getId(), atomType->getId(), 0};
-        InteractionSet is2 = {atomType->getId(), mAtomType->getId(), 0};
+AtomType* LifeSimulationRules::addAtomType(AtomType* atomType) {
+    for (AtomType* atomType2 : mAtomTypes) {
+        InteractionSet is1 = {atomType2->getId(), atomType->getId(), 0};
+        InteractionSet is2 = {atomType->getId(), atomType2->getId(), 0};
         mInteractions.push_back(is1);
         mInteractions.push_back(is2);
     }
-    InteractionSet is = {atomType->getId(), atomType->getId(), 0};
-    mInteractions.push_back(is);
+    InteractionSet interactionSet = {atomType->getId(), atomType->getId(), 0};
+    mInteractions.push_back(interactionSet);
     mAtomTypes.push_back(atomType);
+    return atomType;
 }
 
-AtomType *LifeSimulationRules::getAtomType(unsigned int atomTypeId) {
-    for (auto & atomType : mAtomTypes) {
+AtomType* LifeSimulationRules::getAtomType(unsigned int atomTypeId) {
+    for (AtomType* atomType : mAtomTypes) {
         if (atomType->getId() == atomTypeId) {
             return atomType;
         }
@@ -132,8 +134,8 @@ void LifeSimulationRules::removeAtomType(unsigned int atomTypeId) {
     }
 }
 
-std::vector<AtomType*>* LifeSimulationRules::getAtomTypes() {
-    return &mAtomTypes;
+std::vector<AtomType*>& LifeSimulationRules::getAtomTypes() {
+    return mAtomTypes;
 }
 
 void LifeSimulationRules::setInteraction(unsigned int aId, unsigned int bId, float interaction) {

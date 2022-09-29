@@ -21,8 +21,8 @@ public:
     void shuffleAtomPositions();
     void shuffleAtomInteractions();
 
-    std::vector<Atom*>* getAtoms();
-    LifeSimulationRules* getLSRules();
+    std::vector<Atom*>& getAtoms();
+    LifeSimulationRules& getLSRules();
 private:
     float mSimWidth;
     float mSimHeight;
