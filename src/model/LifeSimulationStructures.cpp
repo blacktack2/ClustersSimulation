@@ -115,24 +115,20 @@ AtomType* LifeSimulationRules::getAtomType(unsigned int atomTypeId) {
 }
 
 void LifeSimulationRules::removeAtomType(unsigned int atomTypeId) {
-    std::vector<unsigned int> typesToRemove;
-    std::vector<unsigned int> interactionsToRemove;
-    for (unsigned int i = 0; i < mAtomTypes.size(); i++) {
-        if (mAtomTypes[i]->getId() == atomTypeId) {
-            typesToRemove.push_back(i);
-        }
-    }
-    for (unsigned int i = 0; i < mInteractions.size(); i++) {
-        if (mInteractions[i].aId == atomTypeId || mInteractions[i].bId == atomTypeId) {
-            interactionsToRemove.push_back(i);
-        }
-    }
-    for (unsigned int i : typesToRemove) {
-        mAtomTypes.erase(mAtomTypes.begin() + i);
-    }
-    for (unsigned int i : interactionsToRemove) {
-        mInteractions.erase(mInteractions.begin() + i);
-    }
+    mInteractions.erase(
+        std::remove_if(
+            mInteractions.begin(), mInteractions.end(),
+            [atomTypeId](InteractionSet is) {
+                return is.aId == atomTypeId || is.bId == atomTypeId;
+            }), mInteractions.end()
+                );
+    mAtomTypes.erase(
+        std::remove_if(
+            mAtomTypes.begin(), mAtomTypes.end(),
+            [atomTypeId](AtomType* atomType) {
+                return atomType->getId() == atomTypeId;
+            }), mAtomTypes.end()
+                );
 }
 
 std::vector<AtomType*>& LifeSimulationRules::getAtomTypes() {

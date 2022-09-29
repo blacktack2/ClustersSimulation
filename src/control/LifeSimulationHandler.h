@@ -18,6 +18,7 @@ public:
     void initSimulation();
     void iterateSimulation();
 
+    void removeAtomType(unsigned int atomTypeId);
     void shuffleAtomPositions();
     void shuffleAtomInteractions();
 

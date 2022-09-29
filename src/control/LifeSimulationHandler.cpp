@@ -133,6 +133,21 @@ void LifeSimulationHandler::iterateSimulation() {
     }
 }
 
+void LifeSimulationHandler::removeAtomType(unsigned int atomTypeId) {
+    mAtoms.erase(
+        std::remove_if(
+            mAtoms.begin(), mAtoms.end(),
+            [atomTypeId](Atom* atom) {
+                if (atom->getAtomType()->getId() == atomTypeId) {
+                    delete atom;
+                    return true;
+                }
+                return false;
+            }), mAtoms.end()
+                );
+    mLSRules.removeAtomType(atomTypeId);
+}
+
 void LifeSimulationHandler::shuffleAtomPositions() {
     std::random_device rd;
     std::mt19937 mt(rd());

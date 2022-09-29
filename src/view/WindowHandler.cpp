@@ -408,6 +408,10 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
                 rules.setInteraction(atomType->getId(), atomType2->getId(), interaction);
             }
         }
+        label = "Delete##DeleteButton-" + std::to_string(atomType->getId());
+        if (ImGui::Button(label.c_str())) {
+            mLSHandler->removeAtomType(atomType->getId());
+        }
         ImGui::PopItemWidth();
     }
 }
