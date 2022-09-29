@@ -143,7 +143,7 @@ bool WindowHandler::init() {
     mLSHandler = new LifeSimulationHandler();
     mLSRenderer = new LifeSimulationRenderer(*mLSHandler);
 
-    mLSHandler->setBounds(static_cast<float>(mWindowWidth), static_cast<float>(mWindowHeight));
+    mLSHandler->setBounds(1000.0f, 1000.0f);
     mLSHandler->initSimulation();
 
     return true;
