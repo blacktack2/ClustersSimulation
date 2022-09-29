@@ -1,0 +1,27 @@
+﻿{
+  "configurations": [
+    {
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "SDLmain",
+          "value": "C:/programs/sdl/lib/x64/SDL2main.lib",
+          "type": "FILEPATH"
+        },
+        {
+          "name": "SDL",
+          "value": "C:/programs/sdl/lib/x64/SDL2.lib",
+          "type": "FILEPATH"
+        }
+      ]
+    }
+  ]
+}
