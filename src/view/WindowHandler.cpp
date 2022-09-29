@@ -349,6 +349,12 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         mLSHandler->shuffleAtomInteractions();
     }
 
+    float simScale = mLSHandler->getWidth();
+    if (ImGui::InputFloat("Simulation Scale", &simScale, 1.0f, 10.0f, "%.0f")) {
+        simScale = std::max(std::min(simScale, 1000000.0f), 1.0f);
+        mLSHandler->setBounds(simScale, simScale);
+    }
+
     LifeSimulationRules& rules = mLSHandler->getLSRules();
 
     if (ImGui::Button("Add Atom Type")) {
