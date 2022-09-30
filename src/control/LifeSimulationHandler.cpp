@@ -122,7 +122,7 @@ void LifeSimulationHandler::iterateSimulation() {
             float d2 = dX * dX + dY * dY;
             if (d2 < 6400) {
                 float d = sqrt(d2);
-                float f = std::min(100.0f, g / d);
+                float f = std::min(1.0f, g / d);
                 if (d < atomDiameter) {
                     f += (atomDiameter - d) * 1.0f / atomDiameter;
                 }
@@ -132,19 +132,23 @@ void LifeSimulationHandler::iterateSimulation() {
         }
         atomA->mVX = (atomA->mVX + fX * mDt) * mDrag;
         atomA->mVY = (atomA->mVY + fY * mDt) * mDrag;
+    }
 
-        atomA->mX += atomA->mVX * mDt;
-        atomA->mY += atomA->mVY * mDt;
+    for (Atom* atom : mAtoms) {
+        atom->mX += atom->mVX * mDt;
+        atom->mY += atom->mVY * mDt;
 
-        if (atomA->mX < 0) {
-            atomA->mX += mSimWidth;
-        } else if (atomA->mX >= mSimWidth) {
-            atomA->mX -= mSimWidth;
+        if (atom->mX < 0) {
+            atom->mX += mSimWidth;
         }
-        if (atomA->mY < 0) {
-            atomA->mY += mSimHeight;
-        } else if (atomA->mY >= mSimHeight) {
-            atomA->mY -= mSimHeight;
+        else if (atom->mX >= mSimWidth) {
+            atom->mX -= mSimWidth;
+        }
+        if (atom->mY < 0) {
+            atom->mY += mSimHeight;
+        }
+        else if (atom->mY >= mSimHeight) {
+            atom->mY -= mSimHeight;
         }
     }
 }
