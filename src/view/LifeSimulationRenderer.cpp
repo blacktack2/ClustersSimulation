@@ -29,8 +29,8 @@ void LifeSimulationRenderer::drawSimulation(float startX, float startY, float wi
         Color c = atomType->getColor();
         float x = startX + atom->mX * scaleX;
         float y = startY + atom->mY * scaleY;
-        drawList->AddRectFilled(
-                ImVec2(x, y), ImVec2(x + atomSize, y + atomSize),
+        drawList->AddCircleFilled(
+                ImVec2(x, y), atomSize,
                 ImColor(ImVec4(c.r, c.g, c.b, 1.0f))
                 );
     }
