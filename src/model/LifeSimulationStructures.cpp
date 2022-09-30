@@ -63,7 +63,7 @@ AtomType* Atom::getAtomType() {
 }
 
 LifeSimulationRules::LifeSimulationRules() :
-mAtomTypes(), mInteractions() {
+mAtomRadius(3.0f), mAtomTypes(), mInteractions() {
 
 }
 
@@ -151,6 +151,14 @@ float LifeSimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
         }
     }
     return 0.0f;
+}
+
+void LifeSimulationRules::setAtomRadius(float atomRadius) {
+    mAtomRadius = atomRadius;
+}
+
+float LifeSimulationRules::getAtomRadius() {
+    return mAtomRadius;
 }
 
 Color LifeSimulationRules::hslToColor(float h, float s, float l) {

@@ -14,6 +14,12 @@ public:
     [[nodiscard]] float getWidth() const;
     [[nodiscard]] float getHeight() const;
 
+    void setDt(float dt);
+    float getDt();
+
+    void setDrag(float drag);
+    float getDrag();
+
     void clearSimulation();
     void initSimulation();
     void iterateSimulation();
@@ -27,6 +33,9 @@ public:
 private:
     float mSimWidth;
     float mSimHeight;
+
+    float mDt;
+    float mDrag;
 
     std::vector<Atom*> mAtoms;
     LifeSimulationRules mLSRules;

@@ -75,8 +75,13 @@ public:
 
     void setInteraction(unsigned int aId, unsigned int bId, float interaction);
     float getInteraction(unsigned int aId, unsigned int bId);
+
+    void setAtomRadius(float atomRadius);
+    float getAtomRadius();
 private:
     Color hslToColor(float h, float s, float l);
+
+    float mAtomRadius;
 
     std::vector<AtomType*> mAtomTypes;
     std::vector<InteractionSet> mInteractions;

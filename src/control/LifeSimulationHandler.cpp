@@ -3,7 +3,7 @@
 #include <random>
 
 LifeSimulationHandler::LifeSimulationHandler() :
-mSimWidth(0), mSimHeight(0), mLSRules(), mAtoms() {
+mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f), mLSRules(), mAtoms() {
     AtomType* red = mLSRules.newAtomType();
     red->setColor({1.0f, 0.0f, 0.0f});
     red->setFriendlyName("Red");
@@ -48,6 +48,22 @@ float LifeSimulationHandler::getHeight() const {
     return mSimHeight;
 }
 
+void LifeSimulationHandler::setDt(float dt) {
+    mDt = dt;
+}
+
+float LifeSimulationHandler::getDt() {
+    return mDt;
+}
+
+void LifeSimulationHandler::setDrag(float drag) {
+    mDrag = drag;
+}
+
+float LifeSimulationHandler::getDrag() {
+    return mDrag;
+}
+
 void LifeSimulationHandler::clearSimulation() {
     for (Atom* atom : mAtoms) {
         delete atom;
@@ -69,6 +85,9 @@ void LifeSimulationHandler::initSimulation() {
 }
 
 void LifeSimulationHandler::iterateSimulation() {
+    float atomRadius = mLSRules.getAtomRadius();
+    float atomDiameter = atomRadius * 2;
+    float atomRadius2 = atomRadius * atomRadius;
     for (Atom* atomA : mAtoms) {
         float fX = 0;
         float fY = 0;
@@ -77,9 +96,9 @@ void LifeSimulationHandler::iterateSimulation() {
                 continue;
             }
             float g = mLSRules.getInteraction(atomA->getAtomType()->getId(), atomB->getAtomType()->getId());
-            if (g == 0) {
+           /* if (g == 0) {
                 continue;
-            }
+            }*/
 
             float dX = atomA->mX - atomB->mX;
             float dY = atomA->mY - atomB->mY;
@@ -103,16 +122,19 @@ void LifeSimulationHandler::iterateSimulation() {
             float d2 = dX * dX + dY * dY;
             if (d2 < 6400) {
                 float d = sqrt(d2);
-                float f = g / d;
+                float f = std::min(100.0f, g / d);
+                if (d < atomDiameter) {
+                    f += (atomDiameter - d) * 1.0f / atomDiameter;
+                }
                 fX += f * dX;
                 fY += f * dY;
             }
         }
-        atomA->mVX = (atomA->mVX + fX) * 0.5f;
-        atomA->mVY = (atomA->mVY + fY) * 0.5f;
+        atomA->mVX = (atomA->mVX + fX * mDt) * mDrag;
+        atomA->mVY = (atomA->mVY + fY * mDt) * mDrag;
 
-        atomA->mX += atomA->mVX;
-        atomA->mY += atomA->mVY;
+        atomA->mX += atomA->mVX * mDt;
+        atomA->mY += atomA->mVY * mDt;
 
         if (atomA->mX < 0) {
             atomA->mX += mSimWidth;

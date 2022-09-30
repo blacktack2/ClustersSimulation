@@ -354,6 +354,16 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         simScale = std::max(std::min(simScale, 1000000.0f), 1.0f);
         mLSHandler->setBounds(simScale, simScale);
     }
+    float dt = mLSHandler->getDt();
+    if (ImGui::InputFloat("Time Delta (dt)", &dt, 0.01f, 0.1f, "%.2f")) {
+        dt = std::max(std::min(dt, 10.0f), 0.01f);
+        mLSHandler->setDt(dt);
+    }
+    float drag = mLSHandler->getDrag();
+    if (ImGui::InputFloat("Drag Force", &drag, 0.01f, 0.1f, "%.2f")) {
+        drag = std::max(std::min(drag, 1.0f), 0.0f);
+        mLSHandler->setDrag(drag);
+    }
 
     LifeSimulationRules& rules = mLSHandler->getLSRules();
 

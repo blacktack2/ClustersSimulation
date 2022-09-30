@@ -22,7 +22,7 @@ void LifeSimulationRenderer::drawSimulation(float startX, float startY, float wi
 
     float scaleX = static_cast<float>(width) / mHandler.getWidth();
     float scaleY = static_cast<float>(height) / mHandler.getHeight();
-    float atomSize = 3 * scaleX;
+    float atomSize = std::max(3.0 * scaleX, 3.0);
 
     for (Atom* atom : atoms) {
         AtomType* atomType = atom->getAtomType();
@@ -33,5 +33,10 @@ void LifeSimulationRenderer::drawSimulation(float startX, float startY, float wi
                 ImVec2(x, y), atomSize,
                 ImColor(ImVec4(c.r, c.g, c.b, 1.0f))
                 );
+        drawList->AddCircle(
+            ImVec2(x, y), atomSize,
+            ImColor(ImVec4(0.0f, 0.0f, 0.0f, 0.5f)),
+            0, 2.0f
+        );
     }
 }
