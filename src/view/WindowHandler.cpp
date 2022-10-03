@@ -37,7 +37,7 @@
 WindowHandler::WindowHandler() :
 mWindowWidth(0), mWindowHeight(0), mRunning(false), mSimulationRunning(false),
 mWindow(nullptr), mLSHandler(nullptr), mLSRenderer(nullptr),
-mFileSaveLocation("sampleFile"), mFileLoadLocations(), mFileLoadIndex(0), mFileLoadCount(0) {
+mFileSaveLocation("sampleFile"), mFileLoadLocations(), mFileLoadIndex(0), mFileLoadCount(0), mIsOverwritingFile(false) {
 
 }
 
@@ -444,12 +444,31 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         }
         ImGui::PopItemWidth();
     }
-    if (ImGui::Button("Save")) {
-        saveToFile(CONFIG_FILE_LOCATION + std::string("/") + mFileSaveLocation + std::string(".") + CONFIG_FILE_EXTENSION, mLSHandler);
-        mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
+
+    std::string fileSaveLocation = CONFIG_FILE_LOCATION + std::string("/") + mFileSaveLocation + std::string(".") + CONFIG_FILE_EXTENSION;
+    if (mIsOverwritingFile) {
+        ImGui::Text(("Config '" + mFileSaveLocation + "' exists.\nOverwrite?").c_str());
+        if (ImGui::Button("Yes")) {
+            saveToFile(fileSaveLocation, mLSHandler);
+            mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
+            mIsOverwritingFile = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No")) {
+            mIsOverwritingFile = false;
+        }
+    } else {
+        if (ImGui::Button("Save")) {
+            if (std::filesystem::exists(fileSaveLocation)) {
+                mIsOverwritingFile = true;
+            } else {
+                saveToFile(fileSaveLocation, mLSHandler);
+                mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
+            }
+        }
+        ImGui::SameLine();
+        ImGui::InputText("##Save Location", &mFileSaveLocation);
     }
-    ImGui::SameLine();
-    ImGui::InputText("##Save Location", &mFileSaveLocation);
 
     if (ImGui::Button("Load")) {
         loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mLSHandler);

@@ -63,6 +63,7 @@ private:
     std::string mFileLoadLocations[MAX_FILE_COUNT];
     int mFileLoadIndex;
     int mFileLoadCount;
+    bool mIsOverwritingFile;
 };
 
 
