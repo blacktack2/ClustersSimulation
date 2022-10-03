@@ -156,19 +156,25 @@ std::vector<AtomType*>& LifeSimulationRules::getAtomTypes() {
     return mAtomTypes;
 }
 
+void LifeSimulationRules::clearInteractions() {
+    for (InteractionSet& is : mInteractions) {
+        is.value = 0.0f;
+    }
+}
+
 void LifeSimulationRules::setInteraction(unsigned int aId, unsigned int bId, float interaction) {
-    for (InteractionSet& mInteraction : mInteractions) {
-        if (mInteraction.aId == aId && mInteraction.bId == bId) {
-            mInteraction.value = interaction;
+    for (InteractionSet& is : mInteractions) {
+        if (is.aId == aId && is.bId == bId) {
+            is.value = interaction;
             return;
         }
     }
 }
 
 float LifeSimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
-    for (auto & interaction : mInteractions) {
-        if (interaction.aId == aId && interaction.bId == bId) {
-            return interaction.value;
+    for (InteractionSet& is : mInteractions) {
+        if (is.aId == aId && is.bId == bId) {
+            return is.value;
         }
     }
     return 0.0f;

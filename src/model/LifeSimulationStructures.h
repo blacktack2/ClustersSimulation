@@ -75,6 +75,7 @@ public:
 
     std::vector<AtomType*>& getAtomTypes();
 
+    void clearInteractions();
     void setInteraction(unsigned int aId, unsigned int bId, float interaction);
     float getInteraction(unsigned int aId, unsigned int bId);
     [[nodiscard]] std::vector<InteractionSet>& getInteractions();

@@ -101,9 +101,6 @@ void LifeSimulationHandler::iterateSimulation() {
                 continue;
             }
             float g = mLSRules.getInteraction(atomA->getAtomType()->getId(), atomB->getAtomType()->getId());
-           /* if (g == 0) {
-                continue;
-            }*/
 
             float dX = atomA->mX - atomB->mX;
             float dY = atomA->mY - atomB->mY;

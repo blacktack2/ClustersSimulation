@@ -338,112 +338,133 @@ void WindowHandler::drawDebugPanel(float fps) {
 
 void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
     std::string label;
+
     if (mSimulationRunning) {
-        if (ImGui::Button("Pause")) {
+        if (ImGui::Button("Pause", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
             mSimulationRunning = false;
         }
     } else {
-        if (ImGui::Button("Play")) {
+        if (ImGui::Button("Play", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
             mSimulationRunning = true;
         }
     }
-    if (ImGui::Button("Re-Init Simulation")) {
+    if (ImGui::Button("Re-generate Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
         mLSHandler->initSimulation();
     }
-    if (ImGui::Button("Clear Simulation")) {
+    if (ImGui::Button("Clear Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
         mLSHandler->clearAtoms();
     }
-    if (ImGui::Button("Randomize Positions")) {
+    if (ImGui::Button("Clear Atom Types", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+        mLSHandler->clearAtomTypes();
+    }
+    if (ImGui::Button("Randomize Positions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
         mLSHandler->shuffleAtomPositions();
     }
-    if (ImGui::Button("Shuffle Interactions")) {
+    if (ImGui::Button("Zero Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+        mLSHandler->getLSRules().clearInteractions();
+    }
+    if (ImGui::Button("Shuffle Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
         mLSHandler->shuffleAtomInteractions();
     }
 
+    ImGui::Text("Simulation Scale");
     float simScale = mLSHandler->getWidth();
-    if (ImGui::InputFloat("Simulation Scale", &simScale, 1.0f, 10.0f, "%.0f")) {
+    if (ImGui::InputFloat("##Simulation Scale", &simScale, 1.0f, 10.0f, "%.0f")) {
         simScale = std::max(std::min(simScale, 1000000.0f), 1.0f);
         mLSHandler->setBounds(simScale, simScale);
     }
+    ImGui::Text("Time Delta (dt)");
     float dt = mLSHandler->getDt();
-    if (ImGui::InputFloat("Time Delta (dt)", &dt, 0.01f, 0.1f, "%.2f")) {
+    if (ImGui::InputFloat("##Time Delta", &dt, 0.01f, 0.1f, "%.2f")) {
         dt = std::max(std::min(dt, 10.0f), 0.01f);
         mLSHandler->setDt(dt);
     }
+    ImGui::Text("Drag Force");
     float drag = mLSHandler->getDrag();
-    if (ImGui::InputFloat("Drag Force", &drag, 0.01f, 0.1f, "%.2f")) {
+    if (ImGui::InputFloat("##Drag Force", &drag, 0.01f, 0.1f, "%.2f")) {
         drag = std::max(std::min(drag, 1.0f), 0.0f);
         mLSHandler->setDrag(drag);
     }
 
     LifeSimulationRules& rules = mLSHandler->getLSRules();
 
-    if (ImGui::Button("Add Atom Type")) {
+    if (ImGui::Button("Add Atom Type", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
         rules.newAtomType();
     }
     std::vector<AtomType*>& atomTypes = rules.getAtomTypes();
     for (AtomType* atomType : atomTypes) {
+        ImGui::Separator();
+        unsigned int atomId = atomType->getId();
+        std::string atomIdStr = std::to_string(atomId);
         Color c = atomType->getColor();
 
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(c.r, c.g, c.b, 1.0));
         // Textbox for the friendly name of each AtomType
         std::string friendlyName = atomType->getFriendlyName();
-        label = "##FriendlyNameText-" + std::to_string(atomType->getId());
+        label = "##FriendlyNameText-" + atomIdStr;
         if (ImGui::InputText(label.c_str(), &friendlyName)) {
             atomType->setFriendlyName(friendlyName);
         }
         ImGui::PopStyleColor(1);
 
         ImGui::SameLine();
-        ImGui::Text(std::to_string(atomType->getId()).c_str());
+        ImGui::Text(atomIdStr.c_str());
 
         // Three 0.0-1.0 float inputs for the rgb color of each AtomType
         float r = c.r;
         float g = c.g;
         float b = c.b;
         ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
-        label = "##ColorRedSlider-" + std::to_string(atomType->getId());
+        label = "##ColorRedSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &r, 0.0f, 1.0f)) {
             atomType->setColorR(r);
         }
         ImGui::SameLine();
-        label = "##ColorGreenSlider-" + std::to_string(atomType->getId());
+        label = "##ColorGreenSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &g, 0.0f, 1.0f)) {
             atomType->setColorG(g);
         }
         ImGui::SameLine();
-        label = "##ColorBlueSlider-" + std::to_string(atomType->getId());
+        label = "##ColorBlueSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &b, 0.0f, 1.0f)) {
             atomType->setColorB(b);
         }
         ImGui::PopItemWidth();
 
         int quantity = atomType->getQuantity();
-        label = "Quantity##QuantityInt-" + std::to_string(atomType->getId());
+        label = "Quantity##QuantityInt-" + atomIdStr;
         if (ImGui::InputInt(label.c_str(), &quantity)) {
             atomType->setQuantity(quantity);
         }
 
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2);
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 3 / 4);
         for (AtomType* atomType2 : atomTypes) {
-            label = "0##ZeroButton-" + std::to_string(atomType->getId()) + "-" + std::to_string(atomType2->getId());
+            unsigned int atom2Id = atomType2->getId();
+            std::string atom2IdStr = std::to_string(atom2Id);
+            Color atom2Color = atomType2->getColor();
+            ImGui::TextColored(ImVec4(r, g, b, 1.0f), atomType->getFriendlyName().c_str());
+            ImGui::SameLine();
+            ImGui::Text("->");
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), atomType2->getFriendlyName().c_str());
+            label = "0##ZeroButton-" + atomIdStr + "-" + atom2IdStr;
             if (ImGui::Button(label.c_str())) {
-                rules.setInteraction(atomType->getId(), atomType2->getId(), 0);
+                rules.setInteraction(atomId, atom2Id, 0);
             }
             ImGui::SameLine();
-            float interaction = rules.getInteraction(atomType->getId(), atomType2->getId());
-            label = atomType->getFriendlyName() + "->" + atomType2->getFriendlyName() + "##InteractionSlider-"
-                    + std::to_string(atomType->getId()) + "-" + std::to_string(atomType2->getId());
+            float interaction = rules.getInteraction(atomId, atom2Id);
+            label = "##InteractionSlider-" + atomIdStr + "-" + atom2IdStr;
             if (ImGui::SliderFloat(label.c_str(), &interaction, -1.0f, 1.0f)) {
-                rules.setInteraction(atomType->getId(), atomType2->getId(), interaction);
+                rules.setInteraction(atomId, atom2Id, interaction);
             }
         }
-        label = "Delete##DeleteButton-" + std::to_string(atomType->getId());
-        if (ImGui::Button(label.c_str())) {
-            mLSHandler->removeAtomType(atomType->getId());
+        label = "Delete Atom Type [" + friendlyName + "]##DeleteButton-" + atomIdStr;
+        if (ImGui::Button(label.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+            mLSHandler->removeAtomType(atomId);
         }
         ImGui::PopItemWidth();
     }
+    ImGui::Separator();
 
     std::string fileSaveLocation = CONFIG_FILE_LOCATION + std::string("/") + mFileSaveLocation + std::string(".") + CONFIG_FILE_EXTENSION;
     if (mIsOverwritingFile) {
