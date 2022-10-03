@@ -149,13 +149,13 @@ bool WindowHandler::init() {
     mLSRenderer = new LifeSimulationRenderer(*mLSHandler);
 
     mLSHandler->setBounds(1000.0f, 1000.0f);
-    mLSHandler->initSimulation();
 
     if (!getLoadableFiles(mFileLoadLocations, mFileLoadCount)) {
         fprintf(stderr, "Failed to read config files!\n");
         return false;
     }
     loadFromFile("resources/current.csdat", mLSHandler);
+    mLSHandler->initSimulation();
 
     return true;
 }
