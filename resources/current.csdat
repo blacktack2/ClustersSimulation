@@ -1,0 +1,45 @@
+Width:1000.000000 Height:1000.000000
+DT:1.000000
+Drag:0.500000
+ID:0 Name:Red Quantity:200 R:1.000000 G:0.000000 B:0.000000
+ID:1 Name:Green Quantity:200 R:0.000000 G:1.000000 B:0.000000
+ID:2 Name:Blue Quantity:200 R:0.000000 G:0.000000 B:1.000000
+ID:3 Name:Cyan Quantity:200 R:0.000000 G:1.000000 B:1.000000
+ID:4 Name:Magenta Quantity:200 R:1.000000 G:0.000000 B:1.000000
+ID:5 Name:Yellow Quantity:200 R:1.000000 G:1.000000 B:0.000000
+Aid:0 Bid:0 Value:0.751876
+Aid:0 Bid:1 Value:-0.318385
+Aid:1 Bid:0 Value:-0.415750
+Aid:1 Bid:1 Value:0.975348
+Aid:0 Bid:2 Value:-0.435008
+Aid:2 Bid:0 Value:-0.006722
+Aid:1 Bid:2 Value:-0.176147
+Aid:2 Bid:1 Value:0.615755
+Aid:2 Bid:2 Value:0.572259
+Aid:0 Bid:3 Value:-0.729152
+Aid:3 Bid:0 Value:0.244769
+Aid:1 Bid:3 Value:-0.007387
+Aid:3 Bid:1 Value:-0.585674
+Aid:2 Bid:3 Value:0.208945
+Aid:3 Bid:2 Value:0.424104
+Aid:3 Bid:3 Value:-0.617896
+Aid:0 Bid:4 Value:0.786764
+Aid:4 Bid:0 Value:0.198277
+Aid:1 Bid:4 Value:0.487263
+Aid:4 Bid:1 Value:-0.024688
+Aid:2 Bid:4 Value:0.643989
+Aid:4 Bid:2 Value:0.754313
+Aid:3 Bid:4 Value:0.001988
+Aid:4 Bid:3 Value:0.952913
+Aid:4 Bid:4 Value:0.934906
+Aid:0 Bid:5 Value:0.579485
+Aid:5 Bid:0 Value:0.643328
+Aid:1 Bid:5 Value:-0.556301
+Aid:5 Bid:1 Value:0.535511
+Aid:2 Bid:5 Value:0.032690
+Aid:5 Bid:2 Value:0.312307
+Aid:3 Bid:5 Value:-0.483890
+Aid:5 Bid:3 Value:-0.231207
+Aid:4 Bid:5 Value:0.386566
+Aid:5 Bid:4 Value:0.263497
+Aid:5 Bid:5 Value:0.234362

@@ -41,7 +41,7 @@ bool saveToFile(std::string location, LifeSimulationHandler* handler) {
 	}
 
 	std::ofstream file;
-	file.open(CONFIG_FILE_LOCATION + std::string("/") + location + std::string(".") + CONFIG_FILE_EXTENSION);
+	file.open(location);
 	if (!file) {
 		fprintf(stderr, "Failed to open file %s!\n", location.c_str());
 		return false;
@@ -64,7 +64,7 @@ bool loadFromFile(std::string location, LifeSimulationHandler* handler) {
 
 	std::string line;
 	std::ifstream file;
-	file.open(CONFIG_FILE_LOCATION + std::string("/") + location + std::string(".") + CONFIG_FILE_EXTENSION);
+	file.open(location);
 
 	if (!file.is_open()) {
 		fprintf(stderr, "Failed to open file %s!\n", location.c_str());

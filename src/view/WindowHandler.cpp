@@ -42,6 +42,8 @@ mFileSaveLocation("sampleFile"), mFileLoadLocations(), mFileLoadIndex(0), mFileL
 }
 
 WindowHandler::~WindowHandler() {
+    saveToFile("resources/current.csdat", mLSHandler);
+
     if (mLSHandler != nullptr) {
         delete mLSHandler;
         mLSHandler = nullptr;
@@ -153,6 +155,7 @@ bool WindowHandler::init() {
         fprintf(stderr, "Failed to read config files!\n");
         return false;
     }
+    loadFromFile("resources/current.csdat", mLSHandler);
 
     return true;
 }
@@ -441,15 +444,15 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         }
         ImGui::PopItemWidth();
     }
-    if (ImGui::Button("Save Configuration")) {
-        saveToFile(mFileSaveLocation, mLSHandler);
+    if (ImGui::Button("Save")) {
+        saveToFile(CONFIG_FILE_LOCATION + std::string("/") + mFileSaveLocation + std::string(".") + CONFIG_FILE_EXTENSION, mLSHandler);
         mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
     }
     ImGui::SameLine();
     ImGui::InputText("##Save Location", &mFileSaveLocation);
 
-    if (ImGui::Button("Load Configuration")) {
-        loadFromFile(mFileLoadLocations[mFileLoadIndex], mLSHandler);
+    if (ImGui::Button("Load")) {
+        loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mLSHandler);
         mLSHandler->initSimulation();
     }
     ImGui::SameLine();
