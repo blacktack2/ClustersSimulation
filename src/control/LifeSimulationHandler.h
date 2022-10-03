@@ -20,7 +20,8 @@ public:
     void setDrag(float drag);
     float getDrag();
 
-    void clearSimulation();
+    void clearAtoms();
+    void clearAtomTypes();
     void initSimulation();
     void iterateSimulation();
 

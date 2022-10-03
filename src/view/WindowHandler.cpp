@@ -4,9 +4,11 @@
 #include "../../imgui/imgui_impl_opengl3.h"
 #include "../../imgui/imgui_stdlib.h"
 
+#include <glad/glad.h>
+
 #include <cstdio>
 #include <chrono>
-#include <glad/glad.h>
+#include <filesystem>
 
 #define PANEL_PADDING 10
 #define PANEL_MARGINS 10
@@ -34,7 +36,8 @@
 
 WindowHandler::WindowHandler() :
 mWindowWidth(0), mWindowHeight(0), mRunning(false), mSimulationRunning(false),
-mWindow(nullptr), mLSHandler(nullptr), mLSRenderer(nullptr) {
+mWindow(nullptr), mLSHandler(nullptr), mLSRenderer(nullptr),
+mFileSaveLocation("sampleFile"), mFileLoadLocations(), mFileLoadIndex(0), mFileLoadCount(0) {
 
 }
 
@@ -145,6 +148,11 @@ bool WindowHandler::init() {
 
     mLSHandler->setBounds(1000.0f, 1000.0f);
     mLSHandler->initSimulation();
+
+    if (!getLoadableFiles(mFileLoadLocations, mFileLoadCount)) {
+        fprintf(stderr, "Failed to read config files!\n");
+        return false;
+    }
 
     return true;
 }
@@ -340,7 +348,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         mLSHandler->initSimulation();
     }
     if (ImGui::Button("Clear Simulation")) {
-        mLSHandler->clearSimulation();
+        mLSHandler->clearAtoms();
     }
     if (ImGui::Button("Randomize Positions")) {
         mLSHandler->shuffleAtomPositions();
@@ -433,4 +441,24 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         }
         ImGui::PopItemWidth();
     }
+    if (ImGui::Button("Save Configuration")) {
+        saveToFile(mFileSaveLocation, mLSHandler);
+        mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
+    }
+    ImGui::SameLine();
+    ImGui::InputText("##Save Location", &mFileSaveLocation);
+
+    if (ImGui::Button("Load Configuration")) {
+        loadFromFile(mFileLoadLocations[mFileLoadIndex], mLSHandler);
+        mLSHandler->initSimulation();
+    }
+    ImGui::SameLine();
+    struct Funcs { static bool ItemGetter(void* data, int n, const char** out_str) { *out_str = ((std::string*)data)[n].c_str(); return true; } };
+    ImGui::Combo(
+        "##Loadable Files", &mFileLoadIndex,
+        &Funcs::ItemGetter,
+        mFileLoadLocations,
+        mFileLoadCount
+    );
+    
 }

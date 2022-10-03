@@ -3,6 +3,7 @@
 
 #include "../control/LifeSimulationHandler.h"
 #include "LifeSimulationRenderer.h"
+#include "../control/SaveAndLoad.h"
 
 #include "../../imgui/imgui.h"
 
@@ -57,6 +58,11 @@ private:
 
     LifeSimulationHandler* mLSHandler;
     LifeSimulationRenderer* mLSRenderer;
+
+    std::string mFileSaveLocation;
+    std::string mFileLoadLocations[MAX_FILE_COUNT];
+    int mFileLoadIndex;
+    int mFileLoadCount;
 };
 
 

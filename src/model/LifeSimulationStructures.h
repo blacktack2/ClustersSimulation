@@ -13,6 +13,7 @@ struct Color {
 class AtomType {
 public:
     AtomType();
+    AtomType(unsigned int id);
     ~AtomType();
 
     [[nodiscard]] unsigned int getId() const;
@@ -64,9 +65,10 @@ public:
     LifeSimulationRules();
     ~LifeSimulationRules();
 
-    void clear();
+    void clearAtomTypes();
 
     AtomType* newAtomType();
+    AtomType* newAtomType(unsigned int id);
     AtomType* addAtomType(AtomType* atomType);
     AtomType* getAtomType(unsigned int atomTypeId);
     void removeAtomType(unsigned int atomTypeId);
@@ -75,6 +77,7 @@ public:
 
     void setInteraction(unsigned int aId, unsigned int bId, float interaction);
     float getInteraction(unsigned int aId, unsigned int bId);
+    [[nodiscard]] std::vector<InteractionSet>& getInteractions();
 
     void setAtomRadius(float atomRadius);
     float getAtomRadius();

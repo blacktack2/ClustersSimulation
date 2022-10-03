@@ -32,7 +32,7 @@ mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f), mLSRules(), mAtoms() {
 }
 
 LifeSimulationHandler::~LifeSimulationHandler() {
-    clearSimulation();
+    clearAtoms();
 }
 
 void LifeSimulationHandler::setBounds(float simWidth, float simHeight) {
@@ -64,15 +64,20 @@ float LifeSimulationHandler::getDrag() {
     return mDrag;
 }
 
-void LifeSimulationHandler::clearSimulation() {
+void LifeSimulationHandler::clearAtoms() {
     for (Atom* atom : mAtoms) {
         delete atom;
     }
     mAtoms.clear();
 }
 
+void LifeSimulationHandler::clearAtomTypes() {
+    clearAtoms();
+    mLSRules.clearAtomTypes();
+}
+
 void LifeSimulationHandler::initSimulation() {
-    clearSimulation();
+    clearAtoms();
 
     for (AtomType* atomType : mLSRules.getAtomTypes()) {
         unsigned int quantity = atomType->getQuantity();

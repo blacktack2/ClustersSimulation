@@ -9,6 +9,11 @@ mId(idCounter++), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u), mFriendlyName(std
 
 }
 
+AtomType::AtomType(unsigned int id) :
+mId(id), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u), mFriendlyName(std::to_string(mId)) {
+    idCounter = std::max(id, idCounter);
+}
+
 AtomType::~AtomType() {
 
 }
@@ -68,10 +73,10 @@ mAtomRadius(3.0f), mAtomTypes(), mInteractions() {
 }
 
 LifeSimulationRules::~LifeSimulationRules() {
-    clear();
+    clearAtomTypes();
 }
 
-void LifeSimulationRules::clear() {
+void LifeSimulationRules::clearAtomTypes() {
     for (AtomType* atomType : mAtomTypes) {
         delete atomType;
     }
@@ -89,6 +94,22 @@ AtomType* LifeSimulationRules::newAtomType() {
     AtomType* atomType = new AtomType();
     atomType->setColor(hslToColor(rangeH(mt), rangeS(mt), rangeL(mt)));
     
+    return addAtomType(atomType);
+}
+
+AtomType* LifeSimulationRules::newAtomType(unsigned int id) {
+    if (getAtomType(id) != nullptr) {
+        return nullptr;
+    }
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
+    std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
+    std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
+
+    AtomType* atomType = new AtomType(id);
+    atomType->setColor(hslToColor(rangeH(mt), rangeS(mt), rangeL(mt)));
+
     return addAtomType(atomType);
 }
 
@@ -136,7 +157,7 @@ std::vector<AtomType*>& LifeSimulationRules::getAtomTypes() {
 }
 
 void LifeSimulationRules::setInteraction(unsigned int aId, unsigned int bId, float interaction) {
-    for (auto & mInteraction : mInteractions) {
+    for (InteractionSet& mInteraction : mInteractions) {
         if (mInteraction.aId == aId && mInteraction.bId == bId) {
             mInteraction.value = interaction;
             return;
@@ -151,6 +172,10 @@ float LifeSimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
         }
     }
     return 0.0f;
+}
+
+std::vector<InteractionSet>& LifeSimulationRules::getInteractions() {
+    return mInteractions;
 }
 
 void LifeSimulationRules::setAtomRadius(float atomRadius) {
