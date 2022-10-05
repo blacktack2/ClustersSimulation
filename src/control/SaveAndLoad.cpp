@@ -23,20 +23,20 @@ bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
 	return true;
 }
 
-bool saveToFile(std::string location, LifeSimulationHandler* handler) {
+bool saveToFile(std::string location, LifeSimulationHandler& handler) {
 	std::string data = "";
 
-	data += "Width:" + std::to_string(handler->getWidth()) + " Height:" + std::to_string(handler->getHeight()) + "\n";
-	data += "DT:" + std::to_string(handler->getDt()) + "\n";
-	data += "Drag:" + std::to_string(handler->getDrag()) + "\n";
+	data += "Width:" + std::to_string(handler.getWidth()) + " Height:" + std::to_string(handler.getHeight()) + "\n";
+	data += "DT:" + std::to_string(handler.getDt()) + "\n";
+	data += "Drag:" + std::to_string(handler.getDrag()) + "\n";
 
-	for (AtomType* atomType : handler->getLSRules().getAtomTypes()) {
-		data += "ID:" + std::to_string(atomType->getId()) + " Name:" + atomType->getFriendlyName() + " Quantity:" + std::to_string(atomType->getQuantity()) + " ";
-		Color c = atomType->getColor();
+	for (AtomType& atomType : handler.getLSRules().getAtomTypes()) {
+		data += "ID:" + std::to_string(atomType.getId()) + " Name:" + atomType.getFriendlyName() + " Quantity:" + std::to_string(atomType.getQuantity()) + " ";
+		Color c = atomType.getColor();
 		data += "R:" + std::to_string(c.r) + " G:" + std::to_string(c.g) + " B:" + std::to_string(c.b) + "\n";
 	}
 
-	for (InteractionSet is : handler->getLSRules().getInteractions()) {
+	for (InteractionSet is : handler.getLSRules().getInteractions()) {
 		data += "Aid:" + std::to_string(is.aId) + " Bid:" + std::to_string(is.bId) + " Value:" + std::to_string(is.value) + "\n";
 	}
 
@@ -52,15 +52,15 @@ bool saveToFile(std::string location, LifeSimulationHandler* handler) {
 	return true;
 }
 
-bool loadFromFile(std::string location, LifeSimulationHandler* handler) {
+bool loadFromFile(std::string location, LifeSimulationHandler& handler) {
 	static const std::regex atomTypeRegex = std::regex("^ID:([0-9]+) Name:([A-Za-z0-9_-]+) Quantity:([0-9]+) R:([0-9]+(\\.[0-9]+)?) G:([0-9]+(\\.[0-9]+)?) B:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex interactionRegex = std::regex("^Aid:([0-9]+) Bid:([0-9]+) Value:(-?[0-9]+(\\.[0-9]+)?)$");
 	static const std::regex sizeRegex = std::regex("^Width:([0-9]+(\\.[0-9]+)?) Height:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex dtRegex = std::regex("^DT:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex dragRegex = std::regex("^Drag:([0-9]+(\\.[0-9]+)?)$");
 
-	LifeSimulationRules& rules = handler->getLSRules();
-	handler->clearAtomTypes();
+	LifeSimulationRules& rules = handler.getLSRules();
+	handler.clearAtomTypes();
 
 	std::string line;
 	std::ifstream file;
@@ -82,23 +82,23 @@ bool loadFromFile(std::string location, LifeSimulationHandler* handler) {
 			float width;
 			float height;
 			if (!parseFloat(matches[1], width) || !parseFloat(matches[3], height)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches[0]);
+				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
 			} else {
-				handler->setBounds(width, height);
+				handler.setBounds(width, height);
 			}
 		} else if (std::regex_search(line, matches, dtRegex)) {
 			float dt;
 			if (!parseFloat(matches[1], dt)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches[0]);
+				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
 			} else {
-				handler->setDt(dt);
+				handler.setDt(dt);
 			}
 		} else if (std::regex_search(line, matches, dragRegex)) {
 			float drag;
 			if (!parseFloat(matches[1], drag)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches[0]);
+				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
 			} else {
-				handler->setDrag(drag);
+				handler.setDrag(drag);
 			}
 		}
 	}
@@ -115,12 +115,12 @@ bool loadFromFile(std::string location, LifeSimulationHandler* handler) {
 			float b;
 			if (!parseUint(matches[1], id) || !parseUint(matches[3], quantity) ||
 				!parseFloat(matches[4], r) || !parseFloat(matches[6], g) || !parseFloat(matches[8], b)) {
-				fprintf(stderr, "Failed to parse AtomType values! Line: %s", matches[0]);
+				fprintf(stderr, "Failed to parse AtomType values! Line: %s", matches.str(0).c_str());
 			} else {
-				AtomType* at = rules.newAtomType(id);
-				at->setFriendlyName(name);
-				at->setQuantity(quantity);
-				at->setColor({r, g, b});
+				AtomType& at = rules.newAtomType(id);
+				at.setFriendlyName(name);
+				at.setQuantity(quantity);
+				at.setColor({r, g, b});
 			}
 		}
 	}
@@ -132,7 +132,7 @@ bool loadFromFile(std::string location, LifeSimulationHandler* handler) {
 			unsigned int bId;
 			float value;
 			if (!parseUint(matches[1], aId) || !parseUint(matches[2], bId) || !parseFloat(matches[3], value)) {
-				fprintf(stderr, "Failed to parse interaction values! Line: %s", matches[0]);
+				fprintf(stderr, "Failed to parse interaction values! Line: %s", matches.str(0).c_str());
 			} else {
 				rules.setInteraction(aId, bId, value);
 			}
@@ -147,11 +147,11 @@ bool parseFloat(std::string s, float& f) {
 	try {
 		f = std::stof(s, &pos);
 	} catch (std::invalid_argument const& ex) {
-		fprintf(stderr, "std::invalid_argument::what():\n", s, ex.what());
+		fprintf(stderr, "std::invalid_argument::what():\n", s.c_str(), ex.what());
 		return false;
 	} catch (std::out_of_range const& ex) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():\nstd::stoll('%s'): %s; pos: %s\n", ex.what(), s, ll, pos);
+		fprintf(stderr, "std::out_of_range::what():\nstd::stoll('%s'): %ll; pos: %zu\n", ex.what(), s.c_str(), ll, pos);
 		return false;
 	}
 	return true;
@@ -162,15 +162,15 @@ bool parseUint(std::string s, unsigned int& i) {
 	try {
 		unsigned long l = std::stoul(s, &pos);
 		if (l > std::numeric_limits<unsigned int>::max()) {
-			fprintf(stderr, "Uint value out of range: %s", s);
+			fprintf(stderr, "Uint value out of range: %s", s.c_str());
 		}
 		i = l;
 	} catch (std::invalid_argument const& ex) {
-		fprintf(stderr, "std::invalid_argument::what():\n", s, ex.what());
+		fprintf(stderr, "std::invalid_argument::what():\n", s.c_str(), ex.what());
 		return false;
 	} catch (std::out_of_range const& ex) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():\nstd::stoll('%s'): %s; pos: %s\n", ex.what(), s, ll, pos);
+		fprintf(stderr, "std::out_of_range::what():\nstd::stoll('%s'): %ll; pos: %zu\n", ex.what(), s.c_str(), ll, pos);
 		return false;
 	}
 	return true;

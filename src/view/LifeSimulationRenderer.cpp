@@ -12,7 +12,6 @@ LifeSimulationRenderer::~LifeSimulationRenderer() {
 }
 
 void LifeSimulationRenderer::drawSimulation(float startX, float startY, float width, float height) {
-    std::vector<Atom*>& atoms = mHandler.getAtoms();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
     drawList->AddRectFilled(
@@ -24,19 +23,20 @@ void LifeSimulationRenderer::drawSimulation(float startX, float startY, float wi
     float scaleY = static_cast<float>(height) / mHandler.getHeight();
     float atomSize = std::max(3.0 * scaleX, 3.0);
 
-    for (Atom* atom : atoms) {
-        AtomType* atomType = atom->getAtomType();
-        Color c = atomType->getColor();
-        float x = startX + atom->mX * scaleX;
-        float y = startY + atom->mY * scaleY;
-        drawList->AddCircleFilled(
+    for (AtomType& atomType : mHandler.getLSRules().getAtomTypes()) {
+        Color c = atomType.getColor();
+        for (Atom& atom : atomType.getAtoms()) {
+            float x = startX + atom.mX * scaleX;
+            float y = startY + atom.mY * scaleY;
+            drawList->AddCircleFilled(
                 ImVec2(x, y), atomSize,
                 ImColor(ImVec4(c.r, c.g, c.b, 1.0f))
-                );
-        drawList->AddCircle(
-            ImVec2(x, y), atomSize,
-            ImColor(ImVec4(0.0f, 0.0f, 0.0f, 0.5f)),
-            0, 2.0f
-        );
+            );
+            drawList->AddCircle(
+                ImVec2(x, y), atomSize,
+                ImColor(ImVec4(0.0f, 0.0f, 0.0f, 0.5f)),
+                0, 2.0f
+            );
+        }
     }
 }

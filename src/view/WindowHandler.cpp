@@ -36,23 +36,13 @@
 
 WindowHandler::WindowHandler() :
 mWindowWidth(0), mWindowHeight(0), mRunning(false), mSimulationRunning(false),
-mWindow(nullptr), mLSHandler(nullptr), mLSRenderer(nullptr),
+mWindow(nullptr), mLSHandler(), mLSRenderer(mLSHandler),
 mFileSaveLocation("sampleFile"), mFileLoadLocations(), mFileLoadIndex(0), mFileLoadCount(0), mIsOverwritingFile(false) {
 
 }
 
 WindowHandler::~WindowHandler() {
     saveToFile("resources/current.csdat", mLSHandler);
-
-    if (mLSHandler != nullptr) {
-        delete mLSHandler;
-        mLSHandler = nullptr;
-    }
-
-    if (mLSRenderer != nullptr) {
-        delete mLSRenderer;
-        mLSRenderer = nullptr;
-    }
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -145,17 +135,14 @@ bool WindowHandler::init() {
 
     glClearColor(0, 0, 0, 1);
 
-    mLSHandler = new LifeSimulationHandler();
-    mLSRenderer = new LifeSimulationRenderer(*mLSHandler);
-
-    mLSHandler->setBounds(1000.0f, 1000.0f);
+    mLSHandler.setBounds(1000.0f, 1000.0f);
 
     if (!getLoadableFiles(mFileLoadLocations, mFileLoadCount)) {
         fprintf(stderr, "Failed to read config files!\n");
         return false;
     }
     loadFromFile("resources/current.csdat", mLSHandler);
-    mLSHandler->initSimulation();
+    mLSHandler.initSimulation();
 
     return true;
 }
@@ -266,7 +253,7 @@ void WindowHandler::mainloop() {
 
             ImGui::Begin("Simulation", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
-            mLSRenderer->drawSimulation(simPanelBounds.x, simPanelBounds.y, simPanelBounds.z, simPanelBounds.w);
+            mLSRenderer.drawSimulation(simPanelBounds.x, simPanelBounds.y, simPanelBounds.z, simPanelBounds.w);
 
             ImGui::End();
         }
@@ -279,7 +266,7 @@ void WindowHandler::mainloop() {
         fpsCounter++;
 
         if (mSimulationRunning) {
-            mLSHandler->iterateSimulation();
+            mLSHandler.iterateSimulation();
         }
     }
 }
@@ -332,7 +319,7 @@ void WindowHandler::drawDebugPanel(float fps) {
     );
     ImGui::TextColored(
             debugTextColor,
-            "Atom Count: %zu", mLSHandler->getAtoms().size()
+            "Atom Count: %zu", mLSHandler.getLSRules().getAtomCount()
     );
 }
 
@@ -349,61 +336,61 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         }
     }
     if (ImGui::Button("Re-generate Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler->initSimulation();
+        mLSHandler.initSimulation();
     }
     if (ImGui::Button("Clear Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler->clearAtoms();
+        mLSHandler.clearAtoms();
     }
     if (ImGui::Button("Clear Atom Types", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler->clearAtomTypes();
+        mLSHandler.clearAtomTypes();
     }
     if (ImGui::Button("Randomize Positions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler->shuffleAtomPositions();
+        mLSHandler.shuffleAtomPositions();
     }
     if (ImGui::Button("Zero Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler->getLSRules().clearInteractions();
+        mLSHandler.getLSRules().clearInteractions();
     }
     if (ImGui::Button("Shuffle Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler->shuffleAtomInteractions();
+        mLSHandler.shuffleAtomInteractions();
     }
 
     ImGui::Text("Simulation Scale");
-    float simScale = mLSHandler->getWidth();
+    float simScale = mLSHandler.getWidth();
     if (ImGui::InputFloat("##Simulation Scale", &simScale, 1.0f, 10.0f, "%.0f")) {
         simScale = std::max(std::min(simScale, 1000000.0f), 1.0f);
-        mLSHandler->setBounds(simScale, simScale);
+        mLSHandler.setBounds(simScale, simScale);
     }
     ImGui::Text("Time Delta (dt)");
-    float dt = mLSHandler->getDt();
+    float dt = mLSHandler.getDt();
     if (ImGui::InputFloat("##Time Delta", &dt, 0.01f, 0.1f, "%.2f")) {
         dt = std::max(std::min(dt, 10.0f), 0.01f);
-        mLSHandler->setDt(dt);
+        mLSHandler.setDt(dt);
     }
     ImGui::Text("Drag Force");
-    float drag = mLSHandler->getDrag();
+    float drag = mLSHandler.getDrag();
     if (ImGui::InputFloat("##Drag Force", &drag, 0.01f, 0.1f, "%.2f")) {
         drag = std::max(std::min(drag, 1.0f), 0.0f);
-        mLSHandler->setDrag(drag);
+        mLSHandler.setDrag(drag);
     }
 
-    LifeSimulationRules& rules = mLSHandler->getLSRules();
+    LifeSimulationRules& rules = mLSHandler.getLSRules();
 
     if (ImGui::Button("Add Atom Type", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
         rules.newAtomType();
     }
-    std::vector<AtomType*>& atomTypes = rules.getAtomTypes();
-    for (AtomType* atomType : atomTypes) {
+    std::vector<AtomType>& atomTypes = rules.getAtomTypes();
+    for (AtomType& atomType : atomTypes) {
         ImGui::Separator();
-        unsigned int atomId = atomType->getId();
+        unsigned int atomId = atomType.getId();
         std::string atomIdStr = std::to_string(atomId);
-        Color c = atomType->getColor();
+        Color c = atomType.getColor();
 
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(c.r, c.g, c.b, 1.0));
         // Textbox for the friendly name of each AtomType
-        std::string friendlyName = atomType->getFriendlyName();
+        std::string friendlyName = atomType.getFriendlyName();
         label = "##FriendlyNameText-" + atomIdStr;
         if (ImGui::InputText(label.c_str(), &friendlyName)) {
-            atomType->setFriendlyName(friendlyName);
+            atomType.setFriendlyName(friendlyName);
         }
         ImGui::PopStyleColor(1);
 
@@ -417,36 +404,36 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
         label = "##ColorRedSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &r, 0.0f, 1.0f)) {
-            atomType->setColorR(r);
+            atomType.setColorR(r);
         }
         ImGui::SameLine();
         label = "##ColorGreenSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &g, 0.0f, 1.0f)) {
-            atomType->setColorG(g);
+            atomType.setColorG(g);
         }
         ImGui::SameLine();
         label = "##ColorBlueSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &b, 0.0f, 1.0f)) {
-            atomType->setColorB(b);
+            atomType.setColorB(b);
         }
         ImGui::PopItemWidth();
 
-        int quantity = atomType->getQuantity();
+        int quantity = atomType.getQuantity();
         label = "Quantity##QuantityInt-" + atomIdStr;
         if (ImGui::InputInt(label.c_str(), &quantity)) {
-            atomType->setQuantity(quantity);
+            atomType.setQuantity(quantity);
         }
 
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 3 / 4);
-        for (AtomType* atomType2 : atomTypes) {
-            unsigned int atom2Id = atomType2->getId();
+        for (AtomType& atomType2 : atomTypes) {
+            unsigned int atom2Id = atomType2.getId();
             std::string atom2IdStr = std::to_string(atom2Id);
-            Color atom2Color = atomType2->getColor();
-            ImGui::TextColored(ImVec4(r, g, b, 1.0f), atomType->getFriendlyName().c_str());
+            Color atom2Color = atomType2.getColor();
+            ImGui::TextColored(ImVec4(r, g, b, 1.0f), atomType.getFriendlyName().c_str());
             ImGui::SameLine();
             ImGui::Text("->");
             ImGui::SameLine();
-            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), atomType2->getFriendlyName().c_str());
+            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), atomType2.getFriendlyName().c_str());
             label = "0##ZeroButton-" + atomIdStr + "-" + atom2IdStr;
             if (ImGui::Button(label.c_str())) {
                 rules.setInteraction(atomId, atom2Id, 0);
@@ -460,7 +447,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         }
         label = "Delete Atom Type [" + friendlyName + "]##DeleteButton-" + atomIdStr;
         if (ImGui::Button(label.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-            mLSHandler->removeAtomType(atomId);
+            mLSHandler.removeAtomType(atomId);
         }
         ImGui::PopItemWidth();
     }
@@ -493,7 +480,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
 
     if (ImGui::Button("Load")) {
         loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mLSHandler);
-        mLSHandler->initSimulation();
+        mLSHandler.initSimulation();
     }
     ImGui::SameLine();
     struct Funcs { static bool ItemGetter(void* data, int n, const char** out_str) { *out_str = ((std::string*)data)[n].c_str(); return true; } };

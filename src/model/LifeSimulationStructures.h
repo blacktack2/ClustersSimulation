@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <optional>
+#include <memory>
 
 struct Color {
     float r;
@@ -10,11 +12,39 @@ struct Color {
     float b;
 };
 
+class Atom {
+public:
+    Atom();
+    Atom(const Atom& other);
+
+    float mX;
+    float mY;
+
+    float mVX;
+    float mVY;
+
+    float mFX;
+    float mFY;
+};
+
 class AtomType {
 public:
     AtomType();
     AtomType(unsigned int id);
+    AtomType(const AtomType& other);
     ~AtomType();
+    AtomType& operator=(AtomType&& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+        mColor = other.mColor;
+        mQuantity = other.mQuantity;
+        mFriendlyName = other.mFriendlyName;
+        mAtoms = other.mAtoms;
+
+        return *this;
+    }
 
     [[nodiscard]] unsigned int getId() const;
 
@@ -30,6 +60,10 @@ public:
 
     std::string getFriendlyName();
     void setFriendlyName(std::string friendlyName);
+
+    Atom& newAtom();
+    std::vector<Atom>& getAtoms();
+    void clearAtoms();
 private:
     const unsigned int mId;
 
@@ -37,21 +71,8 @@ private:
     unsigned int mQuantity;
 
     std::string mFriendlyName;
-};
 
-class Atom {
-public:
-    explicit Atom(AtomType* atomType);
-
-    AtomType* getAtomType();
-
-    float mX;
-    float mY;
-
-    float mVX;
-    float mVY;
-private:
-    AtomType* mAtomType;
+    std::vector<Atom> mAtoms;
 };
 
 struct InteractionSet {
@@ -67,13 +88,14 @@ public:
 
     void clearAtomTypes();
 
-    AtomType* newAtomType();
-    AtomType* newAtomType(unsigned int id);
-    AtomType* addAtomType(AtomType* atomType);
-    AtomType* getAtomType(unsigned int atomTypeId);
+    AtomType& newAtomType();
+    AtomType& newAtomType(unsigned int id);
+    std::optional<std::reference_wrapper<AtomType>> getAtomType(unsigned int atomTypeId);
     void removeAtomType(unsigned int atomTypeId);
 
-    std::vector<AtomType*>& getAtomTypes();
+    std::vector<AtomType>& getAtomTypes();
+
+    unsigned int getAtomCount();
 
     void clearInteractions();
     void setInteraction(unsigned int aId, unsigned int bId, float interaction);
@@ -83,12 +105,14 @@ public:
     void setAtomRadius(float atomRadius);
     float getAtomRadius();
 private:
-    Color hslToColor(float h, float s, float l);
+    void createInteractionsForAtomType(AtomType& atomType);
 
     float mAtomRadius;
 
-    std::vector<AtomType*> mAtomTypes;
+    std::vector<AtomType> mAtomTypes;
     std::vector<InteractionSet> mInteractions;
 };
+
+Color hslToColor(float h, float s, float l);
 
 #endif //CLUSTERSSIMULATION_LIFESIMULATIONSTRUCTURES_H

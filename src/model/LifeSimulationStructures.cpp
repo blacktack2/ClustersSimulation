@@ -4,14 +4,46 @@
 
 static unsigned int idCounter = 0;
 
-AtomType::AtomType() :
-mId(idCounter++), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u), mFriendlyName(std::to_string(mId)) {
+Atom::Atom() :
+mX(0.0f), mY(0.0f), mVX(0.0f), mVY(0.0f), mFX(0.0f), mFY(0.0f) {
 
 }
 
+Atom::Atom(const Atom& other) :
+mX(other.mX), mY(other.mY), mVX(other.mVX), mVY(other.mVY), mFX(other.mFX), mFY(other.mFY) {
+
+}
+
+AtomType::AtomType() :
+mId(idCounter++), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u),
+mFriendlyName(std::to_string(mId)), mAtoms() {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
+    std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
+    std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
+    
+    mColor = hslToColor(rangeH(mt), rangeS(mt), rangeL(mt));
+}
+
 AtomType::AtomType(unsigned int id) :
-mId(id), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u), mFriendlyName(std::to_string(mId)) {
-    idCounter = std::max(id, idCounter);
+mId(id), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u),
+mFriendlyName(std::to_string(mId)), mAtoms() {
+    idCounter = std::max(mId, idCounter);
+
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
+    std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
+    std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
+
+    mColor = hslToColor(rangeH(mt), rangeS(mt), rangeL(mt));
+}
+
+AtomType::AtomType(const AtomType& other) :
+mId(other.mId), mColor(other.mColor), mQuantity(other.mQuantity),
+mFriendlyName(other.mFriendlyName), mAtoms(other.mAtoms) {
+    idCounter = std::max(mId, idCounter);
 }
 
 AtomType::~AtomType() {
@@ -58,13 +90,16 @@ void AtomType::setFriendlyName(std::string friendlyName) {
     mFriendlyName = std::move(friendlyName);
 }
 
-Atom::Atom(AtomType* atomType) :
-mAtomType(atomType), mX(0.0f), mY(0.0f), mVX(0.0f), mVY(0.0f){
-
+Atom& AtomType::newAtom() {
+    return mAtoms.emplace_back();
 }
 
-AtomType* Atom::getAtomType() {
-    return mAtomType;
+std::vector<Atom>& AtomType::getAtoms() {
+    return mAtoms;
+}
+
+void AtomType::clearAtoms() {
+    mAtoms.clear();
 }
 
 LifeSimulationRules::LifeSimulationRules() :
@@ -73,66 +108,38 @@ mAtomRadius(3.0f), mAtomTypes(), mInteractions() {
 }
 
 LifeSimulationRules::~LifeSimulationRules() {
-    clearAtomTypes();
+    
 }
 
 void LifeSimulationRules::clearAtomTypes() {
-    for (AtomType* atomType : mAtomTypes) {
-        delete atomType;
-    }
     mAtomTypes.clear();
     mInteractions.clear();
 }
 
-AtomType* LifeSimulationRules::newAtomType() {
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
-    std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
-    std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
-
-    AtomType* atomType = new AtomType();
-    atomType->setColor(hslToColor(rangeH(mt), rangeS(mt), rangeL(mt)));
-    
-    return addAtomType(atomType);
+AtomType& LifeSimulationRules::newAtomType() {
+    AtomType& at = mAtomTypes.emplace_back();
+    createInteractionsForAtomType(at);
+    return at;
 }
 
-AtomType* LifeSimulationRules::newAtomType(unsigned int id) {
-    if (getAtomType(id) != nullptr) {
-        return nullptr;
+AtomType& LifeSimulationRules::newAtomType(unsigned int id) {
+    std::optional<std::reference_wrapper<AtomType>> exists = getAtomType(id);
+    if (exists.has_value()) {
+        return exists.value();
     }
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
-    std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
-    std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
 
-    AtomType* atomType = new AtomType(id);
-    atomType->setColor(hslToColor(rangeH(mt), rangeS(mt), rangeL(mt)));
-
-    return addAtomType(atomType);
+    AtomType& at = mAtomTypes.emplace_back();
+    createInteractionsForAtomType(at);
+    return at;
 }
 
-AtomType* LifeSimulationRules::addAtomType(AtomType* atomType) {
-    for (AtomType* atomType2 : mAtomTypes) {
-        InteractionSet is1 = {atomType2->getId(), atomType->getId(), 0};
-        InteractionSet is2 = {atomType->getId(), atomType2->getId(), 0};
-        mInteractions.push_back(is1);
-        mInteractions.push_back(is2);
-    }
-    InteractionSet interactionSet = {atomType->getId(), atomType->getId(), 0};
-    mInteractions.push_back(interactionSet);
-    mAtomTypes.push_back(atomType);
-    return atomType;
-}
-
-AtomType* LifeSimulationRules::getAtomType(unsigned int atomTypeId) {
-    for (AtomType* atomType : mAtomTypes) {
-        if (atomType->getId() == atomTypeId) {
+std::optional<std::reference_wrapper<AtomType>> LifeSimulationRules::getAtomType(unsigned int atomTypeId) {
+    for (AtomType& atomType : mAtomTypes) {
+        if (atomType.getId() == atomTypeId) {
             return atomType;
         }
     }
-    return nullptr;
+    return std::optional<std::reference_wrapper<AtomType>>();
 }
 
 void LifeSimulationRules::removeAtomType(unsigned int atomTypeId) {
@@ -146,14 +153,22 @@ void LifeSimulationRules::removeAtomType(unsigned int atomTypeId) {
     mAtomTypes.erase(
         std::remove_if(
             mAtomTypes.begin(), mAtomTypes.end(),
-            [atomTypeId](AtomType* atomType) {
-                return atomType->getId() == atomTypeId;
+            [atomTypeId](AtomType& atomType) {
+                return atomType.getId() == atomTypeId;
             }), mAtomTypes.end()
                 );
 }
 
-std::vector<AtomType*>& LifeSimulationRules::getAtomTypes() {
+std::vector<AtomType>& LifeSimulationRules::getAtomTypes() {
     return mAtomTypes;
+}
+
+unsigned int LifeSimulationRules::getAtomCount() {
+    unsigned int count = 0;
+    for (AtomType& atomType : mAtomTypes) {
+        count += atomType.getQuantity();
+    }
+    return count;
 }
 
 void LifeSimulationRules::clearInteractions() {
@@ -192,7 +207,21 @@ float LifeSimulationRules::getAtomRadius() {
     return mAtomRadius;
 }
 
-Color LifeSimulationRules::hslToColor(float h, float s, float l) {
+void LifeSimulationRules::createInteractionsForAtomType(AtomType& atomType) {
+    for (AtomType& atomType2 : mAtomTypes) {
+        if (&atomType == &atomType2) {
+            continue;
+        }
+        InteractionSet is1 = {atomType2.getId(), atomType.getId(), 0};
+        InteractionSet is2 = {atomType.getId(), atomType2.getId(), 0};
+        mInteractions.push_back(is1);
+        mInteractions.push_back(is2);
+    }
+    InteractionSet interactionSet = {atomType.getId(), atomType.getId(), 0};
+    mInteractions.push_back(interactionSet);
+}
+
+Color hslToColor(float h, float s, float l) {
     float c = (1 - std::abs(2 * l - 1)) * s;
     float x = c * (1 - std::abs(std::fmodf(h / 60, 2) - 1));
     float m = l - c / 2;

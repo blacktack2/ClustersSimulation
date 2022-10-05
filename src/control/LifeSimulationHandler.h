@@ -29,7 +29,6 @@ public:
     void shuffleAtomPositions();
     void shuffleAtomInteractions();
 
-    std::vector<Atom*>& getAtoms();
     LifeSimulationRules& getLSRules();
 private:
     float mSimWidth;
@@ -38,7 +37,6 @@ private:
     float mDt;
     float mDrag;
 
-    std::vector<Atom*> mAtoms;
     LifeSimulationRules mLSRules;
 };
 

@@ -56,8 +56,8 @@ private:
     SDL_GLContext mGlContext{};
     ImGuiIO mIo;
 
-    LifeSimulationHandler* mLSHandler;
-    LifeSimulationRenderer* mLSRenderer;
+    LifeSimulationHandler mLSHandler;
+    LifeSimulationRenderer mLSRenderer;
 
     std::string mFileSaveLocation;
     std::string mFileLoadLocations[MAX_FILE_COUNT];
