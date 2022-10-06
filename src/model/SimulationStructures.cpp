@@ -128,7 +128,7 @@ AtomType& SimulationRules::newAtomType(unsigned int id) {
         return exists.value();
     }
 
-    AtomType& at = mAtomTypes.emplace_back();
+    AtomType& at = mAtomTypes.emplace_back(id);
     createInteractionsForAtomType(at);
     return at;
 }
