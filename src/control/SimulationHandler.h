@@ -1,14 +1,14 @@
 #ifndef LIFESIMULATIONC_LIFESIMULATIONHANDLER_H
 #define LIFESIMULATIONC_LIFESIMULATIONHANDLER_H
 
-#include "../model/LifeSimulationStructures.h"
+#include "../model/SimulationStructures.h"
 
 #include <vector>
 
-class LifeSimulationHandler {
+class SimulationHandler {
 public:
-    LifeSimulationHandler();
-    ~LifeSimulationHandler();
+    SimulationHandler();
+    ~SimulationHandler();
 
     void setBounds(float simWidth, float simHeight);
     [[nodiscard]] float getWidth() const;
@@ -29,7 +29,7 @@ public:
     void shuffleAtomPositions();
     void shuffleAtomInteractions();
 
-    LifeSimulationRules& getLSRules();
+    SimulationRules& getLSRules();
 private:
     float mSimWidth;
     float mSimHeight;
@@ -37,7 +37,7 @@ private:
     float mDt;
     float mDrag;
 
-    LifeSimulationRules mLSRules;
+    SimulationRules mLSRules;
 };
 
 

@@ -33,7 +33,7 @@ public:
     AtomType(unsigned int id);
     AtomType(const AtomType& other);
     ~AtomType();
-    AtomType& operator=(AtomType&& other) {
+    AtomType& operator=(AtomType&& other) noexcept {
         if (this == &other) {
             return *this;
         }
@@ -81,10 +81,10 @@ struct InteractionSet {
     float value;
 };
 
-class LifeSimulationRules {
+class SimulationRules {
 public:
-    LifeSimulationRules();
-    ~LifeSimulationRules();
+    SimulationRules();
+    ~SimulationRules();
 
     void clearAtomTypes();
 

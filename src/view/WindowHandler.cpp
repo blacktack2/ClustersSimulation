@@ -36,13 +36,13 @@
 
 WindowHandler::WindowHandler() :
 mWindowWidth(0), mWindowHeight(0), mRunning(false), mSimulationRunning(false),
-mWindow(nullptr), mLSHandler(), mLSRenderer(mLSHandler),
+mWindow(nullptr), mSimulationHandler(), mSimulationRenderer(mSimulationHandler),
 mFileSaveLocation("sampleFile"), mFileLoadLocations(), mFileLoadIndex(0), mFileLoadCount(0), mIsOverwritingFile(false) {
 
 }
 
 WindowHandler::~WindowHandler() {
-    saveToFile("resources/current.csdat", mLSHandler);
+    saveToFile("resources/current.csdat", mSimulationHandler);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -135,14 +135,14 @@ bool WindowHandler::init() {
 
     glClearColor(0, 0, 0, 1);
 
-    mLSHandler.setBounds(1000.0f, 1000.0f);
+    mSimulationHandler.setBounds(1000.0f, 1000.0f);
 
     if (!getLoadableFiles(mFileLoadLocations, mFileLoadCount)) {
         fprintf(stderr, "Failed to read config files!\n");
         return false;
     }
-    loadFromFile("resources/current.csdat", mLSHandler);
-    mLSHandler.initSimulation();
+    loadFromFile("resources/current.csdat", mSimulationHandler);
+    mSimulationHandler.initSimulation();
 
     return true;
 }
@@ -253,7 +253,7 @@ void WindowHandler::mainloop() {
 
             ImGui::Begin("Simulation", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
-            mLSRenderer.drawSimulation(simPanelBounds.x, simPanelBounds.y, simPanelBounds.z, simPanelBounds.w);
+            mSimulationRenderer.drawSimulation(simPanelBounds.x, simPanelBounds.y, simPanelBounds.z, simPanelBounds.w);
 
             ImGui::End();
         }
@@ -266,7 +266,7 @@ void WindowHandler::mainloop() {
         fpsCounter++;
 
         if (mSimulationRunning) {
-            mLSHandler.iterateSimulation();
+            mSimulationHandler.iterateSimulation();
         }
     }
 }
@@ -319,61 +319,50 @@ void WindowHandler::drawDebugPanel(float fps) {
     );
     ImGui::TextColored(
             debugTextColor,
-            "Atom Count: %zu", mLSHandler.getLSRules().getAtomCount()
+            "Atom Count: %zu", mSimulationHandler.getLSRules().getAtomCount()
     );
 }
 
 void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
     std::string label;
 
-    if (mSimulationRunning) {
-        if (ImGui::Button("Pause", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-            mSimulationRunning = false;
-        }
-    } else {
-        if (ImGui::Button("Play", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-            mSimulationRunning = true;
-        }
-    }
-    if (ImGui::Button("Re-generate Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler.initSimulation();
-    }
-    if (ImGui::Button("Clear Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler.clearAtoms();
-    }
-    if (ImGui::Button("Clear Atom Types", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler.clearAtomTypes();
-    }
-    if (ImGui::Button("Randomize Positions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler.shuffleAtomPositions();
-    }
-    if (ImGui::Button("Zero Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler.getLSRules().clearInteractions();
-    }
-    if (ImGui::Button("Shuffle Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        mLSHandler.shuffleAtomInteractions();
-    }
+    mSimulationRunning = mSimulationRunning ?
+        !ImGui::Button("Pause##PlayPause", ImVec2(ImGui::GetContentRegionAvail().x, 0)) :
+        ImGui::Button("Play##PlayPause", ImVec2(ImGui::GetContentRegionAvail().x, 0));
+
+    ImGui::Button("Re-generate Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
+        mSimulationHandler.initSimulation() : 0;
+    ImGui::Button("Clear Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
+        mSimulationHandler.clearAtoms() : 0;
+    ImGui::Button("Clear Atom Types", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
+        mSimulationHandler.clearAtomTypes() : 0;
+    ImGui::Button("Randomize Positions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
+        mSimulationHandler.shuffleAtomPositions() : 0;
+    ImGui::Button("Zero Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
+        mSimulationHandler.getLSRules().clearInteractions() : 0;
+    ImGui::Button("Shuffle Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
+        mSimulationHandler.shuffleAtomInteractions() : 0;
 
     ImGui::Text("Simulation Scale");
-    float simScale = mLSHandler.getWidth();
+    float simScale = mSimulationHandler.getWidth();
     if (ImGui::InputFloat("##Simulation Scale", &simScale, 1.0f, 10.0f, "%.0f")) {
         simScale = std::max(std::min(simScale, 1000000.0f), 1.0f);
-        mLSHandler.setBounds(simScale, simScale);
+        mSimulationHandler.setBounds(simScale, simScale);
     }
     ImGui::Text("Time Delta (dt)");
-    float dt = mLSHandler.getDt();
+    float dt = mSimulationHandler.getDt();
     if (ImGui::InputFloat("##Time Delta", &dt, 0.01f, 0.1f, "%.2f")) {
         dt = std::max(std::min(dt, 10.0f), 0.01f);
-        mLSHandler.setDt(dt);
+        mSimulationHandler.setDt(dt);
     }
     ImGui::Text("Drag Force");
-    float drag = mLSHandler.getDrag();
+    float drag = mSimulationHandler.getDrag();
     if (ImGui::InputFloat("##Drag Force", &drag, 0.01f, 0.1f, "%.2f")) {
         drag = std::max(std::min(drag, 1.0f), 0.0f);
-        mLSHandler.setDrag(drag);
+        mSimulationHandler.setDrag(drag);
     }
 
-    LifeSimulationRules& rules = mLSHandler.getLSRules();
+    SimulationRules& rules = mSimulationHandler.getLSRules();
 
     if (ImGui::Button("Add Atom Type", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
         rules.newAtomType();
@@ -447,7 +436,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         }
         label = "Delete Atom Type [" + friendlyName + "]##DeleteButton-" + atomIdStr;
         if (ImGui::Button(label.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-            mLSHandler.removeAtomType(atomId);
+            mSimulationHandler.removeAtomType(atomId);
         }
         ImGui::PopItemWidth();
     }
@@ -457,7 +446,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
     if (mIsOverwritingFile) {
         ImGui::Text(("Config '" + mFileSaveLocation + "' exists.\nOverwrite?").c_str());
         if (ImGui::Button("Yes")) {
-            saveToFile(fileSaveLocation, mLSHandler);
+            saveToFile(fileSaveLocation, mSimulationHandler);
             mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
             mIsOverwritingFile = false;
         }
@@ -470,7 +459,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
             if (std::filesystem::exists(fileSaveLocation)) {
                 mIsOverwritingFile = true;
             } else {
-                saveToFile(fileSaveLocation, mLSHandler);
+                saveToFile(fileSaveLocation, mSimulationHandler);
                 mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
             }
         }
@@ -479,8 +468,8 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
     }
 
     if (ImGui::Button("Load")) {
-        loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mLSHandler);
-        mLSHandler.initSimulation();
+        loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mSimulationHandler);
+        mSimulationHandler.initSimulation();
     }
     ImGui::SameLine();
     struct Funcs { static bool ItemGetter(void* data, int n, const char** out_str) { *out_str = ((std::string*)data)[n].c_str(); return true; } };
@@ -490,5 +479,4 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         mFileLoadLocations,
         mFileLoadCount
     );
-    
 }

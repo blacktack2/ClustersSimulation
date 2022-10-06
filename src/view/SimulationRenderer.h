@@ -1,18 +1,18 @@
 #ifndef LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
 #define LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
 
-#include "../control/LifeSimulationHandler.h"
+#include "../control/SimulationHandler.h"
 
 #include <cstdio>
 
-class LifeSimulationRenderer {
+class SimulationRenderer {
 public:
-    explicit LifeSimulationRenderer(LifeSimulationHandler& handler);
-    ~LifeSimulationRenderer();
+    explicit SimulationRenderer(SimulationHandler& handler);
+    ~SimulationRenderer();
 
     void drawSimulation(float startX, float startY, float width, float height);
 private:
-    LifeSimulationHandler& mHandler;
+    SimulationHandler& mHandler;
 };
 
 

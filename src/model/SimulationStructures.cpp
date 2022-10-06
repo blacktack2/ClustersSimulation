@@ -1,4 +1,4 @@
-#include "LifeSimulationStructures.h"
+#include "SimulationStructures.h"
 
 #include <random>
 
@@ -102,27 +102,27 @@ void AtomType::clearAtoms() {
     mAtoms.clear();
 }
 
-LifeSimulationRules::LifeSimulationRules() :
+SimulationRules::SimulationRules() :
 mAtomRadius(3.0f), mAtomTypes(), mInteractions() {
 
 }
 
-LifeSimulationRules::~LifeSimulationRules() {
+SimulationRules::~SimulationRules() {
     
 }
 
-void LifeSimulationRules::clearAtomTypes() {
+void SimulationRules::clearAtomTypes() {
     mAtomTypes.clear();
     mInteractions.clear();
 }
 
-AtomType& LifeSimulationRules::newAtomType() {
+AtomType& SimulationRules::newAtomType() {
     AtomType& at = mAtomTypes.emplace_back();
     createInteractionsForAtomType(at);
     return at;
 }
 
-AtomType& LifeSimulationRules::newAtomType(unsigned int id) {
+AtomType& SimulationRules::newAtomType(unsigned int id) {
     std::optional<std::reference_wrapper<AtomType>> exists = getAtomType(id);
     if (exists.has_value()) {
         return exists.value();
@@ -133,7 +133,7 @@ AtomType& LifeSimulationRules::newAtomType(unsigned int id) {
     return at;
 }
 
-std::optional<std::reference_wrapper<AtomType>> LifeSimulationRules::getAtomType(unsigned int atomTypeId) {
+std::optional<std::reference_wrapper<AtomType>> SimulationRules::getAtomType(unsigned int atomTypeId) {
     for (AtomType& atomType : mAtomTypes) {
         if (atomType.getId() == atomTypeId) {
             return atomType;
@@ -142,7 +142,7 @@ std::optional<std::reference_wrapper<AtomType>> LifeSimulationRules::getAtomType
     return std::optional<std::reference_wrapper<AtomType>>();
 }
 
-void LifeSimulationRules::removeAtomType(unsigned int atomTypeId) {
+void SimulationRules::removeAtomType(unsigned int atomTypeId) {
     mInteractions.erase(
         std::remove_if(
             mInteractions.begin(), mInteractions.end(),
@@ -159,11 +159,11 @@ void LifeSimulationRules::removeAtomType(unsigned int atomTypeId) {
                 );
 }
 
-std::vector<AtomType>& LifeSimulationRules::getAtomTypes() {
+std::vector<AtomType>& SimulationRules::getAtomTypes() {
     return mAtomTypes;
 }
 
-unsigned int LifeSimulationRules::getAtomCount() {
+unsigned int SimulationRules::getAtomCount() {
     unsigned int count = 0;
     for (AtomType& atomType : mAtomTypes) {
         count += atomType.getQuantity();
@@ -171,13 +171,13 @@ unsigned int LifeSimulationRules::getAtomCount() {
     return count;
 }
 
-void LifeSimulationRules::clearInteractions() {
+void SimulationRules::clearInteractions() {
     for (InteractionSet& is : mInteractions) {
         is.value = 0.0f;
     }
 }
 
-void LifeSimulationRules::setInteraction(unsigned int aId, unsigned int bId, float interaction) {
+void SimulationRules::setInteraction(unsigned int aId, unsigned int bId, float interaction) {
     for (InteractionSet& is : mInteractions) {
         if (is.aId == aId && is.bId == bId) {
             is.value = interaction;
@@ -186,7 +186,7 @@ void LifeSimulationRules::setInteraction(unsigned int aId, unsigned int bId, flo
     }
 }
 
-float LifeSimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
+float SimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
     for (InteractionSet& is : mInteractions) {
         if (is.aId == aId && is.bId == bId) {
             return is.value;
@@ -195,19 +195,19 @@ float LifeSimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
     return 0.0f;
 }
 
-std::vector<InteractionSet>& LifeSimulationRules::getInteractions() {
+std::vector<InteractionSet>& SimulationRules::getInteractions() {
     return mInteractions;
 }
 
-void LifeSimulationRules::setAtomRadius(float atomRadius) {
+void SimulationRules::setAtomRadius(float atomRadius) {
     mAtomRadius = atomRadius;
 }
 
-float LifeSimulationRules::getAtomRadius() {
+float SimulationRules::getAtomRadius() {
     return mAtomRadius;
 }
 
-void LifeSimulationRules::createInteractionsForAtomType(AtomType& atomType) {
+void SimulationRules::createInteractionsForAtomType(AtomType& atomType) {
     for (AtomType& atomType2 : mAtomTypes) {
         if (&atomType == &atomType2) {
             continue;

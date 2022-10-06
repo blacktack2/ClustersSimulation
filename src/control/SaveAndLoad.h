@@ -3,7 +3,7 @@
 
 #include <regex>
 
-#include "LifeSimulationHandler.h"
+#include "SimulationHandler.h"
 
 #define MAX_FILE_COUNT 1000
 #define CONFIG_FILE_LOCATION "SimConfigs"
@@ -12,8 +12,8 @@ const std::regex CONFIG_FILE_REGEX = std::regex(CONFIG_FILE_LOCATION + std::stri
 
 bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count);
 
-bool saveToFile(std::string location, LifeSimulationHandler& handler);
-bool loadFromFile(std::string location, LifeSimulationHandler& handler);
+bool saveToFile(std::string location, SimulationHandler& handler);
+bool loadFromFile(std::string location, SimulationHandler& handler);
 
 bool parseFloat(std::string s, float& f);
 bool parseUint(std::string, unsigned int& i);

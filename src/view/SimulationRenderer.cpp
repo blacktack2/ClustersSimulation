@@ -1,17 +1,17 @@
-#include "LifeSimulationRenderer.h"
+#include "SimulationRenderer.h"
 
 #include "../../imgui/imgui.h"
 
-LifeSimulationRenderer::LifeSimulationRenderer(LifeSimulationHandler& handler) :
+SimulationRenderer::SimulationRenderer(SimulationHandler& handler) :
 mHandler(handler) {
 
 }
 
-LifeSimulationRenderer::~LifeSimulationRenderer() {
+SimulationRenderer::~SimulationRenderer() {
 
 }
 
-void LifeSimulationRenderer::drawSimulation(float startX, float startY, float width, float height) {
+void SimulationRenderer::drawSimulation(float startX, float startY, float width, float height) {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
     drawList->AddRectFilled(

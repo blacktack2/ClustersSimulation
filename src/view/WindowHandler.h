@@ -1,8 +1,8 @@
 #ifndef LIFESIMULATIONC_WINDOWHANDLER_H
 #define LIFESIMULATIONC_WINDOWHANDLER_H
 
-#include "../control/LifeSimulationHandler.h"
-#include "LifeSimulationRenderer.h"
+#include "../control/SimulationHandler.h"
+#include "SimulationRenderer.h"
 #include "../control/SaveAndLoad.h"
 
 #include "../../imgui/imgui.h"
@@ -56,8 +56,8 @@ private:
     SDL_GLContext mGlContext{};
     ImGuiIO mIo;
 
-    LifeSimulationHandler mLSHandler;
-    LifeSimulationRenderer mLSRenderer;
+    SimulationHandler mSimulationHandler;
+    SimulationRenderer mSimulationRenderer;
 
     std::string mFileSaveLocation;
     std::string mFileLoadLocations[MAX_FILE_COUNT];

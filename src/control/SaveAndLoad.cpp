@@ -23,7 +23,7 @@ bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
 	return true;
 }
 
-bool saveToFile(std::string location, LifeSimulationHandler& handler) {
+bool saveToFile(std::string location, SimulationHandler& handler) {
 	std::string data = "";
 
 	data += "Width:" + std::to_string(handler.getWidth()) + " Height:" + std::to_string(handler.getHeight()) + "\n";
@@ -52,14 +52,14 @@ bool saveToFile(std::string location, LifeSimulationHandler& handler) {
 	return true;
 }
 
-bool loadFromFile(std::string location, LifeSimulationHandler& handler) {
+bool loadFromFile(std::string location, SimulationHandler& handler) {
 	static const std::regex atomTypeRegex = std::regex("^ID:([0-9]+) Name:([A-Za-z0-9_-]+) Quantity:([0-9]+) R:([0-9]+(\\.[0-9]+)?) G:([0-9]+(\\.[0-9]+)?) B:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex interactionRegex = std::regex("^Aid:([0-9]+) Bid:([0-9]+) Value:(-?[0-9]+(\\.[0-9]+)?)$");
 	static const std::regex sizeRegex = std::regex("^Width:([0-9]+(\\.[0-9]+)?) Height:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex dtRegex = std::regex("^DT:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex dragRegex = std::regex("^Drag:([0-9]+(\\.[0-9]+)?)$");
 
-	LifeSimulationRules& rules = handler.getLSRules();
+	SimulationRules& rules = handler.getLSRules();
 	handler.clearAtomTypes();
 
 	std::string line;
@@ -147,11 +147,11 @@ bool parseFloat(std::string s, float& f) {
 	try {
 		f = std::stof(s, &pos);
 	} catch (std::invalid_argument const& ex) {
-		fprintf(stderr, "std::invalid_argument::what():\n", s.c_str(), ex.what());
+		fprintf(stderr, "std::invalid_argument::what():%s\n", ex.what());
 		return false;
 	} catch (std::out_of_range const& ex) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():\nstd::stoll('%s'): %ll; pos: %zu\n", ex.what(), s.c_str(), ll, pos);
+		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll('%ll'); pos: %zu\n", ex.what(), ll, pos);
 		return false;
 	}
 	return true;
@@ -166,11 +166,11 @@ bool parseUint(std::string s, unsigned int& i) {
 		}
 		i = l;
 	} catch (std::invalid_argument const& ex) {
-		fprintf(stderr, "std::invalid_argument::what():\n", s.c_str(), ex.what());
+		fprintf(stderr, "std::invalid_argument::what():%s\n", ex.what());
 		return false;
 	} catch (std::out_of_range const& ex) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():\nstd::stoll('%s'): %ll; pos: %zu\n", ex.what(), s.c_str(), ll, pos);
+		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll('%ll'); pos: %zu\n", ex.what(), ll, pos);
 		return false;
 	}
 	return true;
