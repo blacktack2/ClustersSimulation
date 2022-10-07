@@ -3,7 +3,9 @@
 #include <random>
 
 SimulationHandler::SimulationHandler() :
-mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f), mLSRules(), mInteractionRange(80), mInteractionRange2(6400) {
+mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f),
+mInteractionRange(80), mInteractionRange2(6400), mCollisionForce(1.0f),
+mLSRules() {
 
 }
 
@@ -47,6 +49,14 @@ void SimulationHandler::setInteractionRange(float interactionRange) {
 
 float SimulationHandler::getInteractionRange() {
     return mInteractionRange;
+}
+
+void SimulationHandler::setCollisionForce(float collisionForce) {
+    mCollisionForce = collisionForce;
+}
+
+float SimulationHandler::getCollisionForce() {
+    return mCollisionForce;
 }
 
 void SimulationHandler::clearAtoms() {
@@ -105,7 +115,7 @@ void SimulationHandler::iterateSimulation() {
                     if (d2 < mInteractionRange2) {
                         float d = sqrt(d2);
                         float f = g / d;
-                        f += (d < atomDiameter) ? (atomDiameter - d) * 1.0f / atomDiameter : 0.0f;
+                        f += (d < atomDiameter) ? (atomDiameter - d) * mCollisionForce / atomDiameter : 0.0f;
                         atomA.mFX += f * dX;
                         atomA.mFY += f * dY;
                     }

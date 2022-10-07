@@ -29,7 +29,7 @@ mFriendlyName(std::to_string(mId)), mAtoms() {
 AtomType::AtomType(unsigned int id) :
 mId(id), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u),
 mFriendlyName(std::to_string(mId)), mAtoms() {
-    idCounter = std::max(mId, idCounter);
+    idCounter = std::max(mId + 1, idCounter);
 
     std::random_device rd;
     std::mt19937 mt(rd());
@@ -43,7 +43,7 @@ mFriendlyName(std::to_string(mId)), mAtoms() {
 AtomType::AtomType(const AtomType& other) :
 mId(other.mId), mColor(other.mColor), mQuantity(other.mQuantity),
 mFriendlyName(other.mFriendlyName), mAtoms(other.mAtoms) {
-    idCounter = std::max(mId, idCounter);
+    idCounter = std::max(mId + 1, idCounter);
 }
 
 AtomType::~AtomType() {

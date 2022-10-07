@@ -367,6 +367,12 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         interactionRange = std::max(std::min(interactionRange, simScale / 2.0f), 1.0f);
         mSimulationHandler.setInteractionRange(interactionRange);
     }
+    ImGui::Text("Collision Force");
+    float collisionForce = mSimulationHandler.getCollisionForce();
+    if (ImGui::InputFloat("##Collision Force", &collisionForce, 0.01f, 0.1f, "%.2f")) {
+        collisionForce = std::max(std::min(collisionForce, 10.0f), 0.00f);
+        mSimulationHandler.setCollisionForce(collisionForce);
+    }
 
     SimulationRules& rules = mSimulationHandler.getLSRules();
 

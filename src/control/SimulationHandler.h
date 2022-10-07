@@ -23,6 +23,9 @@ public:
     void setInteractionRange(float interactionRange);
     float getInteractionRange();
 
+    void setCollisionForce(float collisionForce);
+    float getCollisionForce();
+
     void clearAtoms();
     void clearAtomTypes();
     void initSimulation();
@@ -41,6 +44,7 @@ private:
     float mDrag;
     float mInteractionRange;
     float mInteractionRange2;
+    float mCollisionForce;
 
     SimulationRules mLSRules;
 };
