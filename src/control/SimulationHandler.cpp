@@ -117,7 +117,7 @@ void SimulationHandler::iterateSimulation() {
             atom.mX += (atom.mX < 0) ? mSimWidth :
                 (atom.mX >= mSimWidth) ? -mSimWidth : 0.0f;
             atom.mY += (atom.mY < 0) ? mSimHeight :
-                (atom.mY >= mSimHeight) ? mSimHeight : 0.0f;
+                (atom.mY >= mSimHeight) ? -mSimHeight : 0.0f;
         }
     }
 }
