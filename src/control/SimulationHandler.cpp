@@ -1,10 +1,9 @@
 #include "SimulationHandler.h"
 
 #include <random>
-#include <vector>
 
 SimulationHandler::SimulationHandler() :
-mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f), mLSRules() {
+mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f), mLSRules(), mInteractionRange(80), mInteractionRange2(6400) {
 
 }
 
@@ -39,6 +38,15 @@ void SimulationHandler::setDrag(float drag) {
 
 float SimulationHandler::getDrag() {
     return mDrag;
+}
+
+void SimulationHandler::setInteractionRange(float interactionRange) {
+    mInteractionRange = interactionRange;
+    mInteractionRange2 = mInteractionRange * mInteractionRange;
+}
+
+float SimulationHandler::getInteractionRange() {
+    return mInteractionRange;
 }
 
 void SimulationHandler::clearAtoms() {
@@ -94,7 +102,7 @@ void SimulationHandler::iterateSimulation() {
                     }
 
                     float d2 = dX * dX + dY * dY;
-                    if (d2 < 6400) {
+                    if (d2 < mInteractionRange2) {
                         float d = sqrt(d2);
                         float f = g / d;
                         f += (d < atomDiameter) ? (atomDiameter - d) * 1.0f / atomDiameter : 0.0f;

@@ -29,6 +29,7 @@ bool saveToFile(std::string location, SimulationHandler& handler) {
 	data += "Width:" + std::to_string(handler.getWidth()) + " Height:" + std::to_string(handler.getHeight()) + "\n";
 	data += "DT:" + std::to_string(handler.getDt()) + "\n";
 	data += "Drag:" + std::to_string(handler.getDrag()) + "\n";
+	data += "Range:" + std::to_string(handler.getInteractionRange()) + "\n";
 
 	for (AtomType& atomType : handler.getLSRules().getAtomTypes()) {
 		data += "ID:" + std::to_string(atomType.getId()) + " Name:" + atomType.getFriendlyName() + " Quantity:" + std::to_string(atomType.getQuantity()) + " ";
@@ -58,6 +59,7 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 	static const std::regex sizeRegex = std::regex("^Width:([0-9]+(\\.[0-9]+)?) Height:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex dtRegex = std::regex("^DT:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex dragRegex = std::regex("^Drag:([0-9]+(\\.[0-9]+)?)$");
+	static const std::regex interactionRangeRegex = std::regex("^Range:([0-9]+(\\.[0-9]+)?)$");
 
 	SimulationRules& rules = handler.getLSRules();
 	handler.clearAtomTypes();
@@ -99,6 +101,13 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
 			} else {
 				handler.setDrag(drag);
+			}
+		} else if (std::regex_search(line, matches, interactionRangeRegex)) {
+			float interactionRange;
+			if (!parseFloat(matches[1], interactionRange)) {
+				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+			} else {
+				handler.setInteractionRange(interactionRange);
 			}
 		}
 	}

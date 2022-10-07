@@ -20,6 +20,9 @@ public:
     void setDrag(float drag);
     float getDrag();
 
+    void setInteractionRange(float interactionRange);
+    float getInteractionRange();
+
     void clearAtoms();
     void clearAtomTypes();
     void initSimulation();
@@ -36,6 +39,8 @@ private:
 
     float mDt;
     float mDrag;
+    float mInteractionRange;
+    float mInteractionRange2;
 
     SimulationRules mLSRules;
 };

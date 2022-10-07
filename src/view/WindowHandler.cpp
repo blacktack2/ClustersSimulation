@@ -361,6 +361,12 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         drag = std::max(std::min(drag, 1.0f), 0.0f);
         mSimulationHandler.setDrag(drag);
     }
+    ImGui::Text("Max Interaction Range");
+    float interactionRange = mSimulationHandler.getInteractionRange();
+    if (ImGui::InputFloat("##Max Interaction Range", &interactionRange, 1.0f, 10.0f, "%.0f")) {
+        interactionRange = std::max(std::min(interactionRange, simScale / 2.0f), 1.0f);
+        mSimulationHandler.setInteractionRange(interactionRange);
+    }
 
     SimulationRules& rules = mSimulationHandler.getLSRules();
 
