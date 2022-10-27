@@ -4,19 +4,48 @@
 
 static unsigned int idCounter = 0;
 
+#ifdef ITERATE_ON_COMPUTE_SHADER
+AtomType::AtomType() :
+id(idCounter++), r(0.0f), g(0.0f), b(0.0f), friendlyName(), quantity(200) {
+
+}
+
+AtomType::AtomType(unsigned int id_) :
+id(id_), r(0.0f), g(0.0f), b(0.0f), friendlyName(), quantity(200) {
+    idCounter = std::max(idCounter, id + 1);
+}
+
+AtomTypeRaw::AtomTypeRaw() :
+r(0.0f), g(0.0f), b(0.0f) {
+}
+
+AtomTypeRaw::AtomTypeRaw(AtomType at) :
+r(at.r), g(at.g), b(at.b) {
+}
+
 Atom::Atom() :
-mX(0.0f), mY(0.0f), mVX(0.0f), mVY(0.0f), mFX(0.0f), mFY(0.0f) {
+atomType(0), x(0), y(0), vx(0), vy(0), fx(0), fy(0) {
+
+}
+
+Atom::Atom(unsigned int atomType_) :
+atomType(atomType_), x(0), y(0), vx(0), vy(0), fx(0), fy(0) {
+
+}
+#else
+Atom::Atom(AtomType* atomType) :
+mAtomType(atomType), mX(0.0f), mY(0.0f), mVX(0.0f), mVY(0.0f), mFX(0.0f), mFY(0.0f) {
 
 }
 
 Atom::Atom(const Atom& other) :
-mX(other.mX), mY(other.mY), mVX(other.mVX), mVY(other.mVY), mFX(other.mFX), mFY(other.mFY) {
+mAtomType(other.mAtomType), mX(other.mX), mY(other.mY), mVX(other.mVX), mVY(other.mVY), mFX(other.mFX), mFY(other.mFY) {
 
 }
 
 AtomType::AtomType() :
 mId(idCounter++), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u),
-mFriendlyName(std::to_string(mId)), mAtoms() {
+mFriendlyName(std::to_string(mId)) {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
@@ -28,7 +57,7 @@ mFriendlyName(std::to_string(mId)), mAtoms() {
 
 AtomType::AtomType(unsigned int id) :
 mId(id), mColor({0.0f, 0.0f, 0.0f}), mQuantity(200u),
-mFriendlyName(std::to_string(mId)), mAtoms() {
+mFriendlyName(std::to_string(mId)) {
     idCounter = std::max(mId + 1, idCounter);
 
     std::random_device rd;
@@ -42,7 +71,7 @@ mFriendlyName(std::to_string(mId)), mAtoms() {
 
 AtomType::AtomType(const AtomType& other) :
 mId(other.mId), mColor(other.mColor), mQuantity(other.mQuantity),
-mFriendlyName(other.mFriendlyName), mAtoms(other.mAtoms) {
+mFriendlyName(other.mFriendlyName) {
     idCounter = std::max(mId + 1, idCounter);
 }
 
@@ -90,18 +119,6 @@ void AtomType::setFriendlyName(std::string friendlyName) {
     mFriendlyName = std::move(friendlyName);
 }
 
-Atom& AtomType::newAtom() {
-    return mAtoms.emplace_back();
-}
-
-std::vector<Atom>& AtomType::getAtoms() {
-    return mAtoms;
-}
-
-void AtomType::clearAtoms() {
-    mAtoms.clear();
-}
-
 SimulationRules::SimulationRules() :
 mAtomRadius(3.0f), mAtomTypes(), mInteractions() {
 
@@ -116,57 +133,57 @@ void SimulationRules::clearAtomTypes() {
     mInteractions.clear();
 }
 
-AtomType& SimulationRules::newAtomType() {
-    AtomType& at = mAtomTypes.emplace_back();
+AtomType* SimulationRules::newAtomType() {
+    AtomType* at = mAtomTypes.emplace_back(std::unique_ptr<AtomType>(new AtomType)).get();
     createInteractionsForAtomType(at);
     return at;
 }
 
-AtomType& SimulationRules::newAtomType(unsigned int id) {
-    std::optional<std::reference_wrapper<AtomType>> exists = getAtomType(id);
-    if (exists.has_value()) {
-        return exists.value();
+AtomType* SimulationRules::newAtomType(unsigned int id) {
+    AtomType* exists = getAtomType(id);
+    if (exists != nullptr) {
+        return exists;
     }
 
-    AtomType& at = mAtomTypes.emplace_back(id);
+    AtomType* at = mAtomTypes.emplace_back(std::unique_ptr<AtomType>(new AtomType(id))).get();
     createInteractionsForAtomType(at);
     return at;
 }
 
-std::optional<std::reference_wrapper<AtomType>> SimulationRules::getAtomType(unsigned int atomTypeId) {
-    for (AtomType& atomType : mAtomTypes) {
-        if (atomType.getId() == atomTypeId) {
-            return atomType;
+AtomType* SimulationRules::getAtomType(unsigned int atomTypeId) {
+    for (std::unique_ptr<AtomType>& atomType : mAtomTypes) {
+        if (atomType->getId() == atomTypeId) {
+            return atomType.get();
         }
     }
-    return std::optional<std::reference_wrapper<AtomType>>();
+    return nullptr;
 }
 
 void SimulationRules::removeAtomType(unsigned int atomTypeId) {
     mInteractions.erase(
         std::remove_if(
             mInteractions.begin(), mInteractions.end(),
-            [atomTypeId](InteractionSet is) {
+            [atomTypeId](InteractionSet& is) {
                 return is.aId == atomTypeId || is.bId == atomTypeId;
             }), mInteractions.end()
                 );
     mAtomTypes.erase(
         std::remove_if(
             mAtomTypes.begin(), mAtomTypes.end(),
-            [atomTypeId](AtomType& atomType) {
-                return atomType.getId() == atomTypeId;
+            [atomTypeId](std::unique_ptr<AtomType>& atomType) {
+                return atomType->getId() == atomTypeId;
             }), mAtomTypes.end()
                 );
 }
 
-std::vector<AtomType>& SimulationRules::getAtomTypes() {
+std::vector<std::unique_ptr<AtomType>>& SimulationRules::getAtomTypes() {
     return mAtomTypes;
 }
 
 unsigned int SimulationRules::getAtomCount() {
     unsigned int count = 0;
-    for (AtomType& atomType : mAtomTypes) {
-        count += atomType.getQuantity();
+    for (std::unique_ptr<AtomType>& atomType : mAtomTypes) {
+        count += atomType->getQuantity();
     }
     return count;
 }
@@ -207,19 +224,20 @@ float SimulationRules::getAtomRadius() {
     return mAtomRadius;
 }
 
-void SimulationRules::createInteractionsForAtomType(AtomType& atomType) {
-    for (AtomType& atomType2 : mAtomTypes) {
-        if (&atomType == &atomType2) {
+void SimulationRules::createInteractionsForAtomType(AtomType* atomType) {
+    for (std::unique_ptr<AtomType>& atomType2 : mAtomTypes) {
+        if (atomType == atomType2.get()) {
             continue;
         }
-        InteractionSet is1 = {atomType2.getId(), atomType.getId(), 0};
-        InteractionSet is2 = {atomType.getId(), atomType2.getId(), 0};
+        InteractionSet is1 = {atomType2->getId(), atomType->getId(), 0};
+        InteractionSet is2 = {atomType->getId(), atomType2->getId(), 0};
         mInteractions.push_back(is1);
         mInteractions.push_back(is2);
     }
-    InteractionSet interactionSet = {atomType.getId(), atomType.getId(), 0};
+    InteractionSet interactionSet = {atomType->getId(), atomType->getId(), 0};
     mInteractions.push_back(interactionSet);
 }
+#endif
 
 Color hslToColor(float h, float s, float l) {
     float c = (1 - std::abs(2 * l - 1)) * s;

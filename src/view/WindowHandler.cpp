@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>
 
+#include <array>
 #include <cstdio>
 #include <chrono>
 #include <filesystem>
@@ -135,14 +136,34 @@ bool WindowHandler::init() {
 
     glClearColor(0, 0, 0, 1);
 
-    mSimulationHandler.setBounds(1000.0f, 1000.0f);
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    mSimulationHandler.initComputeShaders();
+#endif
 
     if (!getLoadableFiles(mFileLoadLocations, mFileLoadCount)) {
         fprintf(stderr, "Failed to read config files!\n");
         return false;
     }
     loadFromFile("resources/current.csdat", mSimulationHandler);
+
     mSimulationHandler.initSimulation();
+
+#ifdef _DEBUG
+    glCheckError();
+#endif
+
+//#ifdef ITERATE_ON_COMPUTE_SHADER
+//#ifdef _DEBUG
+//    int flags;
+//    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+//    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+//        glEnable(GL_DEBUG_OUTPUT);
+//        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
+//        glDebugMessageCallback(glDebugOutput, nullptr);
+//        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+//    } 
+//#endif
+//#endif
 
     return true;
 }
@@ -151,12 +172,11 @@ void WindowHandler::mainloop() {
 
     SDL_Event e;
 
-    unsigned int fpsHistory[] = {0, 0, 0, 0, 0};
-    int fpsIndex = 0;
-    unsigned int fpsTotal = 0;
-    int fpsCounter = 0;
-
-    unsigned int lastFpsCheck = 0;
+    float mspfTotal = 0;
+    float mspf = 1;
+    float delta = 0;
+    unsigned int lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    int frameCounter = 0;
 
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowPadding,
@@ -165,18 +185,14 @@ void WindowHandler::mainloop() {
 
     while (mRunning) {
         unsigned int currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        if (currentTime - lastFpsCheck >= 1000) {
-            lastFpsCheck = currentTime;
-            fpsIndex++;
-            if (fpsIndex > 4) {
-                fpsIndex = 0;
-            }
-            fpsTotal -= fpsHistory[fpsIndex];
-            fpsTotal += fpsCounter;
-            fpsHistory[fpsIndex] = fpsCounter;
-
-            fpsCounter = 0;
+        delta += currentTime - lastTime;
+        lastTime = currentTime;
+        if (delta > 1000.0f) {
+            mspf = delta / frameCounter;
+            delta = 0.0f;
+            frameCounter = 0;
         }
+        frameCounter++;
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -223,7 +239,7 @@ void WindowHandler::mainloop() {
 
             ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-            drawDebugPanel(static_cast<float>(fpsTotal) / 10.0f);
+            drawDebugPanel(mspf);
 
             ImGui::End();
 
@@ -262,8 +278,6 @@ void WindowHandler::mainloop() {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         SDL_GL_SwapWindow(mWindow);
-
-        fpsCounter++;
 
         if (mSimulationRunning) {
             mSimulationHandler.iterateSimulation();
@@ -310,16 +324,16 @@ void WindowHandler::handleEvent(SDL_Event& e) {
     }
 }
 
-void WindowHandler::drawDebugPanel(float fps) {
+void WindowHandler::drawDebugPanel(float mspf) {
     const ImVec4 debugTextColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
     ImGui::TextColored(
             debugTextColor,
-            "[FPS: %f]", fps
+            "[FPS: %.2f | %.2fms]", 1000.0f / mspf, mspf
     );
     ImGui::TextColored(
             debugTextColor,
-            "Atom Count: %zu", mSimulationHandler.getLSRules().getAtomCount()
+            "Atom Count: %zu", mSimulationHandler.getAtomCount()
     );
 }
 
@@ -329,6 +343,10 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
     mSimulationRunning = mSimulationRunning ?
         !ImGui::Button("Pause##PlayPause", ImVec2(ImGui::GetContentRegionAvail().x, 0)) :
         ImGui::Button("Play##PlayPause", ImVec2(ImGui::GetContentRegionAvail().x, 0));
+    if (ImGui::Button("Single Iteration", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+        mSimulationRunning = false;
+        mSimulationHandler.iterateSimulation();
+    }
 
     ImGui::Button("Re-generate Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
         mSimulationHandler.initSimulation() : 0;
@@ -339,7 +357,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
     ImGui::Button("Randomize Positions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
         mSimulationHandler.shuffleAtomPositions() : 0;
     ImGui::Button("Zero Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
-        mSimulationHandler.getLSRules().clearInteractions() : 0;
+        mSimulationHandler.zeroAtomInteractions() : 0;
     ImGui::Button("Shuffle Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
         mSimulationHandler.shuffleAtomInteractions() : 0;
 
@@ -374,81 +392,76 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         mSimulationHandler.setCollisionForce(collisionForce);
     }
 
-    SimulationRules& rules = mSimulationHandler.getLSRules();
-
     if (ImGui::Button("Add Atom Type", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-        rules.newAtomType();
+        mSimulationHandler.newAtomType();
     }
-    std::vector<AtomType>& atomTypes = rules.getAtomTypes();
-    for (AtomType& atomType : atomTypes) {
+    std::vector<unsigned int> atomTypes = mSimulationHandler.getAtomTypeIds();
+    for (unsigned int atomTypeId : atomTypes) {
         ImGui::Separator();
-        unsigned int atomId = atomType.getId();
-        std::string atomIdStr = std::to_string(atomId);
-        Color c = atomType.getColor();
+        std::string atomIdStr = std::to_string(atomTypeId);
+        Color c = mSimulationHandler.getAtomTypeColor(atomTypeId);
 
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(c.r, c.g, c.b, 1.0));
-        // Textbox for the friendly name of each AtomType
-        std::string friendlyName = atomType.getFriendlyName();
+        std::string friendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId);
         label = "##FriendlyNameText-" + atomIdStr;
         if (ImGui::InputText(label.c_str(), &friendlyName)) {
-            atomType.setFriendlyName(friendlyName);
+            mSimulationHandler.setAtomTypeFriendlyName(atomTypeId, friendlyName);
         }
         ImGui::PopStyleColor(1);
 
         ImGui::SameLine();
         ImGui::Text(atomIdStr.c_str());
 
-        // Three 0.0-1.0 float inputs for the rgb color of each AtomType
         float r = c.r;
         float g = c.g;
         float b = c.b;
         ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
         label = "##ColorRedSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &r, 0.0f, 1.0f)) {
-            atomType.setColorR(r);
+            mSimulationHandler.setAtomTypeColorR(atomTypeId, r);
         }
         ImGui::SameLine();
         label = "##ColorGreenSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &g, 0.0f, 1.0f)) {
-            atomType.setColorG(g);
+            mSimulationHandler.setAtomTypeColorG(atomTypeId, g);
         }
         ImGui::SameLine();
         label = "##ColorBlueSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &b, 0.0f, 1.0f)) {
-            atomType.setColorB(b);
+            mSimulationHandler.setAtomTypeColorB(atomTypeId, b);
         }
         ImGui::PopItemWidth();
 
-        int quantity = atomType.getQuantity();
+        int quantity = mSimulationHandler.getAtomTypeQuantity(atomTypeId);
         label = "Quantity##QuantityInt-" + atomIdStr;
         if (ImGui::InputInt(label.c_str(), &quantity)) {
-            atomType.setQuantity(quantity);
+            mSimulationHandler.setAtomTypeQuantity(atomTypeId, quantity);
         }
 
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 3 / 4);
-        for (AtomType& atomType2 : atomTypes) {
-            unsigned int atom2Id = atomType2.getId();
-            std::string atom2IdStr = std::to_string(atom2Id);
-            Color atom2Color = atomType2.getColor();
-            ImGui::TextColored(ImVec4(r, g, b, 1.0f), atomType.getFriendlyName().c_str());
+        for (unsigned int atomTypeId2 : atomTypes) {
+            std::string atom2IdStr = std::to_string(atomTypeId2);
+            Color atom2Color = mSimulationHandler.getAtomTypeColor(atomTypeId2);
+            std::string atom2FriendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId2);
+            ImGui::TextColored(ImVec4(r, g, b, 1.0f), friendlyName.c_str());
             ImGui::SameLine();
             ImGui::Text("->");
             ImGui::SameLine();
-            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), atomType2.getFriendlyName().c_str());
+            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), atom2FriendlyName.c_str());
             label = "0##ZeroButton-" + atomIdStr + "-" + atom2IdStr;
             if (ImGui::Button(label.c_str())) {
-                rules.setInteraction(atomId, atom2Id, 0);
+                mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, 0);
             }
             ImGui::SameLine();
-            float interaction = rules.getInteraction(atomId, atom2Id);
+            float interaction = mSimulationHandler.getInteraction(atomTypeId, atomTypeId2);
             label = "##InteractionSlider-" + atomIdStr + "-" + atom2IdStr;
             if (ImGui::SliderFloat(label.c_str(), &interaction, -1.0f, 1.0f)) {
-                rules.setInteraction(atomId, atom2Id, interaction);
+                mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, interaction);
             }
         }
         label = "Delete Atom Type [" + friendlyName + "]##DeleteButton-" + atomIdStr;
         if (ImGui::Button(label.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-            mSimulationHandler.removeAtomType(atomId);
+            mSimulationHandler.removeAtomType(atomTypeId);
         }
         ImGui::PopItemWidth();
     }

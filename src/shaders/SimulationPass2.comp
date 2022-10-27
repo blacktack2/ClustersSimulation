@@ -1,0 +1,62 @@
+#version 430 core
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct AtomType {
+	float r;
+	float g;
+	float b;
+};
+
+layout(std430, binding = 1) buffer AtomTypeBuffer {
+	AtomType atomTypes[50];
+};
+
+struct Atom {
+    float x, y, vx, vy, fx, fy;
+	uint atomType;
+};
+
+layout(std430, binding = 2) buffer AtomBuffer {
+	Atom atoms[10000];
+};
+
+layout(std430, binding = 3) buffer InteractionBuffer {
+	float interactions[2500];
+};
+#define INTERACTION_INDEX(aId, bId) aId == bId ? aId * aId : (aId < bId ? bId * bId + aId * 2 + 1 : aId * aId + bId * 2 + 2)
+
+uniform vec2 simulationBounds = vec2(500.0f, 500.0f);
+uniform float interactionRange2 = 6400.0f;
+uniform float atomDiameter = 3.0f;
+uniform float collisionForce = 1.0f;
+uniform float dragForce = 0.5f;
+
+void main() {
+	uvec2 id = gl_GlobalInvocationID.xy;
+	if (id.x == id.y)
+		return;
+
+	Atom atomA = atoms[id.x];
+	Atom atomB = atoms[id.y];
+	float g = interactions[INTERACTION_INDEX(atomA.atomType, atomB.atomType)];
+
+	vec2 delta = vec2(atomA.x - atomB.x, atomA.y - atomB.y);
+
+	vec2 deltaAbs = abs(delta);
+	vec2 deltaAlt = simulationBounds - deltaAbs;
+	delta.x = (deltaAlt.x < deltaAbs.x) ? deltaAlt.x * (atomA.x < atomB.x ? 1.0f : -1.0f) : delta.x;
+	delta.y = (deltaAlt.y < deltaAbs.y) ? deltaAlt.y * (atomA.y < atomB.y ? 1.0f : -1.0f) : delta.y;
+	if (delta == vec2(0.0f, 0.0f))
+		return;
+
+	float d2 = dot(delta, delta);
+	if (d2 < interactionRange2) {
+		float d = sqrt(d2);
+		float f = g / d;
+		f += (d < atomDiameter) ? (atomDiameter - d) * collisionForce / atomDiameter : 0.0f;
+		atomA.fx += f * delta.x;
+		atomA.fy += f * delta.y;
+		atoms[id.x] = atomA;
+	}
+}

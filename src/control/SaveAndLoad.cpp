@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 
 bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
@@ -32,14 +33,19 @@ bool saveToFile(std::string location, SimulationHandler& handler) {
 	data += "Range:" + std::to_string(handler.getInteractionRange()) + "\n";
 	data += "CollisionForce:" + std::to_string(handler.getCollisionForce()) + "\n";
 
-	for (AtomType& atomType : handler.getLSRules().getAtomTypes()) {
-		data += "ID:" + std::to_string(atomType.getId()) + " Name:" + atomType.getFriendlyName() + " Quantity:" + std::to_string(atomType.getQuantity()) + " ";
-		Color c = atomType.getColor();
-		data += "R:" + std::to_string(c.r) + " G:" + std::to_string(c.g) + " B:" + std::to_string(c.b) + "\n";
+	std::vector<unsigned int> atomTypeIds = handler.getAtomTypeIds();
+	for (unsigned int atomTypeId : atomTypeIds) {
+		std::string name = handler.getAtomTypeFriendlyName(atomTypeId);
+		unsigned int quantity = handler.getAtomTypeQuantity(atomTypeId);
+		data += "ID:" + std::to_string(atomTypeId) + " Name:" + name + " Quantity:" + std::to_string(quantity) + " ";
+		Color color = handler.getAtomTypeColor(atomTypeId);
+		data += "R:" + std::to_string(color.r) + " G:" + std::to_string(color.g) + " B:" + std::to_string(color.b) + "\n";
 	}
 
-	for (InteractionSet is : handler.getLSRules().getInteractions()) {
-		data += "Aid:" + std::to_string(is.aId) + " Bid:" + std::to_string(is.bId) + " Value:" + std::to_string(is.value) + "\n";
+	for (unsigned int aId : atomTypeIds) {
+		for (unsigned int bId : atomTypeIds) {
+			data += "Aid:" + std::to_string(aId) + " Bid:" + std::to_string(bId) + " Value:" + std::to_string(handler.getInteraction(aId, bId)) + "\n";
+		}
 	}
 
 	std::ofstream file;
@@ -55,7 +61,7 @@ bool saveToFile(std::string location, SimulationHandler& handler) {
 }
 
 bool loadFromFile(std::string location, SimulationHandler& handler) {
-	static const std::regex atomTypeRegex = std::regex("^ID:([0-9]+) Name:([A-Za-z0-9_-]+) Quantity:([0-9]+) R:([0-9]+(\\.[0-9]+)?) G:([0-9]+(\\.[0-9]+)?) B:([0-9]+(\\.[0-9]+)?)$");
+	static const std::regex atomTypeRegex = std::regex("^ID:([0-9]+) Name:([A-Za-z0-9_-]*) Quantity:([0-9]+) R:([0-9]+(\\.[0-9]+)?) G:([0-9]+(\\.[0-9]+)?) B:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex interactionRegex = std::regex("^Aid:([0-9]+) Bid:([0-9]+) Value:(-?[0-9]+(\\.[0-9]+)?)$");
 	static const std::regex sizeRegex = std::regex("^Width:([0-9]+(\\.[0-9]+)?) Height:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex dtRegex = std::regex("^DT:([0-9]+(\\.[0-9]+)?)$");
@@ -63,7 +69,6 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 	static const std::regex interactionRangeRegex = std::regex("^Range:([0-9]+(\\.[0-9]+)?)$");
 	static const std::regex collisionForceRegex = std::regex("^CollisionForce:([0-9]+(\\.[0-9]+)?)$");
 
-	SimulationRules& rules = handler.getLSRules();
 	handler.clearAtomTypes();
 
 	std::string line;
@@ -122,6 +127,7 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 	}
 	file.close();
 
+	std::map<unsigned int, unsigned int> idMap;
 	for (std::string l : atomTypes) {
 		std::smatch matches;
 		if (std::regex_search(l, matches, atomTypeRegex)) {
@@ -135,10 +141,11 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 				!parseFloat(matches[4], r) || !parseFloat(matches[6], g) || !parseFloat(matches[8], b)) {
 				fprintf(stderr, "Failed to parse AtomType values! Line: %s", matches.str(0).c_str());
 			} else {
-				AtomType& at = rules.newAtomType(id);
-				at.setFriendlyName(name);
-				at.setQuantity(quantity);
-				at.setColor({r, g, b});
+				unsigned int newId = handler.newAtomType();
+				idMap.emplace(id, newId);
+				handler.setAtomTypeFriendlyName(newId, name);
+				handler.setAtomTypeQuantity(newId, quantity);
+				handler.setAtomTypeColor(newId, { r, g, b });
 			}
 		}
 	}
@@ -152,7 +159,7 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 			if (!parseUint(matches[1], aId) || !parseUint(matches[2], bId) || !parseFloat(matches[3], value)) {
 				fprintf(stderr, "Failed to parse interaction values! Line: %s", matches.str(0).c_str());
 			} else {
-				rules.setInteraction(aId, bId, value);
+				handler.setInteraction(idMap[aId], idMap[bId], value);
 			}
 		}
 	}

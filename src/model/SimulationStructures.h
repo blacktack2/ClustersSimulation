@@ -12,20 +12,40 @@ struct Color {
     float b;
 };
 
-class Atom {
-public:
-    Atom();
-    Atom(const Atom& other);
+#ifdef ITERATE_ON_COMPUTE_SHADER
+struct vec2 { float x; float y; };
+struct uvec2 { unsigned int x; unsigned int y; };
 
-    float mX;
-    float mY;
+struct AtomType {
+    AtomType();
+    explicit AtomType(unsigned int id);
+    unsigned int id;
 
-    float mVX;
-    float mVY;
+    float r;
+    float g;
+    float b;
 
-    float mFX;
-    float mFY;
+    unsigned int quantity;
+    std::string friendlyName;
 };
+
+struct AtomTypeRaw {
+    explicit AtomTypeRaw();
+    explicit AtomTypeRaw(AtomType at);
+    float r;
+    float g;
+    float b;
+};
+
+struct Atom {
+    Atom();
+    explicit Atom(unsigned int atomType);
+
+    float x, y, vx, vy, fx, fy;
+
+    unsigned int atomType;
+};
+#else
 
 class AtomType {
 public:
@@ -33,18 +53,6 @@ public:
     AtomType(unsigned int id);
     AtomType(const AtomType& other);
     ~AtomType();
-    AtomType& operator=(AtomType&& other) noexcept {
-        if (this == &other) {
-            return *this;
-        }
-
-        mColor = other.mColor;
-        mQuantity = other.mQuantity;
-        mFriendlyName = other.mFriendlyName;
-        mAtoms = other.mAtoms;
-
-        return *this;
-    }
 
     [[nodiscard]] unsigned int getId() const;
 
@@ -60,19 +68,29 @@ public:
 
     std::string getFriendlyName();
     void setFriendlyName(std::string friendlyName);
-
-    Atom& newAtom();
-    std::vector<Atom>& getAtoms();
-    void clearAtoms();
 private:
-    const unsigned int mId;
+    unsigned int mId;
 
     Color mColor;
     unsigned int mQuantity;
 
     std::string mFriendlyName;
+};
 
-    std::vector<Atom> mAtoms;
+struct Atom {
+    Atom(AtomType* atomType);
+    Atom(const Atom& other);
+
+    AtomType* mAtomType;
+
+    float mX;
+    float mY;
+
+    float mVX;
+    float mVY;
+
+    float mFX;
+    float mFY;
 };
 
 struct InteractionSet {
@@ -88,12 +106,12 @@ public:
 
     void clearAtomTypes();
 
-    AtomType& newAtomType();
-    AtomType& newAtomType(unsigned int id);
-    std::optional<std::reference_wrapper<AtomType>> getAtomType(unsigned int atomTypeId);
+    AtomType* newAtomType();
+    AtomType* newAtomType(unsigned int id);
+    AtomType* getAtomType(unsigned int atomTypeId);
     void removeAtomType(unsigned int atomTypeId);
 
-    std::vector<AtomType>& getAtomTypes();
+    std::vector<std::unique_ptr<AtomType>>& getAtomTypes();
 
     unsigned int getAtomCount();
 
@@ -105,13 +123,14 @@ public:
     void setAtomRadius(float atomRadius);
     float getAtomRadius();
 private:
-    void createInteractionsForAtomType(AtomType& atomType);
+    void createInteractionsForAtomType(AtomType* atomType);
 
     float mAtomRadius;
 
-    std::vector<AtomType> mAtomTypes;
+    std::vector<std::unique_ptr<AtomType>> mAtomTypes;
     std::vector<InteractionSet> mInteractions;
 };
+#endif
 
 Color hslToColor(float h, float s, float l);
 

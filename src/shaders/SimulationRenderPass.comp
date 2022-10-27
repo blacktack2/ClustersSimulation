@@ -1,0 +1,37 @@
+#version 430 core
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct Atom {
+    float x, y, vx, vy, fx, fy;
+	uint atomType;
+};
+
+layout(std430, binding = 2) buffer AtomBuffer {
+	Atom atoms[10000];
+};
+
+layout(rgba32f, binding = 4) uniform image2D imgOutput;
+
+uniform vec2 simulationBounds = vec2(1000.0f, 1000.0f);
+uniform float interactionRange2 = 6400.0f;
+uniform float atomDiameter = 3.0f;
+uniform float collisionForce = 1.0f;
+uniform float dragForce = 0.5f;
+
+void main() {
+	uint id = gl_GlobalInvocationID.x;
+	Atom atom = atoms[id];
+	for (int i = 0; i < 10; i++)
+		imageStore(imgOutput, ivec2(id, i), vec4(1.0f, 0.0f, 0.0f, 1.0f));
+	/*
+	vec3 color = vec3(0.0f);
+	for (int i = 0; i < atomTypes.length(); i++) {
+		if (atomTypes[i].id == atom.atomType) {
+			color = vec3(atomTypes[i].r, atomTypes[i].g, atomTypes[i].b);
+			break;
+		}
+	}
+
+	imageStore(imgOutput, ivec2(atom.position * imageSize(imgOutput) / simulationBounds), vec4(color, 1.0f));*/
+}

@@ -5,6 +5,7 @@ project(ClustersSimulation)
 set(CMAKE_CXX_STANDARD 17)
 
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY src/shaders DESTINATION ${CMAKE_BINARY_DIR})
 
 find_package(OpenGL REQUIRED)
 
@@ -54,29 +55,35 @@ include_directories(
 file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "src/*.h" "src/*.cpp")
 file(GLOB_RECURSE IMGUI_SRC CONFIGURE_DEPENDS "imgui/*.h" "imgui/*.cpp")
 
-if (WIN32)
-    add_executable(${CMAKE_PROJECT_NAME} WIN32 ${SRC} ${IMGUI_SRC})
-    target_link_libraries(${CMAKE_PROJECT_NAME}
-            "glad"
-            ${SDL}
-            ${SDLmain}
-            ${OPENGL_gl_LIBRARY}
-            )
-else()
-    add_executable(${CMAKE_PROJECT_NAME} ${SRC} ${IMGUI_SRC})
-    target_link_libraries(${CMAKE_PROJECT_NAME}
-            "glad"
-            ${OPENGL_gl_LIBRARY}
-            )
-    if (APPLE)
-        target_link_libraries(${CMAKE_PROJECT_NAME}
+set(EXECUTABLES ${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_NAME}_GPU)
+foreach (executable IN LISTS EXECUTABLES)
+    message("Creating executable: " ${executable}.exe)
+    if (WIN32)
+        add_executable(${executable} WIN32 ${SRC} ${IMGUI_SRC})
+        target_link_libraries(${executable}
+                "glad"
                 ${SDL}
+                ${SDLmain}
+                ${OPENGL_gl_LIBRARY}
                 )
-    endif()
-    if (UNIX AND NOT APPLE)
-        target_link_libraries(${CMAKE_PROJECT_NAME}
-                ${SDL2_LIBRARIES}
-                ${CMAKE_DL_LIBS}
+    else()
+        add_executable(${executable} ${SRC} ${IMGUI_SRC})
+        target_link_libraries(${executable}
+                "glad"
+                ${OPENGL_gl_LIBRARY}
                 )
+        if (APPLE)
+            target_link_libraries(${executable}
+                    ${SDL}
+                    )
+        endif()
+        if (UNIX AND NOT APPLE)
+            target_link_libraries(${executable}
+                    ${SDL2_LIBRARIES}
+                    ${CMAKE_DL_LIBS}
+                    )
+        endif()
     endif()
-endif()
+endforeach()
+
+target_compile_definitions(${CMAKE_PROJECT_NAME}_GPU PUBLIC ITERATE_ON_COMPUTE_SHADER)
