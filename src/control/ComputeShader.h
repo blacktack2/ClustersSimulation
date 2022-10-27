@@ -1,5 +1,4 @@
 #pragma once
-
 #include "glad/glad.h"
 
 #include <array>
@@ -20,6 +19,9 @@ public:
 
 	void readBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size);
 	void writeBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size);
+
+	void setUniform(std::string location, GLfloat value);
+	void setUniform(std::string location, GLfloat value1, GLfloat value2);
 
 	bool isValid();
 private:

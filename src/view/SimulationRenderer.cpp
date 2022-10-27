@@ -17,7 +17,6 @@ SimulationRenderer::~SimulationRenderer() {
 
 void SimulationRenderer::drawSimulation(float startX, float startY, float width, float height) {
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    //ImGui::Image((ImTextureID) mHandler.getRenderTexture(), ImVec2(width, height));
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
     drawList->AddRectFilled(

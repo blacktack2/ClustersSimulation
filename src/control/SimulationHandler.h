@@ -1,8 +1,6 @@
 #ifndef LIFESIMULATIONC_LIFESIMULATIONHANDLER_H
 #define LIFESIMULATIONC_LIFESIMULATIONHANDLER_H
 
-//#define ITERATE_ON_COMPUTE_SHADER
-
 #include "GLUtilities.h"
 #include "../model/SimulationStructures.h"
 #ifdef ITERATE_ON_COMPUTE_SHADER
@@ -30,8 +28,6 @@ public:
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
     void initComputeShaders();
-
-    //void updateRenderTexture(int width, int height);
 #endif
 
     void setBounds(float simWidth, float simHeight);
@@ -55,7 +51,6 @@ public:
     void iterateSimulation();
 
     unsigned int newAtomType();
-    //void newAtomType(unsigned int id);
     void removeAtomType(unsigned int atomTypeId);
     void clearAtomTypes();
 
@@ -79,23 +74,12 @@ public:
 
     unsigned int getAtomCount();
 
-    //GLuint getRenderTexture();
-
 #ifdef ITERATE_ON_COMPUTE_SHADER
     std::array<Atom, ATOMS_BUFFER_SIZE>& getAtoms();
 #else
     std::vector<Atom>& getAtoms();
 #endif
 private:
-#ifdef ITERATE_ON_COMPUTE_SHADER
-    //void newRenderTexture(int width, int height);
-    //void simulationRenderPass();
-
-    //void readAtomsBuffer();
-    //void writeAtomsBuffer();
-    //void writeAtomTypesBuffer();
-    //void writeInteractionsBuffer();
-#endif
     float mSimWidth;
     float mSimHeight;
 
@@ -108,16 +92,6 @@ private:
 #ifdef ITERATE_ON_COMPUTE_SHADER
 
     ComputeShader mIterationComputeShader;
-
-    //GLuint mComputeShaderPass1;
-    //GLuint mComputeShaderPass2;
-    //GLuint mComputeShaderPass3;
-    //GLuint mComputeShaderRenderPass;
-
-    //GLuint mSimulationShaderPass1Program;
-    //GLuint mSimulationShaderPass2Program;
-    //GLuint mSimulationShaderPass3Program;
-    //GLuint mSimulationShaderRenderPassProgram;
 
     GLuint mAtomTypesBufferID;
     GLuint mAtomsBufferID;
@@ -132,7 +106,12 @@ private:
     std::array<Atom, ATOMS_BUFFER_SIZE> mAtomsBuffer;
     std::array<float, INTERACTIONS_BUFFER_SIZE> mInteractionsBuffer;
 
-    //GLuint mRenderTexture;
+    const std::string SIMULATION_BOUNDS_UNIFORM = "simulationBounds";
+    const std::string INTERACTION_RANGE2_UNIFORM = "interactionRange2";
+    const std::string ATOM_DIAMETER_UNIFORM = "atomDiameter";
+    const std::string COLLISION_FORCE_UNIFORM = "collisionForce";
+    const std::string DRAG_FORCE_UNIFORM = "dragForce";
+    const std::string DT_UNIFORM = "dt";
 #else
     std::vector<Atom> mAtoms;
     SimulationRules mLSRules;

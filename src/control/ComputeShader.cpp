@@ -88,6 +88,26 @@ void ComputeShader::writeBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size) 
 #endif
 }
 
+void ComputeShader::setUniform(std::string location, GLfloat value) {
+    for (auto& pass : mPasses) {
+        glUseProgram(pass.program);
+        glUniform1f(glGetUniformLocation(pass.program, location.c_str()), value);
+    }
+#ifdef _DEBUG
+    glCheckError();
+#endif
+}
+
+void ComputeShader::setUniform(std::string location, GLfloat value1, GLfloat value2) {
+    for (auto& pass : mPasses) {
+        glUseProgram(pass.program);
+        glUniform2f(glGetUniformLocation(pass.program, location.c_str()), value1, value2);
+    }
+#ifdef _DEBUG
+    glCheckError();
+#endif
+}
+
 void ComputeShader::setGroupCount(int pass, GLuint x, GLuint y, GLuint z) {
     mPasses[pass].numGroupsX = x;
     mPasses[pass].numGroupsY = y;

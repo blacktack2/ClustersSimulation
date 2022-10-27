@@ -12,8 +12,6 @@ SimulationHandler::SimulationHandler() :
 mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f),
 mInteractionRange(80), mInteractionRange2(6400), mCollisionForce(1.0f)
 #ifdef ITERATE_ON_COMPUTE_SHADER
-//, mSimulationShaderPass1Program(), mSimulationShaderPass2Program(),
-//mComputeShaderPass1(), mComputeShaderPass2(),
 , mAtomCount(0), mAtomTypeCount(0), mInteractionCount(0),
 mAtomTypesBufferID(), mAtomsBufferID(), mInteractionsBufferID(),
 mAtomTypes(), mAtomTypesBuffer(), mAtomsBuffer(), mInteractionsBuffer()
@@ -44,6 +42,9 @@ void SimulationHandler::initComputeShaders() {
 void SimulationHandler::setBounds(float simWidth, float simHeight) {
     mSimWidth = simWidth;
     mSimHeight = simHeight;
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    mIterationComputeShader.setUniform(SIMULATION_BOUNDS_UNIFORM, mSimWidth, mSimHeight);
+#endif
 }
 
 float SimulationHandler::getWidth() const {
@@ -56,6 +57,9 @@ float SimulationHandler::getHeight() const {
 
 void SimulationHandler::setDt(float dt) {
     mDt = dt;
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    mIterationComputeShader.setUniform(DT_UNIFORM, mDt);
+#endif
 }
 
 float SimulationHandler::getDt() {
@@ -64,6 +68,9 @@ float SimulationHandler::getDt() {
 
 void SimulationHandler::setDrag(float drag) {
     mDrag = drag;
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    mIterationComputeShader.setUniform(DRAG_FORCE_UNIFORM, mDrag);
+#endif
 }
 
 float SimulationHandler::getDrag() {
@@ -73,6 +80,9 @@ float SimulationHandler::getDrag() {
 void SimulationHandler::setInteractionRange(float interactionRange) {
     mInteractionRange = interactionRange;
     mInteractionRange2 = mInteractionRange * mInteractionRange;
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    mIterationComputeShader.setUniform(INTERACTION_RANGE2_UNIFORM, mInteractionRange2);
+#endif
 }
 
 float SimulationHandler::getInteractionRange() {
@@ -81,6 +91,9 @@ float SimulationHandler::getInteractionRange() {
 
 void SimulationHandler::setCollisionForce(float collisionForce) {
     mCollisionForce = collisionForce;
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    mIterationComputeShader.setUniform(COLLISION_FORCE_UNIFORM, mCollisionForce);
+#endif
 }
 
 float SimulationHandler::getCollisionForce() {
@@ -116,10 +129,6 @@ void SimulationHandler::initSimulation() {
     }
 #endif
     shuffleAtomPositions();
-
-//#ifdef ITERATE_ON_COMPUTE_SHADER
-//    simulationRenderPass();
-//#endif
 }
 
 void SimulationHandler::iterateSimulation() {
@@ -127,9 +136,6 @@ void SimulationHandler::iterateSimulation() {
     mIterationComputeShader.setGroupCount(0, mAtomCount, mAtomCount, 1);
     mIterationComputeShader.setGroupCount(1, mAtomCount, 1, 1);
     mIterationComputeShader.run();
-//#ifdef _DEBUG
-//    mIterationComputeShader.readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
-//#endif
 #else
     float atomRadius = mLSRules.getAtomRadius();
     float atomDiameter = atomRadius * 2;
@@ -203,26 +209,6 @@ unsigned int SimulationHandler::newAtomType() {
     return mLSRules.newAtomType()->getId();
 #endif
 }
-
-//void SimulationHandler::newAtomType(unsigned int id) {
-//#ifdef ITERATE_ON_COMPUTE_SHADER
-//    if (mAtomTypeCount >= ATOM_TYPES_BUFFER_SIZE)
-//        return;
-//    mAtomTypes[mAtomTypeCount++] = AtomType(id);
-//    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
-//    for (unsigned int id2 : getAtomTypeIds()) {
-//        if (mInteractionCount >= INTERACTIONS_BUFFER_SIZE)
-//            break;
-//        mInteractionsBuffer[mInteractionCount++] = 0.0f;
-//        if (id != id2) {
-//            mInteractionsBuffer[mInteractionCount++] = 0.0f;
-//        }
-//    }
-//    mIterationComputeShader.writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
-//#else
-//    mLSRules.newAtomType(id);
-//#endif
-//}
 
 void SimulationHandler::removeAtomType(unsigned int atomTypeId) {
 #ifdef ITERATE_ON_COMPUTE_SHADER

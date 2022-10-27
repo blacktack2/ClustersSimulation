@@ -11,11 +11,12 @@ layout(std430, binding = 2) buffer AtomBuffer {
 	Atom atoms[10000];
 };
 
-uniform vec2 simulationBounds = vec2(1000.0f, 1000.0f);
-uniform float interactionRange2 = 6400.0f;
-uniform float atomDiameter = 3.0f;
-uniform float collisionForce = 1.0f;
-uniform float dragForce = 0.5f;
+layout(location = 1) uniform vec2 simulationBounds = vec2(500.0f, 500.0f);
+layout(location = 2) uniform float interactionRange2 = 6400.0f;
+layout(location = 3) uniform float atomDiameter = 3.0f;
+layout(location = 4) uniform float collisionForce = 1.0f;
+layout(location = 5) uniform float dragForce = 0.5f;
+layout(location = 6) uniform float dt = 1.0f;
 
 void main() {
 	uint id = gl_GlobalInvocationID.x;
@@ -26,7 +27,7 @@ void main() {
 	vec2 velocity = vec2(atom.vx, atom.vy);
 	vec2 force = vec2(atom.fx, atom.fy);
 
-	velocity = (velocity + force) * dragForce;
+	velocity = (velocity + force * dt) * dragForce;
 	position += velocity;
 
 	position.x += (position.x < 0) ? simulationBounds.x :
@@ -36,8 +37,8 @@ void main() {
 
 	atom.x = position.x;
 	atom.y = position.y;
-	atom.vx = velocity.x;
-	atom.vy = velocity.y;
+	atom.vx = velocity.x * dt;
+	atom.vy = velocity.y * dt;
 	atom.fx = 0.0f;
 	atom.fy = 0.0f;
 	atoms[id] = atom;
