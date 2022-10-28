@@ -134,11 +134,13 @@ bool WindowHandler::init() {
     ImGui_ImplSDL2_InitForOpenGL(mWindow, mGlContext);
     ImGui_ImplOpenGL3_Init(glslVersion.c_str());
 
-    glClearColor(0, 0, 0, 1);
-
 #ifdef ITERATE_ON_COMPUTE_SHADER
     mSimulationHandler.initComputeShaders();
 #endif
+    if (!mSimulationRenderer.init()) {
+        fprintf(stderr, "Failed to initialize simulation renderer!\n");
+        return false;
+    }
 
     if (!getLoadableFiles(mFileLoadLocations, mFileLoadCount)) {
         fprintf(stderr, "Failed to read config files!\n");
@@ -147,23 +149,6 @@ bool WindowHandler::init() {
     loadFromFile("resources/current.csdat", mSimulationHandler);
 
     mSimulationHandler.initSimulation();
-
-#ifdef _DEBUG
-    glCheckError();
-#endif
-
-//#ifdef ITERATE_ON_COMPUTE_SHADER
-//#ifdef _DEBUG
-//    int flags;
-//    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-//    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
-//        glEnable(GL_DEBUG_OUTPUT);
-//        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
-//        glDebugMessageCallback(glDebugOutput, nullptr);
-//        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-//    } 
-//#endif
-//#endif
 
     return true;
 }
@@ -194,6 +179,7 @@ void WindowHandler::mainloop() {
         }
         frameCounter++;
 
+        glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         while (SDL_PollEvent(&e) != 0) {
@@ -269,7 +255,9 @@ void WindowHandler::mainloop() {
 
             ImGui::Begin("Simulation", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
+            glViewport(0, 0, simPanelBounds.z, simPanelBounds.w);
             mSimulationRenderer.drawSimulation(simPanelBounds.x, simPanelBounds.y, simPanelBounds.z, simPanelBounds.w);
+            glViewport(0, 0, mWindowWidth, mWindowHeight);
 
             ImGui::End();
         }

@@ -12,7 +12,8 @@ SimulationHandler::SimulationHandler() :
 mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f),
 mInteractionRange(80), mInteractionRange2(6400), mCollisionForce(1.0f)
 #ifdef ITERATE_ON_COMPUTE_SHADER
-, mAtomCount(0), mAtomTypeCount(0), mInteractionCount(0),
+, mIterationComputePass1("IterationPass1.comp"), mIterationComputePass2("IterationPass2.comp"),
+mAtomCount(0), mAtomTypeCount(0), mInteractionCount(0),
 mAtomTypesBufferID(), mAtomsBufferID(), mInteractionsBufferID(),
 mAtomTypes(), mAtomTypesBuffer(), mAtomsBuffer(), mInteractionsBuffer()
 #else
@@ -27,15 +28,19 @@ SimulationHandler::~SimulationHandler() {
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
 void SimulationHandler::initComputeShaders() {
-    mIterationComputeShader.loadFile("SimulationPass2.comp");
-    mIterationComputeShader.loadFile("SimulationPass3.comp");
-    if (!mIterationComputeShader.isValid()) {
+    mIterationComputePass1.init();
+    if (!mIterationComputePass1.isValid()) {
         fprintf(stderr, "Failed to create Compute Shader\n");
         return;
     }
-    mAtomTypesBufferID    = mIterationComputeShader.createBuffer(mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer), 1);
-    mAtomsBufferID        = mIterationComputeShader.createBuffer(mAtomsBuffer.data(), sizeof(mAtomsBuffer), 2);
-    mInteractionsBufferID = mIterationComputeShader.createBuffer(mInteractionsBuffer.data(), sizeof(mInteractionsBuffer), 3);
+    mIterationComputePass2.init();
+    if (!mIterationComputePass2.isValid()) {
+        fprintf(stderr, "Failed to create Compute Shader\n");
+        return;
+    }
+    mAtomTypesBufferID    = BaseShader::createBuffer(mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer), 1);
+    mAtomsBufferID        = BaseShader::createBuffer(mAtomsBuffer.data(), sizeof(mAtomsBuffer), 2);
+    mInteractionsBufferID = BaseShader::createBuffer(mInteractionsBuffer.data(), sizeof(mInteractionsBuffer), 3);
 }
 #endif
 
@@ -43,7 +48,7 @@ void SimulationHandler::setBounds(float simWidth, float simHeight) {
     mSimWidth = simWidth;
     mSimHeight = simHeight;
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    mIterationComputeShader.setUniform(SIMULATION_BOUNDS_UNIFORM, mSimWidth, mSimHeight);
+    BaseShader::setUniform(SIMULATION_BOUNDS_UNIFORM, mSimWidth, mSimHeight);
 #endif
 }
 
@@ -58,7 +63,7 @@ float SimulationHandler::getHeight() const {
 void SimulationHandler::setDt(float dt) {
     mDt = dt;
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    mIterationComputeShader.setUniform(DT_UNIFORM, mDt);
+    BaseShader::setUniform(DT_UNIFORM, mDt);
 #endif
 }
 
@@ -69,7 +74,7 @@ float SimulationHandler::getDt() {
 void SimulationHandler::setDrag(float drag) {
     mDrag = drag;
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    mIterationComputeShader.setUniform(DRAG_FORCE_UNIFORM, mDrag);
+    BaseShader::setUniform(DRAG_FORCE_UNIFORM, mDrag);
 #endif
 }
 
@@ -81,7 +86,7 @@ void SimulationHandler::setInteractionRange(float interactionRange) {
     mInteractionRange = interactionRange;
     mInteractionRange2 = mInteractionRange * mInteractionRange;
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    mIterationComputeShader.setUniform(INTERACTION_RANGE2_UNIFORM, mInteractionRange2);
+    BaseShader::setUniform(INTERACTION_RANGE2_UNIFORM, mInteractionRange2);
 #endif
 }
 
@@ -92,7 +97,7 @@ float SimulationHandler::getInteractionRange() {
 void SimulationHandler::setCollisionForce(float collisionForce) {
     mCollisionForce = collisionForce;
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    mIterationComputeShader.setUniform(COLLISION_FORCE_UNIFORM, mCollisionForce);
+    BaseShader::setUniform(COLLISION_FORCE_UNIFORM, mCollisionForce);
 #endif
 }
 
@@ -119,7 +124,7 @@ void SimulationHandler::initSimulation() {
             mAtomsBuffer[mAtomCount++] = Atom(mAtomTypes[at].id);
         }
     }
-    mIterationComputeShader.writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
+    BaseShader::writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
 #else
     for (std::unique_ptr<AtomType>& atomType : mLSRules.getAtomTypes()) {
         unsigned int quantity = atomType->getQuantity();
@@ -133,9 +138,8 @@ void SimulationHandler::initSimulation() {
 
 void SimulationHandler::iterateSimulation() {
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    mIterationComputeShader.setGroupCount(0, mAtomCount, mAtomCount, 1);
-    mIterationComputeShader.setGroupCount(1, mAtomCount, 1, 1);
-    mIterationComputeShader.run();
+    mIterationComputePass1.run(mAtomCount, mAtomCount, 1);
+    mIterationComputePass2.run(mAtomCount, 1, 1);
 #else
     float atomRadius = mLSRules.getAtomRadius();
     float atomDiameter = atomRadius * 2;
@@ -195,7 +199,7 @@ unsigned int SimulationHandler::newAtomType() {
     int index = mAtomTypeCount++;
     unsigned int id = (mAtomTypes[index] = AtomType(index)).id;
     mAtomTypesBuffer[index] = AtomTypeRaw(mAtomTypes[index]);
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
     for (unsigned int id2 : getAtomTypeIds()) {
         if (mInteractionCount >= INTERACTIONS_BUFFER_SIZE)
             break;
@@ -203,7 +207,7 @@ unsigned int SimulationHandler::newAtomType() {
         if (id != id2)
             mInteractionsBuffer[mInteractionCount++] = 0.0f;
     }
-    mIterationComputeShader.writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
+    BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
     return id;
 #else
     return mLSRules.newAtomType()->getId();
@@ -212,7 +216,7 @@ unsigned int SimulationHandler::newAtomType() {
 
 void SimulationHandler::removeAtomType(unsigned int atomTypeId) {
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    mIterationComputeShader.readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
+    BaseShader::readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
     auto dummy1 = std::remove_if(mAtomsBuffer.begin(), mAtomsBuffer.begin() + mAtomCount,
         [atomTypeId, this](Atom& atom) {
             if (atom.atomType == atomTypeId) {
@@ -255,9 +259,9 @@ void SimulationHandler::removeAtomType(unsigned int atomTypeId) {
         mAtomTypesBuffer[i] = AtomTypeRaw(mAtomTypes[i]);
     }
     mInteractionCount = mAtomTypeCount * mAtomTypeCount;
-    mIterationComputeShader.writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
-    mIterationComputeShader.writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
+    BaseShader::writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #else
     mAtoms.erase(
         std::remove_if(
@@ -274,9 +278,9 @@ void SimulationHandler::clearAtomTypes() {
     clearAtoms();
 #ifdef ITERATE_ON_COMPUTE_SHADER
     mAtomTypeCount = 0;
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
     mInteractionCount = 0;
-    mIterationComputeShader.writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
+    BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
 #else
     mLSRules.clearAtomTypes();
 #endif
@@ -309,7 +313,7 @@ void SimulationHandler::setAtomTypeColor(unsigned int atomTypeId, Color color) {
             break;
         }
     }
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #else
     AtomType* at = mLSRules.getAtomType(atomTypeId);
     if (at != nullptr) {
@@ -327,7 +331,7 @@ void SimulationHandler::setAtomTypeColorR(unsigned int atomTypeId, float r) {
             break;
         }
     }
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #else
     AtomType* at = mLSRules.getAtomType(atomTypeId);
     if (at != nullptr) {
@@ -345,7 +349,7 @@ void SimulationHandler::setAtomTypeColorG(unsigned int atomTypeId, float g) {
             break;
         }
     }
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #else
     AtomType* at = mLSRules.getAtomType(atomTypeId);
     if (at != nullptr) {
@@ -363,7 +367,7 @@ void SimulationHandler::setAtomTypeColorB(unsigned int atomTypeId, float b) {
             break;
         }
     }
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #else
     AtomType* at = mLSRules.getAtomType(atomTypeId);
     if (at != nullptr) {
@@ -395,7 +399,7 @@ void SimulationHandler::setAtomTypeQuantity(unsigned int atomTypeId, unsigned in
             mAtomTypes[at].quantity = quantity;
         }
     }
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #else
     AtomType* at = mLSRules.getAtomType(atomTypeId);
     if (at != nullptr) {
@@ -427,7 +431,7 @@ void SimulationHandler::setAtomTypeFriendlyName(unsigned int atomTypeId, std::st
             mAtomTypes[at].friendlyName = friendlyName;
         }
     }
-    mIterationComputeShader.writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
+    BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #else
     AtomType* at = mLSRules.getAtomType(atomTypeId);
     if (at != nullptr) {
@@ -463,7 +467,7 @@ float SimulationHandler::getInteraction(unsigned int aId, unsigned int bId) {
 void SimulationHandler::setInteraction(unsigned int aId, unsigned int bId, float value) {
 #ifdef ITERATE_ON_COMPUTE_SHADER
     mInteractionsBuffer[INTERACTION_INDEX(aId, bId)] = value;
-    mIterationComputeShader.writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
+    BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
 #else
     mLSRules.setInteraction(aId, bId, value);
 #endif
@@ -476,12 +480,12 @@ void SimulationHandler::shuffleAtomPositions() {
     std::uniform_real_distribution<float> rangeY(0, mSimWidth);
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    mIterationComputeShader.readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
+    BaseShader::readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
     for (int i = 0; i < mAtomCount; i++) {
         mAtomsBuffer[i].x = rangeX(mt);
         mAtomsBuffer[i].y = rangeY(mt);
     }
-    mIterationComputeShader.writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
+    BaseShader::writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
 #else
     for (Atom& atom : mAtoms) {
         atom.mX = rangeX(mt);
@@ -503,7 +507,7 @@ void SimulationHandler::shuffleAtomInteractions() {
     for (int i = 0; i < mInteractionCount; i++) {
         mInteractionsBuffer[i] = range(mt);
     }
-    mIterationComputeShader.writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
+    BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
 #else
     std::vector<std::unique_ptr<AtomType>>& atomTypes = mLSRules.getAtomTypes();
 
@@ -520,7 +524,7 @@ void SimulationHandler::zeroAtomInteractions() {
     for (int i = 0; i < mInteractionCount; i++) {
         mInteractionsBuffer[i] = 0.0f;
     }
-    mIterationComputeShader.writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
+    BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
 #else
     mLSRules.clearInteractions();
 #endif
@@ -536,7 +540,7 @@ unsigned int SimulationHandler::getAtomCount() {
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
 std::array<Atom, ATOMS_BUFFER_SIZE>& SimulationHandler::getAtoms() {
-    mIterationComputeShader.readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
+    BaseShader::readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
     return mAtomsBuffer;
 #else
 std::vector<Atom>& SimulationHandler::getAtoms() {

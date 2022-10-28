@@ -1,42 +1,13 @@
 #pragma once
-#include "glad/glad.h"
+#include "BaseShader.h"
 
 #include <array>
 #include <string>
 #include <vector>
 
-class ComputeShader {
+class ComputeShader : public BaseShader {
 public:
-	ComputeShader();
+	ComputeShader(const char* filename);
 
-	void loadFile(const char* filename);
-
-	GLuint createBuffer(const GLvoid* data, GLsizeiptr size, GLuint binding);
-
-	void setGroupCount(int pass, GLuint x, GLuint y, GLuint z);
-
-	void run();
-
-	void readBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size);
-	void writeBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size);
-
-	void setUniform(std::string location, GLfloat value);
-	void setUniform(std::string location, GLfloat value1, GLfloat value2);
-
-	bool isValid();
-private:
-	struct ShaderPass {
-		GLuint computeShader;
-		GLuint program;
-		GLuint numGroupsX;
-		GLuint numGroupsY;
-		GLuint numGroupsZ;
-	};
-
-	bool mIsValid = true;
-
-	std::vector<ShaderPass> mPasses{};
-	std::vector<GLuint> mBuffers{};
-
-	const std::string SHADER_DIR = "shaders/";
+	void run(GLuint x, GLuint y, GLuint z);
 };

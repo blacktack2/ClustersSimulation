@@ -90,8 +90,8 @@ private:
     float mCollisionForce;
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
-
-    ComputeShader mIterationComputeShader;
+    ComputeShader mIterationComputePass1;
+    ComputeShader mIterationComputePass2;
 
     GLuint mAtomTypesBufferID;
     GLuint mAtomsBufferID;

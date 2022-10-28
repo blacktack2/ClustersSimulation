@@ -1,18 +1,26 @@
 #ifndef LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
 #define LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
 
+#include "Shader.h"
 #include "../control/SimulationHandler.h"
-
-#include <cstdio>
 
 class SimulationRenderer {
 public:
     explicit SimulationRenderer(SimulationHandler& handler);
     ~SimulationRenderer();
 
+    bool init();
+
     void drawSimulation(float startX, float startY, float width, float height);
 private:
     SimulationHandler& mHandler;
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    Shader mShader;
+    GLuint mFrameBuffer;
+    GLuint mTexture;
+
+    int imageWidth = 500, imageHeight = 500;
+#endif
 };
 
 
