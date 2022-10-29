@@ -1,5 +1,7 @@
 #include "SimulationHandler.h"
 
+#include <algorithm>
+#include <climits>
 #include <random>
 #ifdef ITERATE_ON_COMPUTE_SHADER
 #include <iostream>

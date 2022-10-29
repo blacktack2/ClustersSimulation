@@ -1,5 +1,7 @@
 #include "SimulationStructures.h"
 
+#include <algorithm>
+#include <cmath>
 #include <random>
 
 static unsigned int idCounter = 0;
@@ -241,7 +243,11 @@ void SimulationRules::createInteractionsForAtomType(AtomType* atomType) {
 
 Color hslToColor(float h, float s, float l) {
     float c = (1 - std::abs(2 * l - 1)) * s;
+#ifdef _WIN32
     float x = c * (1 - std::abs(std::fmodf(h / 60, 2) - 1));
+#else
+    float x = c * (1 - std::abs(fmodf(h / 60, 2) - 1));
+#endif
     float m = l - c / 2;
 
     float r;

@@ -321,7 +321,7 @@ void WindowHandler::drawDebugPanel(float mspf) {
     );
     ImGui::TextColored(
             debugTextColor,
-            "Atom Count: %zu", mSimulationHandler.getAtomCount()
+            "Atom Count: %u", mSimulationHandler.getAtomCount()
     );
 }
 
@@ -336,18 +336,18 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         mSimulationHandler.iterateSimulation();
     }
 
-    ImGui::Button("Re-generate Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
-        mSimulationHandler.initSimulation() : 0;
-    ImGui::Button("Clear Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
-        mSimulationHandler.clearAtoms() : 0;
-    ImGui::Button("Clear Atom Types", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
-        mSimulationHandler.clearAtomTypes() : 0;
-    ImGui::Button("Randomize Positions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
-        mSimulationHandler.shuffleAtomPositions() : 0;
-    ImGui::Button("Zero Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
-        mSimulationHandler.zeroAtomInteractions() : 0;
-    ImGui::Button("Shuffle Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)) ?
-        mSimulationHandler.shuffleAtomInteractions() : 0;
+    if (ImGui::Button("Re-generate Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+        mSimulationHandler.initSimulation();
+    if (ImGui::Button("Clear Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+        mSimulationHandler.clearAtoms();
+    if (ImGui::Button("Clear Atom Types", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+        mSimulationHandler.clearAtomTypes();
+    if (ImGui::Button("Randomize Positions", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+        mSimulationHandler.shuffleAtomPositions();
+    if (ImGui::Button("Zero Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+        mSimulationHandler.zeroAtomInteractions();
+    if (ImGui::Button("Shuffle Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+        mSimulationHandler.shuffleAtomInteractions();
 
     ImGui::Text("Simulation Scale");
     float simScale = mSimulationHandler.getWidth();
@@ -398,7 +398,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         ImGui::PopStyleColor(1);
 
         ImGui::SameLine();
-        ImGui::Text(atomIdStr.c_str());
+        ImGui::Text("%s", atomIdStr.c_str());
 
         float r = c.r;
         float g = c.g;
@@ -431,11 +431,11 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
             std::string atom2IdStr = std::to_string(atomTypeId2);
             Color atom2Color = mSimulationHandler.getAtomTypeColor(atomTypeId2);
             std::string atom2FriendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId2);
-            ImGui::TextColored(ImVec4(r, g, b, 1.0f), friendlyName.c_str());
+            ImGui::TextColored(ImVec4(r, g, b, 1.0f), "%s", friendlyName.c_str());
             ImGui::SameLine();
             ImGui::Text("->");
             ImGui::SameLine();
-            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), atom2FriendlyName.c_str());
+            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), "%s", atom2FriendlyName.c_str());
             label = "0##ZeroButton-" + atomIdStr + "-" + atom2IdStr;
             if (ImGui::Button(label.c_str())) {
                 mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, 0);
@@ -457,7 +457,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
 
     std::string fileSaveLocation = CONFIG_FILE_LOCATION + std::string("/") + mFileSaveLocation + std::string(".") + CONFIG_FILE_EXTENSION;
     if (mIsOverwritingFile) {
-        ImGui::Text(("Config '" + mFileSaveLocation + "' exists.\nOverwrite?").c_str());
+        ImGui::Text("%s", ("Config '" + mFileSaveLocation + "' exists.\nOverwrite?").c_str());
         if (ImGui::Button("Yes")) {
             saveToFile(fileSaveLocation, mSimulationHandler);
             mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
