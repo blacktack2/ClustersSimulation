@@ -182,6 +182,9 @@ this functionality in the Shader class)
 and prevent assigning values to programs which don't need them.
 - Change quad to use a triangle strip/fan instead of two separate triangles
 - Replace header definition checks with `#pragma once`
+- Better organise log outputs
+    + Implement printing to a log file
+- Use typedefs to improve type clarity
 
 ### Fixes
 
