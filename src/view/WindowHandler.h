@@ -36,15 +36,15 @@ public:
      * @param screenWidth Width (in pixels) of the window.
      * @param screenHeight Height (in pixels) of the window.
      */
-    void setSize(int screenWidth, int screenHeight);
+    void setSize(const int& screenWidth, const int& screenHeight);
 
-    [[nodiscard]] int getWidth() const;
-    [[nodiscard]] int getHeight() const;
+    [[nodiscard]] const int& getWidth() const;
+    [[nodiscard]] const int& getHeight() const;
 private:
     void handleEvent(SDL_Event& e);
 
-    void drawDebugPanel(float fps);
-    void drawIOPanel(float x, float y, float width, float height);
+    void drawDebugPanel(const float& fps);
+    void drawIOPanel();
 
     int mWindowWidth;
     int mWindowHeight;

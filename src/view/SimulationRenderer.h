@@ -11,7 +11,7 @@ public:
 
     bool init();
 
-    void drawSimulation(float startX, float startY, float width, float height);
+    void drawSimulation([[maybe_unused]] float startX, [[maybe_unused]] float startY, float width, float height);
 private:
     SimulationHandler& mHandler;
 #ifdef ITERATE_ON_COMPUTE_SHADER
@@ -19,7 +19,7 @@ private:
     GLuint mFrameBuffer;
     GLuint mTexture;
 
-    int imageWidth = 500, imageHeight = 500;
+    float imageWidth = 500.0f, imageHeight = 500.0f;
 #endif
 };
 

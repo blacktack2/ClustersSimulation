@@ -3,8 +3,8 @@
 #include <cstdio>
 #include <string>
 
-void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity, 
-    GLsizei length, const char *message, const void *userParam) {
+void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity,
+                            [[maybe_unused]] GLsizei length, const char *message, [[maybe_unused]] const void *userParam) {
     // ignore non-significant error/warning codes
     if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return; 
 
@@ -29,6 +29,9 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
             break;
         case GL_DEBUG_SOURCE_OTHER:
             fprintf(stderr, "Source: Other\n");
+            break;
+        default:
+            fprintf(stderr, "Source: Unknown\n");
             break;
     }
 
@@ -60,6 +63,9 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
         case GL_DEBUG_TYPE_OTHER:
             fprintf(stderr, "Type: Other\n");
             break;
+        default:
+            fprintf(stderr, "Type: Unknown\n");
+            break;
     }
 
     switch (severity)
@@ -76,6 +82,8 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
         case GL_DEBUG_SEVERITY_NOTIFICATION:
             fprintf(stderr, "Severity: notification\n");
             break;
+        default:
+            fprintf(stderr, "Severity: Unknown\n");
     }
 }
 
@@ -104,6 +112,9 @@ GLenum glCheckError_(const char *file, int line) {
                 break;
             case GL_INVALID_FRAMEBUFFER_OPERATION:
                 error = "INVALID_FRAMEBUFFER_OPERATION";
+                break;
+            default:
+                error = "__UNKNOWN_ERROR__";
                 break;
         }
         fprintf(stderr, "%s | %s (LINE: %d)\n", error.c_str(), file, line);

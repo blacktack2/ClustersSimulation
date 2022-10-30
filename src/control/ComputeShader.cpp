@@ -2,11 +2,6 @@
 
 #include "GLUtilities.h"
 
-#include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <sstream>
-
 ComputeShader::ComputeShader(const char* filename) : BaseShader() {
     readFile(filename, GL_COMPUTE_SHADER);
 }

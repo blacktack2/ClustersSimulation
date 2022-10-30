@@ -7,7 +7,7 @@
 
 class ComputeShader : public BaseShader {
 public:
-	ComputeShader(const char* filename);
+	explicit ComputeShader(const char* filename);
 
 	void run(GLuint x, GLuint y, GLuint z);
 };

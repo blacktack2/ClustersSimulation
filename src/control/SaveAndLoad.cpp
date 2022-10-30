@@ -2,9 +2,13 @@
 
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <string>
+
+const std::regex& getConfigFileRegex() {
+    static const std::regex CONFIG_FILE_REGEX(CONFIG_FILE_LOCATION + std::string(R"([/\\]([a-zA-Z0-9_-]+)\.)") + CONFIG_FILE_EXTENSION);
+    return CONFIG_FILE_REGEX;
+}
 
 bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
 	std::filesystem::create_directory(CONFIG_FILE_LOCATION);
@@ -13,7 +17,7 @@ bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
 	for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(CONFIG_FILE_LOCATION)) {
 		std::string filepath = std::string(entry.path().u8string());
 		std::smatch matches;
-		if (std::regex_search(filepath, matches, CONFIG_FILE_REGEX)) {
+		if (std::regex_search(filepath, matches, getConfigFileRegex())) {
 			files[count++] = matches[1];
 			if (count >= MAX_FILE_COUNT) {
 				break;
@@ -24,8 +28,8 @@ bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
 	return true;
 }
 
-bool saveToFile(std::string location, SimulationHandler& handler) {
-	std::string data = "";
+bool saveToFile(const std::string& location, const SimulationHandler& handler) {
+	std::string data;
 
 	data += "Width:" + std::to_string(handler.getWidth()) + " Height:" + std::to_string(handler.getHeight()) + "\n";
 	data += "DT:" + std::to_string(handler.getDt()) + "\n";
@@ -60,14 +64,14 @@ bool saveToFile(std::string location, SimulationHandler& handler) {
 	return true;
 }
 
-bool loadFromFile(std::string location, SimulationHandler& handler) {
-	static const std::regex atomTypeRegex = std::regex("^ID:([0-9]+) Name:([A-Za-z0-9_-]*) Quantity:([0-9]+) R:([0-9]+(\\.[0-9]+)?) G:([0-9]+(\\.[0-9]+)?) B:([0-9]+(\\.[0-9]+)?)$");
-	static const std::regex interactionRegex = std::regex("^Aid:([0-9]+) Bid:([0-9]+) Value:(-?[0-9]+(\\.[0-9]+)?)$");
-	static const std::regex sizeRegex = std::regex("^Width:([0-9]+(\\.[0-9]+)?) Height:([0-9]+(\\.[0-9]+)?)$");
-	static const std::regex dtRegex = std::regex("^DT:([0-9]+(\\.[0-9]+)?)$");
-	static const std::regex dragRegex = std::regex("^Drag:([0-9]+(\\.[0-9]+)?)$");
-	static const std::regex interactionRangeRegex = std::regex("^Range:([0-9]+(\\.[0-9]+)?)$");
-	static const std::regex collisionForceRegex = std::regex("^CollisionForce:([0-9]+(\\.[0-9]+)?)$");
+bool loadFromFile(const std::string& location, SimulationHandler& handler) {
+	static const std::regex atomTypeRegex = std::regex("^ID:([0-9]+) Name:([A-Za-z0-9_-]*) Quantity:([0-9]+) R:([0-9]+(\\.[0-9]+)?) G:([0-9]+(\\.[0-9]+)?) B:([0-9]+(\\.[0-9]+)?)\r?$");
+	static const std::regex interactionRegex = std::regex("^Aid:([0-9]+) Bid:([0-9]+) Value:(-?[0-9]+(\\.[0-9]+)?)\r?$");
+	static const std::regex sizeRegex = std::regex("^Width:([0-9]+(\\.[0-9]+)?) Height:([0-9]+(\\.[0-9]+)?)\r?$");
+	static const std::regex dtRegex = std::regex("^DT:([0-9]+(\\.[0-9]+)?)\r?$");
+	static const std::regex dragRegex = std::regex("^Drag:([0-9]+(\\.[0-9]+)?)\r?$");
+	static const std::regex interactionRangeRegex = std::regex("^Range:([0-9]+(\\.[0-9]+)?)\r?$");
+	static const std::regex collisionForceRegex = std::regex("^CollisionForce:([0-9]+(\\.[0-9]+)?)\r?$");
 
 	handler.clearAtomTypes();
 
@@ -128,7 +132,7 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 	file.close();
 
 	std::map<unsigned int, unsigned int> idMap;
-	for (std::string l : atomTypes) {
+	for (auto& l : atomTypes) {
 		std::smatch matches;
 		if (std::regex_search(l, matches, atomTypeRegex)) {
 			unsigned int id;
@@ -150,7 +154,7 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 		}
 	}
 
-	for (std::string l : interactions) {
+	for (auto& l : interactions) {
 		std::smatch matches;
 		if (std::regex_search(l, matches, interactionRegex)) {
 			unsigned int aId;
@@ -167,7 +171,7 @@ bool loadFromFile(std::string location, SimulationHandler& handler) {
 	return true;
 }
 
-bool parseFloat(std::string s, float& f) {
+bool parseFloat(const std::string& s, float& f) {
 	std::size_t pos{};
 	try {
 		f = std::stof(s, &pos);
@@ -176,13 +180,13 @@ bool parseFloat(std::string s, float& f) {
 		return false;
 	} catch (std::out_of_range const& ex) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll('%ll'); pos: %zu\n", ex.what(), ll, pos);
+		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll('%llu'); pos: %lu\n", ex.what(), ll, pos);
 		return false;
 	}
 	return true;
 }
 
-bool parseUint(std::string s, unsigned int& i) {
+bool parseUint(const std::string& s, unsigned int& i) {
 	std::size_t pos{};
 	try {
 		unsigned long l = std::stoul(s, &pos);
@@ -195,7 +199,7 @@ bool parseUint(std::string s, unsigned int& i) {
 		return false;
 	} catch (std::out_of_range const& ex) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll('%ll'); pos: %zu\n", ex.what(), ll, pos);
+		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll(\'%llu\'); pos: %lu\n", ex.what(), ll, pos);
 		return false;
 	}
 	return true;

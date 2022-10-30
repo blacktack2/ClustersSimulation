@@ -6,7 +6,6 @@
 
 #include <glad/glad.h>
 
-#include <array>
 #include <cstdio>
 #include <chrono>
 #include <filesystem>
@@ -74,37 +73,34 @@ bool WindowHandler::init() {
     std::string glslVersion;
 
 #ifdef __APPLE__
-    // GL 3.2 Core + GLSL 150
     glslVersion = "#version 150";
-    SDL_GL_SetAttribute( // required on Mac OS
+    SDL_GL_SetAttribute(
         SDL_GL_CONTEXT_FLAGS,
         SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG
         );
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #elif __linux__
-    // GL 3.2 Core + GLSL 150
     glslVersion = "#version 150";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 #elif _WIN32
-    // GL 3.0 + GLSL 130
     glslVersion = "#version 130";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #endif
 
-    SDL_WindowFlags windowFlags = (SDL_WindowFlags)(
-            SDL_WINDOW_OPENGL |
+    auto windowFlags = (SDL_WindowFlags)(
+            SDL_WINDOW_OPENGL | // NOLINT(hicpp-signed-bitwise)
             SDL_WINDOW_RESIZABLE |
             SDL_WINDOW_ALLOW_HIGHDPI
             );
 
     mWindow = SDL_CreateWindow(
             "Life Simulation",
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, // NOLINT(hicpp-signed-bitwise)
             mWindowWidth, mWindowHeight,
             windowFlags);
 
@@ -157,10 +153,9 @@ void WindowHandler::mainloop() {
 
     SDL_Event e;
 
-    float mspfTotal = 0;
     float mspf = 1;
     float delta = 0;
-    unsigned int lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    auto lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     int frameCounter = 0;
 
     ImGui::PushStyleVar(
@@ -169,18 +164,18 @@ void WindowHandler::mainloop() {
             );
 
     while (mRunning) {
-        unsigned int currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        delta += currentTime - lastTime;
+        auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        delta += (float) (currentTime - lastTime);
         lastTime = currentTime;
         if (delta > 1000.0f) {
-            mspf = delta / frameCounter;
+            mspf = delta / (float) frameCounter;
             delta = 0.0f;
             frameCounter = 0;
         }
         frameCounter++;
 
         glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // NOLINT(hicpp-signed-bitwise)
 
         while (SDL_PollEvent(&e) != 0) {
             handleEvent(e);
@@ -240,7 +235,7 @@ void WindowHandler::mainloop() {
 
             ImGui::Begin("Parameters", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-            drawIOPanel(ioPanelBounds.x, ioPanelBounds.y, ioPanelBounds.z, ioPanelBounds.w);
+            drawIOPanel();
 
             ImGui::End();
 
@@ -256,7 +251,10 @@ void WindowHandler::mainloop() {
             ImGui::Begin("Simulation", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
             glViewport(0, 0, simPanelBounds.z, simPanelBounds.w);
-            mSimulationRenderer.drawSimulation(simPanelBounds.x, simPanelBounds.y, simPanelBounds.z, simPanelBounds.w);
+            mSimulationRenderer.drawSimulation(
+                    PANEL_PADDING + simPanelBounds.x, PANEL_PADDING + simPanelBounds.y,
+                    simPanelBounds.z - PANEL_PADDING * 2, simPanelBounds.w - PANEL_PADDING * 2
+                    );
             glViewport(0, 0, mWindowWidth, mWindowHeight);
 
             ImGui::End();
@@ -273,16 +271,16 @@ void WindowHandler::mainloop() {
     }
 }
 
-void WindowHandler::setSize(int width, int height) {
+void WindowHandler::setSize(const int& width, const int& height) {
     mWindowWidth = width;
     mWindowHeight = height;
 }
 
-int WindowHandler::getWidth() const {
+const int& WindowHandler::getWidth() const {
     return mWindowWidth;
 }
 
-int WindowHandler::getHeight() const {
+const int& WindowHandler::getHeight() const {
     return mWindowHeight;
 }
 
@@ -312,12 +310,12 @@ void WindowHandler::handleEvent(SDL_Event& e) {
     }
 }
 
-void WindowHandler::drawDebugPanel(float mspf) {
+void WindowHandler::drawDebugPanel(const float& mspf) {
     const ImVec4 debugTextColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
     ImGui::TextColored(
             debugTextColor,
-            "[FPS: %.2f | %.2fms]", 1000.0f / mspf, mspf
+            "[FPS: %.2f | %.2fms]", mspf == 0 ? INFINITY : 1000.0 / mspf, mspf
     );
     ImGui::TextColored(
             debugTextColor,
@@ -325,28 +323,29 @@ void WindowHandler::drawDebugPanel(float mspf) {
     );
 }
 
-void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
+void WindowHandler::drawIOPanel() {
     std::string label;
+    float width = ImGui::GetContentRegionAvail().x;
 
     mSimulationRunning = mSimulationRunning ?
-        !ImGui::Button("Pause##PlayPause", ImVec2(ImGui::GetContentRegionAvail().x, 0)) :
-        ImGui::Button("Play##PlayPause", ImVec2(ImGui::GetContentRegionAvail().x, 0));
-    if (ImGui::Button("Single Iteration", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+        !ImGui::Button("Pause##PlayPause", ImVec2(width, 0)) :
+        ImGui::Button("Play##PlayPause", ImVec2(width, 0));
+    if (ImGui::Button("Single Iteration", ImVec2(width, 0))) {
         mSimulationRunning = false;
         mSimulationHandler.iterateSimulation();
     }
 
-    if (ImGui::Button("Re-generate Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+    if (ImGui::Button("Re-generate Atoms", ImVec2(width, 0)))
         mSimulationHandler.initSimulation();
-    if (ImGui::Button("Clear Atoms", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+    if (ImGui::Button("Clear Atoms", ImVec2(width, 0)))
         mSimulationHandler.clearAtoms();
-    if (ImGui::Button("Clear Atom Types", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+    if (ImGui::Button("Clear Atom Types", ImVec2(width, 0)))
         mSimulationHandler.clearAtomTypes();
-    if (ImGui::Button("Randomize Positions", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+    if (ImGui::Button("Randomize Positions", ImVec2(width, 0)))
         mSimulationHandler.shuffleAtomPositions();
-    if (ImGui::Button("Zero Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+    if (ImGui::Button("Zero Interactions", ImVec2(width, 0)))
         mSimulationHandler.zeroAtomInteractions();
-    if (ImGui::Button("Shuffle Interactions", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+    if (ImGui::Button("Shuffle Interactions", ImVec2(width, 0)))
         mSimulationHandler.shuffleAtomInteractions();
 
     ImGui::Text("Simulation Scale");
@@ -380,7 +379,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         mSimulationHandler.setCollisionForce(collisionForce);
     }
 
-    if (ImGui::Button("Add Atom Type", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+    if (ImGui::Button("Add Atom Type", ImVec2(width, 0))) {
         mSimulationHandler.newAtomType();
     }
     std::vector<unsigned int> atomTypes = mSimulationHandler.getAtomTypeIds();
@@ -403,7 +402,7 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         float r = c.r;
         float g = c.g;
         float b = c.b;
-        ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
+        ImGui::PushItemWidth((width - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
         label = "##ColorRedSlider-" + atomIdStr;
         if (ImGui::SliderFloat(label.c_str(), &r, 0.0f, 1.0f)) {
             mSimulationHandler.setAtomTypeColorR(atomTypeId, r);
@@ -420,13 +419,13 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
         }
         ImGui::PopItemWidth();
 
-        int quantity = mSimulationHandler.getAtomTypeQuantity(atomTypeId);
+        int quantity = (int) mSimulationHandler.getAtomTypeQuantity(atomTypeId);
         label = "Quantity##QuantityInt-" + atomIdStr;
         if (ImGui::InputInt(label.c_str(), &quantity)) {
             mSimulationHandler.setAtomTypeQuantity(atomTypeId, quantity);
         }
 
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 3 / 4);
+        ImGui::PushItemWidth(width * 3 / 4);
         for (unsigned int atomTypeId2 : atomTypes) {
             std::string atom2IdStr = std::to_string(atomTypeId2);
             Color atom2Color = mSimulationHandler.getAtomTypeColor(atomTypeId2);
@@ -436,19 +435,19 @@ void WindowHandler::drawIOPanel(float x, float y, float width, float height) {
             ImGui::Text("->");
             ImGui::SameLine();
             ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), "%s", atom2FriendlyName.c_str());
-            label = "0##ZeroButton-" + atomIdStr + "-" + atom2IdStr;
+            label = std::string().append("0##ZeroButton-").append(atomIdStr).append("-").append(atom2IdStr);
             if (ImGui::Button(label.c_str())) {
                 mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, 0);
             }
             ImGui::SameLine();
             float interaction = mSimulationHandler.getInteraction(atomTypeId, atomTypeId2);
-            label = "##InteractionSlider-" + atomIdStr + "-" + atom2IdStr;
+            label = std::string().append("##InteractionSlider-").append(atomIdStr).append("-").append(atom2IdStr);
             if (ImGui::SliderFloat(label.c_str(), &interaction, -1.0f, 1.0f)) {
                 mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, interaction);
             }
         }
-        label = "Delete Atom Type [" + friendlyName + "]##DeleteButton-" + atomIdStr;
-        if (ImGui::Button(label.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+        label = std::string().append("Delete Atom Type [").append(friendlyName).append("]##DeleteButton-").append(atomIdStr);
+        if (ImGui::Button(label.c_str(), ImVec2(width, 0))) {
             mSimulationHandler.removeAtomType(atomTypeId);
         }
         ImGui::PopItemWidth();

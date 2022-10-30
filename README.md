@@ -185,6 +185,7 @@ and prevent assigning values to programs which don't need them.
 - Better organise log outputs
     + Implement printing to a log file
 - Use typedefs to improve type clarity
+- Add different starting conditions to the simulation
 
 ### Fixes
 
@@ -192,7 +193,6 @@ and prevent assigning values to programs which don't need them.
 from simulation center to corner (currently set from center to edge)
 - Add hard coded limits to number of atoms and atom types to the UI (and a
 warning if the number of atoms exceeds the limit)
-- Remove unwanted padding on the simulation display
 - GPU version does not instantiate default values of new atom types correctly
 - Fix interaction sliders to fill the remaining panel width
 - CPU version uses incredibly slow method of querying atom types

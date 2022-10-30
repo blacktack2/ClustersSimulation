@@ -15,18 +15,16 @@ mHandler(handler)
 
 }
 
-SimulationRenderer::~SimulationRenderer() {
+SimulationRenderer::~SimulationRenderer() = default;
 
-}
-
-bool SimulationRenderer::init() {
+bool SimulationRenderer::init() { // NOLINT(readability-convert-member-functions-to-static)
 #ifdef ITERATE_ON_COMPUTE_SHADER
     glGenFramebuffers(1, &mFrameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffer);
 
     glGenTextures(1, &mTexture);
     glBindTexture(GL_TEXTURE_2D, mTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -59,7 +57,7 @@ bool SimulationRenderer::init() {
     return true;
 }
 
-void SimulationRenderer::drawSimulation(float startX, float startY, float width, float height) {
+void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_unused]] float startY, float width, float height) {
 #ifdef ITERATE_ON_COMPUTE_SHADER
     mShader.bind();
     glEnable(GL_BLEND);
@@ -69,7 +67,7 @@ void SimulationRenderer::drawSimulation(float startX, float startY, float width,
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mTexture);
     if (imageWidth != width || imageHeight != height) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, imageWidth = width, imageHeight = height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, imageWidth = width, imageHeight = height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
         BaseShader::setUniform("screenBounds", imageWidth, imageHeight);
     }
 
@@ -83,7 +81,7 @@ void SimulationRenderer::drawSimulation(float startX, float startY, float width,
     glBindTexture(GL_TEXTURE_2D, 0);
     mShader.unbind();
 
-    ImGui::Image((ImTextureID) mTexture, ImVec2(width, height));
+    ImGui::Image((ImTextureID) (uintptr_t) mTexture, ImVec2(width, height));
 #else
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
@@ -96,7 +94,7 @@ void SimulationRenderer::drawSimulation(float startX, float startY, float width,
     float scaleY = static_cast<float>(height) / mHandler.getHeight();
     float atomSize = std::max(3.0 * scaleX, 3.0);
 
-    for (Atom& atom : mHandler.getAtoms()) {
+    for (const Atom& atom : mHandler.getAtoms()) {
         Color c = atom.mAtomType->getColor();
         float x = startX + atom.mX * scaleX;
         float y = startY + atom.mY * scaleY;

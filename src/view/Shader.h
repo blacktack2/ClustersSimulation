@@ -11,8 +11,8 @@ public:
 
 	void setVAO(const float* vertices, unsigned int size, unsigned int stride);
 
-	void draw();
-	void drawInstanced(unsigned int instanceCount);
+	void draw() const;
+	void drawInstanced(unsigned int instanceCount) const;
 private:
 	GLuint mVAO;
 	GLuint mVBO;

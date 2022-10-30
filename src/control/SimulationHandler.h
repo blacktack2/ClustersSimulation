@@ -35,16 +35,16 @@ public:
     [[nodiscard]] float getHeight() const;
 
     void setDt(float dt);
-    float getDt();
+    [[nodiscard]] inline const float& getDt() const { return mDt; }
 
     void setDrag(float drag);
-    float getDrag();
+    [[nodiscard]] inline const float& getDrag() const { return mDrag; }
 
     void setInteractionRange(float interactionRange);
-    float getInteractionRange();
+    [[nodiscard]] inline const float& getInteractionRange() const { return mInteractionRange; }
 
     void setCollisionForce(float collisionForce);
-    float getCollisionForce();
+    [[nodiscard]] inline const float& getCollisionForce() const { return mCollisionForce; }
 
     void clearAtoms();
     void initSimulation();
@@ -54,30 +54,28 @@ public:
     void removeAtomType(unsigned int atomTypeId);
     void clearAtomTypes();
 
-    std::vector<unsigned int> getAtomTypeIds();
+    [[nodiscard]] std::vector<unsigned int> getAtomTypeIds() const;
     void setAtomTypeColor(unsigned int atomTypeId, Color color);
     void setAtomTypeColorR(unsigned int atomTypeId, float r);
     void setAtomTypeColorG(unsigned int atomTypeId, float g);
     void setAtomTypeColorB(unsigned int atomTypeId, float b);
-    Color getAtomTypeColor(unsigned int atomTypeId);
+    [[nodiscard]] Color getAtomTypeColor(unsigned int atomTypeId) const;
     void setAtomTypeQuantity(unsigned int atomTypeId, unsigned int quantity);
-    unsigned int getAtomTypeQuantity(unsigned int atomTypeId);
-    void setAtomTypeFriendlyName(unsigned int atomTypeId, std::string friendlyName);
-    std::string getAtomTypeFriendlyName(unsigned int atomTypeId);
+    [[nodiscard]] unsigned int getAtomTypeQuantity(unsigned int atomTypeId) const;
+    void setAtomTypeFriendlyName(unsigned int atomTypeId, const std::string& friendlyName);
+    [[nodiscard]] std::string getAtomTypeFriendlyName(unsigned int atomTypeId) const;
 
-    float getInteraction(unsigned int aId, unsigned int bId);
+    [[nodiscard]] float getInteraction(unsigned int aId, unsigned int bId) const;
     void setInteraction(unsigned int aId, unsigned int bId, float value);
 
     void shuffleAtomPositions();
     void shuffleAtomInteractions();
     void zeroAtomInteractions();
 
-    unsigned int getAtomCount();
+    [[nodiscard]] unsigned int getAtomCount() const;
 
-#ifdef ITERATE_ON_COMPUTE_SHADER
-    std::array<Atom, ATOMS_BUFFER_SIZE>& getAtoms();
-#else
-    std::vector<Atom>& getAtoms();
+#ifndef ITERATE_ON_COMPUTE_SHADER
+    const std::vector<Atom>& getAtoms();
 #endif
 private:
     float mSimWidth;
@@ -117,6 +115,4 @@ private:
     SimulationRules mLSRules;
 #endif
 };
-
-
 #endif //LIFESIMULATIONC_LIFESIMULATIONHANDLER_H

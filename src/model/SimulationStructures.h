@@ -14,7 +14,6 @@ struct Color {
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
 struct vec2 { float x; float y; };
-struct uvec2 { unsigned int x; unsigned int y; };
 
 struct AtomType {
     AtomType();
@@ -31,7 +30,7 @@ struct AtomType {
 
 struct AtomTypeRaw {
     explicit AtomTypeRaw();
-    explicit AtomTypeRaw(AtomType at);
+    explicit AtomTypeRaw(const AtomType& at);
     float r;
     float g;
     float b;
@@ -50,11 +49,11 @@ struct Atom {
 class AtomType {
 public:
     AtomType();
-    AtomType(unsigned int id);
+    explicit AtomType(unsigned int id);
     AtomType(const AtomType& other);
     ~AtomType();
 
-    [[nodiscard]] unsigned int getId() const;
+    [[nodiscard]] const unsigned int & getId() const;
 
     Color getColor();
     void setColor(Color color);
@@ -78,8 +77,7 @@ private:
 };
 
 struct Atom {
-    Atom(AtomType* atomType);
-    Atom(const Atom& other);
+    explicit Atom(AtomType* atomType);
 
     AtomType* mAtomType;
 
@@ -113,7 +111,7 @@ public:
 
     std::vector<std::unique_ptr<AtomType>>& getAtomTypes();
 
-    unsigned int getAtomCount();
+    [[nodiscard]] const unsigned int& getAtomCount() const;
 
     void clearInteractions();
     void setInteraction(unsigned int aId, unsigned int bId, float interaction);
@@ -121,7 +119,7 @@ public:
     [[nodiscard]] std::vector<InteractionSet>& getInteractions();
 
     void setAtomRadius(float atomRadius);
-    float getAtomRadius();
+    [[nodiscard]] const float& getAtomRadius() const;
 private:
     void createInteractionsForAtomType(AtomType* atomType);
 

@@ -2,7 +2,10 @@
 
 #include <algorithm>
 #include <cmath>
+#ifndef ITERATE_ON_COMPUTE_SHADER
+#include <memory>
 #include <random>
+#endif
 
 static unsigned int idCounter = 0;
 
@@ -21,7 +24,7 @@ AtomTypeRaw::AtomTypeRaw() :
 r(0.0f), g(0.0f), b(0.0f) {
 }
 
-AtomTypeRaw::AtomTypeRaw(AtomType at) :
+AtomTypeRaw::AtomTypeRaw(const AtomType& at) :
 r(at.r), g(at.g), b(at.b) {
 }
 
@@ -37,11 +40,6 @@ atomType(atomType_), x(0), y(0), vx(0), vy(0), fx(0), fy(0) {
 #else
 Atom::Atom(AtomType* atomType) :
 mAtomType(atomType), mX(0.0f), mY(0.0f), mVX(0.0f), mVY(0.0f), mFX(0.0f), mFY(0.0f) {
-
-}
-
-Atom::Atom(const Atom& other) :
-mAtomType(other.mAtomType), mX(other.mX), mY(other.mY), mVX(other.mVX), mVY(other.mVY), mFX(other.mFX), mFY(other.mFY) {
 
 }
 
@@ -77,11 +75,9 @@ mFriendlyName(other.mFriendlyName) {
     idCounter = std::max(mId + 1, idCounter);
 }
 
-AtomType::~AtomType() {
+AtomType::~AtomType() = default;
 
-}
-
-unsigned int AtomType::getId() const {
+const unsigned int& AtomType::getId() const {
     return mId;
 }
 
@@ -126,9 +122,7 @@ mAtomRadius(3.0f), mAtomTypes(), mInteractions() {
 
 }
 
-SimulationRules::~SimulationRules() {
-    
-}
+SimulationRules::~SimulationRules() = default;
 
 void SimulationRules::clearAtomTypes() {
     mAtomTypes.clear();
@@ -136,7 +130,7 @@ void SimulationRules::clearAtomTypes() {
 }
 
 AtomType* SimulationRules::newAtomType() {
-    AtomType* at = mAtomTypes.emplace_back(std::unique_ptr<AtomType>(new AtomType)).get();
+    AtomType* at = mAtomTypes.emplace_back(std::make_unique<AtomType>()).get();
     createInteractionsForAtomType(at);
     return at;
 }
@@ -147,7 +141,7 @@ AtomType* SimulationRules::newAtomType(unsigned int id) {
         return exists;
     }
 
-    AtomType* at = mAtomTypes.emplace_back(std::unique_ptr<AtomType>(new AtomType(id))).get();
+    AtomType* at = mAtomTypes.emplace_back(std::make_unique<AtomType>(id)).get();
     createInteractionsForAtomType(at);
     return at;
 }
@@ -182,9 +176,10 @@ std::vector<std::unique_ptr<AtomType>>& SimulationRules::getAtomTypes() {
     return mAtomTypes;
 }
 
-unsigned int SimulationRules::getAtomCount() {
-    unsigned int count = 0;
-    for (std::unique_ptr<AtomType>& atomType : mAtomTypes) {
+const unsigned int& SimulationRules::getAtomCount() const {
+    static unsigned int count; // TO BE CHANGED
+    count = 0;
+    for (const std::unique_ptr<AtomType>& atomType : mAtomTypes) {
         count += atomType->getQuantity();
     }
     return count;
@@ -222,7 +217,7 @@ void SimulationRules::setAtomRadius(float atomRadius) {
     mAtomRadius = atomRadius;
 }
 
-float SimulationRules::getAtomRadius() {
+const float& SimulationRules::getAtomRadius() const {
     return mAtomRadius;
 }
 

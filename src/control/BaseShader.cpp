@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <filesystem>
 #include <sstream>
 
 std::vector<GLuint> BaseShader::mBuffers;
@@ -13,8 +12,7 @@ std::vector<GLuint> BaseShader::mPrograms;
 BaseShader::BaseShader() : mProgramID(0) {
 }
 
-BaseShader::~BaseShader() {
-}
+BaseShader::~BaseShader() = default;
 
 void BaseShader::init() {
     mPrograms.push_back(mProgramID = glCreateProgram());
@@ -52,16 +50,16 @@ void BaseShader::init() {
     }
 }
 
-void BaseShader::bind() {
+void BaseShader::bind() const {
     glUseProgram(mProgramID);
 }
 
-void BaseShader::unbind() {
+void BaseShader::unbind() { // NOLINT(readability-convert-member-functions-to-static)
     glUseProgram(0);
 }
 
-void BaseShader::setUniform(std::string location, GLfloat value) {
-    for (auto& programID : mPrograms) {
+void BaseShader::setUniform(const std::string& location, const GLfloat value) {
+    for (const auto& programID : mPrograms) {
         glUseProgram(programID);
         glUniform1f(glGetUniformLocation(programID, location.c_str()), value);
     }
@@ -70,8 +68,8 @@ void BaseShader::setUniform(std::string location, GLfloat value) {
 #endif
 }
 
-void BaseShader::setUniform(std::string location, GLfloat value1, GLfloat value2) {
-    for (auto& programID : mPrograms) {
+void BaseShader::setUniform(const std::string& location, GLfloat value1, GLfloat value2) {
+    for (const auto& programID : mPrograms) {
         glUseProgram(programID);
         glUniform2f(glGetUniformLocation(programID, location.c_str()), value1, value2);
     }
@@ -80,7 +78,7 @@ void BaseShader::setUniform(std::string location, GLfloat value1, GLfloat value2
 #endif
 }
 
-GLuint BaseShader::createBuffer(const GLvoid* data, GLsizeiptr size, GLuint binding) {
+GLuint BaseShader::createBuffer(const GLvoid* data, const GLsizeiptr size, const GLuint binding) {
     GLuint& id = mBuffers.emplace_back();
     glGenBuffers(1, &id);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
@@ -93,7 +91,7 @@ GLuint BaseShader::createBuffer(const GLvoid* data, GLsizeiptr size, GLuint bind
     return id;
 }
 
-void BaseShader::readBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size) {
+void BaseShader::readBuffer(const GLuint bufferID, GLvoid* data, const GLsizeiptr size) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferID);
     glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, size, data);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -102,7 +100,7 @@ void BaseShader::readBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size) {
 #endif
 }
 
-void BaseShader::writeBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size) {
+void BaseShader::writeBuffer(const GLuint bufferID, GLvoid* data, const GLsizeiptr size) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferID);
     glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, GL_DYNAMIC_READ);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -111,7 +109,7 @@ void BaseShader::writeBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size) {
 #endif
 }
 
-void BaseShader::readFile(const char* filename, GLuint type) {
+void BaseShader::readFile(const char* filename, const GLuint type) {
     std::string code;
     try {
         std::ifstream file;
@@ -120,8 +118,8 @@ void BaseShader::readFile(const char* filename, GLuint type) {
         stream << file.rdbuf();
         file.close();
         code = stream.str();
-    } catch (std::ifstream::failure e) {
-        fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ\n");
+    } catch (std::ifstream::failure& e) {
+        fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ\n");
         mIsValid = false;
         return;
     }

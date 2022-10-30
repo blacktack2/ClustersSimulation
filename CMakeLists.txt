@@ -31,11 +31,6 @@ if (UNIX)
     endif()
 endif()
 
-#message(${WHERE-IS-SDL})
-#message(${WHERE-IS-SDL-HEADERS})
-#message(${WHERE-IS-GLAD})
-#message(${WHERE-IS-GLAD-HEADERS})
-
 if (WIN32 OR APPLE)
     find_library(SDL SDL2 PATHS ${WHERE-IS-SDL})
     if (WIN32)
