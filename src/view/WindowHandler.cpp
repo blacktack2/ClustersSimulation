@@ -369,7 +369,7 @@ void WindowHandler::drawIOPanel() {
     ImGui::Text("Max Interaction Range");
     float interactionRange = mSimulationHandler.getInteractionRange();
     if (ImGui::InputFloat("##Max Interaction Range", &interactionRange, 1.0f, 10.0f, "%.0f")) {
-        interactionRange = std::max(std::min(interactionRange, simScale / 2.0f), 1.0f);
+        interactionRange = std::max(std::min(interactionRange, std::sqrt(simScale * simScale + simScale * simScale) / 2.0f), 1.0f);
         mSimulationHandler.setInteractionRange(interactionRange);
     }
     ImGui::Text("Collision Force");

@@ -189,8 +189,6 @@ and prevent assigning values to programs which don't need them.
 
 ### Fixes
 
-- **Max Interaction Range** parameter should have a maximum of the distance
-from simulation center to corner (currently set from center to edge)
 - Add hard coded limits to number of atoms and atom types to the UI (and a
 warning if the number of atoms exceeds the limit)
 - GPU version does not instantiate default values of new atom types correctly
