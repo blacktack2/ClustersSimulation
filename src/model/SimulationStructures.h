@@ -106,16 +106,16 @@ public:
 
     AtomType* newAtomType();
     AtomType* newAtomType(unsigned int id);
-    AtomType* getAtomType(unsigned int atomTypeId);
+    AtomType* getAtomType(unsigned int atomTypeId) const;
     void removeAtomType(unsigned int atomTypeId);
 
-    std::vector<std::unique_ptr<AtomType>>& getAtomTypes();
+    const std::vector<std::unique_ptr<AtomType>>& getAtomTypes() const;
 
     [[nodiscard]] const unsigned int& getAtomCount() const;
 
     void clearInteractions();
     void setInteraction(unsigned int aId, unsigned int bId, float interaction);
-    float getInteraction(unsigned int aId, unsigned int bId);
+    float getInteraction(unsigned int aId, unsigned int bId) const;
     [[nodiscard]] std::vector<InteractionSet>& getInteractions();
 
     void setAtomRadius(float atomRadius);

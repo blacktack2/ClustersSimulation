@@ -146,8 +146,8 @@ AtomType* SimulationRules::newAtomType(unsigned int id) {
     return at;
 }
 
-AtomType* SimulationRules::getAtomType(unsigned int atomTypeId) {
-    for (std::unique_ptr<AtomType>& atomType : mAtomTypes) {
+AtomType* SimulationRules::getAtomType(unsigned int atomTypeId) const {
+    for (const std::unique_ptr<AtomType>& atomType : mAtomTypes) {
         if (atomType->getId() == atomTypeId) {
             return atomType.get();
         }
@@ -172,7 +172,7 @@ void SimulationRules::removeAtomType(unsigned int atomTypeId) {
                 );
 }
 
-std::vector<std::unique_ptr<AtomType>>& SimulationRules::getAtomTypes() {
+const std::vector<std::unique_ptr<AtomType>>& SimulationRules::getAtomTypes() const {
     return mAtomTypes;
 }
 
@@ -200,8 +200,8 @@ void SimulationRules::setInteraction(unsigned int aId, unsigned int bId, float i
     }
 }
 
-float SimulationRules::getInteraction(unsigned int aId, unsigned int bId) {
-    for (InteractionSet& is : mInteractions) {
+float SimulationRules::getInteraction(unsigned int aId, unsigned int bId) const {
+    for (const InteractionSet& is : mInteractions) {
         if (is.aId == aId && is.bId == bId) {
             return is.value;
         }

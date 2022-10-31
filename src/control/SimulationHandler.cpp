@@ -109,7 +109,7 @@ void SimulationHandler::initSimulation() {
     }
     BaseShader::writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
 #else
-    for (std::unique_ptr<AtomType>& atomType : mLSRules.getAtomTypes()) {
+    for (const std::unique_ptr<AtomType>& atomType : mLSRules.getAtomTypes()) {
         unsigned int quantity = atomType->getQuantity();
         for (int i = 0; i < quantity; i++) {
             mAtoms.emplace_back(atomType.get());
@@ -273,7 +273,7 @@ std::vector<unsigned int> SimulationHandler::getAtomTypeIds() const {
         ids[i] = mAtomTypes[i].id;
     }
 #else
-    std::vector<std::unique_ptr<AtomType>>& atomTypes = mLSRules.getAtomTypes();
+    const std::vector<std::unique_ptr<AtomType>>& atomTypes = mLSRules.getAtomTypes();
     std::vector<unsigned int> ids(atomTypes.size());
     for (int i = 0; i < atomTypes.size(); i++) {
         ids[i] = atomTypes[i]->getId();
@@ -489,10 +489,10 @@ void SimulationHandler::shuffleAtomInteractions() {
     }
     BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
 #else
-    std::vector<std::unique_ptr<AtomType>>& atomTypes = mLSRules.getAtomTypes();
+    const std::vector<std::unique_ptr<AtomType>>& atomTypes = mLSRules.getAtomTypes();
 
-    for (std::unique_ptr<AtomType>& atomTypeA : atomTypes) {
-        for (std::unique_ptr<AtomType>& atomTypeB : atomTypes) {
+    for (const std::unique_ptr<AtomType>& atomTypeA : atomTypes) {
+        for (const std::unique_ptr<AtomType>& atomTypeB : atomTypes) {
             mLSRules.setInteraction(atomTypeA->getId(), atomTypeB->getId(), range(mt));
         }
     }
