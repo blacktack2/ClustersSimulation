@@ -2,22 +2,42 @@
 
 #include <algorithm>
 #include <cmath>
+#include <random>
 #ifndef ITERATE_ON_COMPUTE_SHADER
 #include <memory>
-#include <random>
 #endif
 
 static unsigned int idCounter = 0;
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
 AtomType::AtomType() :
-id(idCounter++), r(0.0f), g(0.0f), b(0.0f), friendlyName(), quantity(200) {
+    id(idCounter++), r(0.0f), g(0.0f), b(0.0f), friendlyName(std::to_string(id)), quantity(200) {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
+    std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
+    std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
 
+    Color color = hslToColor(rangeH(mt), rangeS(mt), rangeL(mt));
+    r = color.r;
+    g = color.g;
+    b = color.b;
 }
 
 AtomType::AtomType(unsigned int id_) :
-id(id_), r(0.0f), g(0.0f), b(0.0f), friendlyName(), quantity(200) {
+id(id_), r(0.0f), g(0.0f), b(0.0f), friendlyName(std::to_string(id)), quantity(200) {
     idCounter = std::max(idCounter, id + 1);
+
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> rangeH(0.0f, 360.0f);
+    std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
+    std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
+
+    Color color = hslToColor(rangeH(mt), rangeS(mt), rangeL(mt));
+    r = color.r;
+    g = color.g;
+    b = color.b;
 }
 
 AtomTypeRaw::AtomTypeRaw() :

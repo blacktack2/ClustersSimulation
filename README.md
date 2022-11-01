@@ -186,7 +186,6 @@ and prevent assigning values to programs which don't need them.
 
 ### Fixes
 
-- GPU version does not instantiate default values of new atom types correctly
 - Fix interaction sliders to fill the remaining panel width
 - CPU version uses incredibly slow method of querying atom types
 - Remove magic numbers in ImGui layout
