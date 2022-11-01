@@ -8,31 +8,8 @@
 
 #include <cstdio>
 #include <chrono>
+#include <cmath>
 #include <filesystem>
-
-#define PANEL_PADDING 10
-#define PANEL_MARGINS 10
-
-#define DEBUG_PANEL_WIDTH_MIN  200
-#define DEBUG_PANEL_HEIGHT_MIN 100
-
-#define IO_PANEL_WIDTH_MIN  200
-#define IO_PANEL_HEIGHT_MIN 400
-
-#define SIM_PANEL_WIDTH_MIN  500 + PANEL_PADDING * 2
-#define SIM_PANEL_HEIGHT_MIN 500 + PANEL_PADDING * 2
-
-#if (DEBUG_PANEL_WIDTH_MIN > IO_PANEL_WIDTH_MIN)
-#define WINDOW_WIDTH_MIN DEBUG_PANEL_WIDTH_MIN + DEBUG_PANEL_WIDTH_MIN + PANEL_MARGINS * 4
-#else
-#define WINDOW_WIDTH_MIN DEBUG_PANEL_WIDTH_MIN + SIM_PANEL_WIDTH_MIN + PANEL_MARGINS * 4
-#endif
-
-#if (DEBUG_PANEL_HEIGHT_MIN + IO_PANEL_HEIGHT_MIN + PANEL_MARGINS * 2 > SIM_PANEL_HEIGHT_MIN)
-#define WINDOW_HEIGHT_MIN DEBUG_PANEL_HEIGHT_MIN + IO_PANEL_HEIGHT_MIN + PANEL_MARGINS * 4
-#else
-#define WINDOW_HEIGHT_MIN SIM_PANEL_HEIGHT_MIN + PANEL_MARGINS * 2
-#endif
 
 WindowHandler::WindowHandler() :
 mWindowWidth(0), mWindowHeight(0), mRunning(false), mSimulationRunning(false),
@@ -109,7 +86,7 @@ bool WindowHandler::init() {
         return false;
     }
 
-    SDL_SetWindowMinimumSize(mWindow, WINDOW_WIDTH_MIN, WINDOW_HEIGHT_MIN);
+    SDL_SetWindowMinimumSize(mWindow, 800, 600);
     mGlContext = SDL_GL_CreateContext(mWindow);
 
     SDL_GL_SetSwapInterval(1);
@@ -158,11 +135,6 @@ void WindowHandler::mainloop() {
     auto lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     int frameCounter = 0;
 
-    ImGui::PushStyleVar(
-            ImGuiStyleVar_WindowPadding,
-            ImVec2(static_cast<float>(PANEL_PADDING), static_cast<float>(PANEL_PADDING))
-            );
-
     while (mRunning) {
         auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         delta += (float) (currentTime - lastTime);
@@ -190,72 +162,56 @@ void WindowHandler::mainloop() {
             int sdlHeight = 0;
             SDL_GetWindowSize(mWindow, &sdlWidth, &sdlHeight);
 
-            ImVec4 debugPanelBounds = ImVec4(
-                    static_cast<float>(PANEL_MARGINS),
-                    static_cast<float>(PANEL_MARGINS),
-                    std::max((sdlWidth - PANEL_MARGINS * 4) * 2 / 7, DEBUG_PANEL_WIDTH_MIN),
-                    std::max((sdlHeight - PANEL_MARGINS * 4) / 5, DEBUG_PANEL_HEIGHT_MIN)
-                    );
-            ImVec4 ioPanelBounds = ImVec4(
-                    static_cast<float>(PANEL_MARGINS),
-                    static_cast<float>(debugPanelBounds.y + debugPanelBounds.w + PANEL_MARGINS * 2),
-                    std::max((sdlWidth - PANEL_MARGINS * 4) * 2 / 7, IO_PANEL_WIDTH_MIN),
-                    std::max((sdlHeight - PANEL_MARGINS * 4) * 4 / 5, IO_PANEL_HEIGHT_MIN)
-            );
-            ImVec4 simPanelBounds = ImVec4(
-                    static_cast<float>(std::max(debugPanelBounds.x + debugPanelBounds.z, ioPanelBounds.x + ioPanelBounds.z) + PANEL_MARGINS * 2),
-                    static_cast<float>(PANEL_MARGINS),
-                    std::max((sdlWidth - PANEL_MARGINS * 4) * 5 / 7, SIM_PANEL_WIDTH_MIN),
-                    std::max(sdlHeight - PANEL_MARGINS * 2, SIM_PANEL_HEIGHT_MIN)
-            );
-
             ImGui::SetNextWindowPos(
-                    ImVec2(debugPanelBounds.x, debugPanelBounds.y),
-                    ImGuiCond_Always
-                    );
+                ImVec2(0, 0),
+                ImGuiCond_Always
+            );
             ImGui::SetNextWindowSize(
-                    ImVec2(debugPanelBounds.z, debugPanelBounds.w),
-                    ImGuiCond_Always
-                    );
+                ImVec2(sdlWidth, sdlHeight),
+                ImGuiCond_Always
+            );
+            ImGui::Begin("##root", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
-            ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+            ImVec2 bounds = ImGui::GetContentRegionAvail();
+            ImVec2 messagePanelBounds = ImVec2(bounds.x, 30.0f);
+            ImVec2 debugPanelBounds   = ImVec2(bounds.x * 2.0f / 7.0f, (bounds.y - messagePanelBounds.y) * 1.0f / 5.0f);
+            ImVec2 ioPanelBounds      = ImVec2(debugPanelBounds.x, bounds.y - debugPanelBounds.y - messagePanelBounds.y);
+            ImVec2 simPanelBounds     = ImVec2(bounds.x - debugPanelBounds.x, bounds.y - messagePanelBounds.y);
 
+            ImGui::BeginGroup();
+
+            ImGui::BeginChild("Debug", debugPanelBounds, true);
             drawDebugPanel(mspf);
+            ImGui::EndChild();
 
-            ImGui::End();
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 4); // Not a good solution (magic number)
 
-            ImGui::SetNextWindowPos(
-                    ImVec2(ioPanelBounds.x, ioPanelBounds.y),
-                    ImGuiCond_Always
-                    );
-            ImGui::SetNextWindowSize(
-                    ImVec2(ioPanelBounds.z, ioPanelBounds.w),
-                    ImGuiCond_Always
-            );
-
-            ImGui::Begin("Parameters", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
+            ImGui::BeginChild("Parameters", ioPanelBounds, true);
+            ImGui::PopStyleVar(1);
             drawIOPanel();
+            ImGui::EndChild();
 
-            ImGui::End();
+            ImGui::EndGroup();
+            ImGui::SameLine(0, 0);
 
-            ImGui::SetNextWindowPos(
-                    ImVec2(simPanelBounds.x, simPanelBounds.y),
-                    ImGuiCond_Always
-                    );
-            ImGui::SetNextWindowSize(
-                    ImVec2(simPanelBounds.z, simPanelBounds.w),
-                    ImGuiCond_Always
-            );
-
-            ImGui::Begin("Simulation", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-
-            glViewport(0, 0, simPanelBounds.z, simPanelBounds.w);
+            ImGui::BeginChild("Simulation", simPanelBounds, true);
+            ImVec2 simBounds = ImGui::GetContentRegionAvail();
+            ImVec2 simPos = ImGui::GetContentRegionMax();
+            glViewport(0, 0, simBounds.x, simBounds.y);
+            // Not a good solution for setting x and y parameters (magic number)
             mSimulationRenderer.drawSimulation(
-                    PANEL_PADDING + simPanelBounds.x, PANEL_PADDING + simPanelBounds.y,
-                    simPanelBounds.z - PANEL_PADDING * 2, simPanelBounds.w - PANEL_PADDING * 2
-                    );
+                debugPanelBounds.x + ImGui::GetCursorPosX() + 8, ImGui::GetCursorPosY() + 8, simBounds.x, simBounds.y
+            );
             glViewport(0, 0, mWindowWidth, mWindowHeight);
+            ImGui::EndChild();
+
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 4); // Not a good solution (magic number)
+
+            ImGui::BeginChild("Message", messagePanelBounds, true);
+            if (mShowMessage)
+                ImGui::TextColored(mMessageColor, mMessage.c_str());
+            ImGui::EndChild();
 
             ImGui::End();
         }
@@ -314,12 +270,20 @@ void WindowHandler::drawDebugPanel(const float& mspf) {
     const ImVec4 debugTextColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
     ImGui::TextColored(
-            debugTextColor,
-            "[FPS: %.2f | %.2fms]", mspf == 0 ? INFINITY : 1000.0 / mspf, mspf
+        debugTextColor,
+        "[FPS: %.2f | %.2fms]", mspf == 0 ? INFINITY : 1000.0 / mspf, mspf
     );
     ImGui::TextColored(
-            debugTextColor,
-            "Atom Count: %u", mSimulationHandler.getAtomCount()
+        debugTextColor,
+        "Atom Count: %u", mSimulationHandler.getAtomCount()
+    );
+    ImGui::TextColored(
+        debugTextColor,
+        "Current Atom Count: %u", mSimulationHandler.getActualAtomCount()
+    );
+    ImGui::TextColored(
+        debugTextColor,
+        "Atom Types: %u", mSimulationHandler.getAtomTypeCount()
     );
 }
 
@@ -379,9 +343,12 @@ void WindowHandler::drawIOPanel() {
         mSimulationHandler.setCollisionForce(collisionForce);
     }
 
-    if (ImGui::Button("Add Atom Type", ImVec2(width, 0))) {
+    unsigned int atomTypeCount = mSimulationHandler.getAtomTypeCount();
+    ImGui::BeginDisabled(atomTypeCount >= MAX_ATOM_TYPES);
+    if (ImGui::Button("Add Atom Type", ImVec2(width, 0)))
         mSimulationHandler.newAtomType();
-    }
+    ImGui::EndDisabled();
+
     std::vector<unsigned int> atomTypes = mSimulationHandler.getAtomTypeIds();
     for (unsigned int atomTypeId : atomTypes) {
         ImGui::Separator();
@@ -422,7 +389,13 @@ void WindowHandler::drawIOPanel() {
         int quantity = (int) mSimulationHandler.getAtomTypeQuantity(atomTypeId);
         label = "Quantity##QuantityInt-" + atomIdStr;
         if (ImGui::InputInt(label.c_str(), &quantity)) {
-            mSimulationHandler.setAtomTypeQuantity(atomTypeId, quantity);
+            int count = mSimulationHandler.getAtomCount();
+            mSimulationHandler.setAtomTypeQuantity(atomTypeId, std::min((unsigned int)quantity, MAX_ATOMS));
+            int newCount = mSimulationHandler.getAtomCount();
+            if (newCount > MAX_ATOMS)
+                messageWarn("Too many atoms defined (max: " + std::to_string(MAX_ATOMS) + " | you have " + std::to_string(newCount) + ")");
+            else if (count > MAX_ATOMS)
+                messageClear();
         }
 
         ImGui::PushItemWidth(width * 3 / 4);
@@ -491,4 +464,28 @@ void WindowHandler::drawIOPanel() {
         mFileLoadLocations,
         mFileLoadCount
     );
+}
+
+void WindowHandler::messageInfo(std::string message) {
+    mMessage = message;
+    mMessageColor = MESSAGE_COL;
+    mShowMessage = true;
+}
+
+void WindowHandler::messageWarn(std::string message) {
+    mMessage = "[Warning] " + message;
+    mMessageColor = MESSAGE_WARN_COL;
+    mShowMessage = true;
+}
+
+void WindowHandler::messageError(std::string message) {
+    mMessage = "[Error] " + message;
+    mMessageColor = MESSAGE_ERROR_COL;
+    mShowMessage = true;
+}
+
+void WindowHandler::messageClear() {
+    mMessage = "";
+    mMessageColor = MESSAGE_COL;
+    mShowMessage = false;
 }

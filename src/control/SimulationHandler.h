@@ -12,12 +12,16 @@
 #include <vector>
 #endif
 
+#ifdef ITERATE_ON_COMPUTE_SHADER
+const unsigned int MAX_ATOMS = 10000;
+const unsigned int MAX_ATOM_TYPES = 50;
+#else
+const unsigned int MAX_ATOMS = 3000;
+const unsigned int MAX_ATOM_TYPES = 8;
+#endif
+const unsigned int MAX_INTERACTIONS = MAX_ATOM_TYPES * MAX_ATOM_TYPES;
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
-#define ATOMS_BUFFER_SIZE 10000
-#define ATOM_TYPES_BUFFER_SIZE 50
-#define INTERACTIONS_BUFFER_SIZE ATOM_TYPES_BUFFER_SIZE * ATOM_TYPES_BUFFER_SIZE
-
 #define INTERACTION_INDEX(aId, bId) aId == bId ? aId * aId : (aId < bId ? bId * bId + aId * 2 + 1 : aId * aId + bId * 2 + 2)
 #endif
 
@@ -73,6 +77,8 @@ public:
     void zeroAtomInteractions();
 
     [[nodiscard]] unsigned int getAtomCount() const;
+    [[nodiscard]] unsigned int getActualAtomCount() const;
+    [[nodiscard]] unsigned int getAtomTypeCount() const;
 
 #ifndef ITERATE_ON_COMPUTE_SHADER
     const std::vector<Atom>& getAtoms();
@@ -99,10 +105,10 @@ private:
     size_t mAtomCount;
     size_t mInteractionCount;
 
-    std::array<AtomType, ATOM_TYPES_BUFFER_SIZE> mAtomTypes;
-    std::array<AtomTypeRaw, ATOM_TYPES_BUFFER_SIZE> mAtomTypesBuffer;
-    std::array<Atom, ATOMS_BUFFER_SIZE> mAtomsBuffer;
-    std::array<float, INTERACTIONS_BUFFER_SIZE> mInteractionsBuffer;
+    std::array<AtomType, MAX_ATOM_TYPES> mAtomTypes;
+    std::array<AtomTypeRaw, MAX_ATOM_TYPES> mAtomTypesBuffer;
+    std::array<Atom, MAX_ATOMS> mAtomsBuffer;
+    std::array<float, MAX_INTERACTIONS> mInteractionsBuffer;
 
     const std::string SIMULATION_BOUNDS_UNIFORM = "simulationBounds";
     const std::string INTERACTION_RANGE2_UNIFORM = "interactionRange2";

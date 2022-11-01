@@ -102,7 +102,7 @@ void SimulationHandler::initSimulation() {
 #ifdef ITERATE_ON_COMPUTE_SHADER
     for (int at = 0; at < mAtomTypeCount; at++) {
         for (int a = 0; a < mAtomTypes[at].quantity; a++) {
-            if (mAtomCount >= ATOMS_BUFFER_SIZE)
+            if (mAtomCount >= MAX_ATOMS)
                 break;
             mAtomsBuffer[mAtomCount++] = Atom(mAtomTypes[at].id);
         }
@@ -176,14 +176,14 @@ void SimulationHandler::iterateSimulation() {
 
 unsigned int SimulationHandler::newAtomType() {
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    if (mAtomTypeCount >= ATOM_TYPES_BUFFER_SIZE)
+    if (mAtomTypeCount >= MAX_ATOM_TYPES)
         return INT_MAX;
     int index = mAtomTypeCount++;
     unsigned int id = (mAtomTypes[index] = AtomType(index)).id;
     mAtomTypesBuffer[index] = AtomTypeRaw(mAtomTypes[index]);
     BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
     for (unsigned int id2 : getAtomTypeIds()) {
-        if (mInteractionCount >= INTERACTIONS_BUFFER_SIZE)
+        if (mInteractionCount >= MAX_INTERACTIONS)
             break;
         mInteractionsBuffer[mInteractionCount++] = 0.0f;
         if (id != id2)
@@ -207,14 +207,14 @@ void SimulationHandler::removeAtomType(unsigned int atomTypeId) {
             return false;
         }) - mAtomsBuffer.begin();
 
-    std::array<unsigned int, ATOM_TYPES_BUFFER_SIZE> newIndices{};
+    std::array<unsigned int, MAX_ATOM_TYPES> newIndices{};
     int counter = 0;
     for (int at = 0; at < mAtomTypeCount; at++)
         if (mAtomTypes[at].id != atomTypeId)
             newIndices[at] = counter++;
     for (int a = 0; a < mAtomCount; a++)
         mAtomsBuffer[a].atomType = newIndices[mAtomsBuffer[a].atomType];
-    bool toRemove[INTERACTIONS_BUFFER_SIZE]{ false };
+    bool toRemove[MAX_INTERACTIONS]{false };
     for (unsigned int i = atomTypeId * atomTypeId; i < (atomTypeId + 1) * (atomTypeId + 1); i++)
         toRemove[i] = true;
     for (unsigned int n = atomTypeId + 1; n < mAtomTypeCount; n++) {
@@ -512,9 +512,28 @@ void SimulationHandler::zeroAtomInteractions() {
 
 unsigned int SimulationHandler::getAtomCount() const {
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    return mAtomCount;
+    unsigned int count = 0;
+    for (int i = 0; i < mAtomTypeCount; i++)
+        count += mAtomTypes[i].quantity;
+    return count;
 #else
     return mLSRules.getAtomCount();
+#endif
+}
+
+unsigned int SimulationHandler::getActualAtomCount() const {
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    return mAtomCount;
+#else
+    return mAtoms.size();
+#endif
+}
+
+unsigned int SimulationHandler::getAtomTypeCount() const {
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    return mAtomTypeCount;
+#else
+    return mLSRules.getAtomTypeCount();
 #endif
 }
 

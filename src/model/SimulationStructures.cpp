@@ -176,13 +176,16 @@ const std::vector<std::unique_ptr<AtomType>>& SimulationRules::getAtomTypes() co
     return mAtomTypes;
 }
 
-const unsigned int& SimulationRules::getAtomCount() const {
-    static unsigned int count; // TO BE CHANGED
-    count = 0;
+int SimulationRules::getAtomCount() const {
+    int count = 0;
     for (const std::unique_ptr<AtomType>& atomType : mAtomTypes) {
         count += atomType->getQuantity();
     }
     return count;
+}
+
+unsigned int SimulationRules::getAtomTypeCount() const {
+    return mAtomTypes.size();
 }
 
 void SimulationRules::clearInteractions() {
@@ -234,15 +237,12 @@ void SimulationRules::createInteractionsForAtomType(AtomType* atomType) {
     InteractionSet interactionSet = {atomType->getId(), atomType->getId(), 0};
     mInteractions.push_back(interactionSet);
 }
+
 #endif
 
 Color hslToColor(float h, float s, float l) {
     float c = (1 - std::abs(2 * l - 1)) * s;
-#ifdef _WIN32
-    float x = c * (1 - std::abs(std::fmodf(h / 60, 2) - 1));
-#else
     float x = c * (1 - std::abs(fmodf(h / 60, 2) - 1));
-#endif
     float m = l - c / 2;
 
     float r;

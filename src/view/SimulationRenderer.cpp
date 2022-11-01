@@ -74,7 +74,7 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    unsigned int count = mHandler.getAtomCount();
+    unsigned int count = mHandler.getActualAtomCount();
     mShader.drawInstanced(count);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -113,19 +113,16 @@ enabled)
 
 ### Limits
 
-I am yet to fully implement hard-coded limits so be careful of simulating with
-more than 1500 atoms on the CPU version, and more than 5000 on the GPU version.
-The CPU version currently also has poorly implemented atom types, so avoid
-using much more than 8.
-
-No proper limits are not yet implemented on the CPU version. Be careful using
-large values on the CPU version (the application may hang).
+On the CPU version large amounts of atoms and/or many atom types will result in
+a noticeable performance decrease (most noticeable at ~2000 atoms). On the GPU
+version, only the number of atoms affects performance (~6000 for the same
+performance decrease).
 
 | Entity | Min | Max | Notes |
 | ------ |:---:|:-----:| ----- |
-| Atoms (total) | 0 | 10000 | CPU version should not go above 2000<br/>Not hard implemented in CPU version |
-| Atom Types | 0 | 50 | CPU version should not go above 8 |
-| Interactions | 0 | 2500 | Hard defined as the square of the atom types |
+| Atoms (total) | 0 | (3000 CPU, 10000 GPU) |  |
+| Atom Types | 0 | (8 CPU, 50 GPU) |  |
+| Interactions | 0 | AtomTypes\^2 |  |
 | Scale | 1.0 | 1000000.0 | Small values may not render correctly |
 | dt | 0.01 | 10.00 | Small values may be imperceptibly slow |
 | Drag | 0.0 | 1.0 |  |
@@ -189,11 +186,10 @@ and prevent assigning values to programs which don't need them.
 
 ### Fixes
 
-- Add hard coded limits to number of atoms and atom types to the UI (and a
-warning if the number of atoms exceeds the limit)
 - GPU version does not instantiate default values of new atom types correctly
 - Fix interaction sliders to fill the remaining panel width
 - CPU version uses incredibly slow method of querying atom types
+- Remove magic numbers in ImGui layout
 - Remove Herobrine?
 
 ### 'Maybe' additions

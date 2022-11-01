@@ -46,11 +46,20 @@ private:
     void drawDebugPanel(const float& fps);
     void drawIOPanel();
 
+    void messageInfo(std::string message);
+    void messageWarn(std::string message);
+    void messageError(std::string message);
+    void messageClear();
+
     int mWindowWidth;
     int mWindowHeight;
 
     bool mRunning;
     bool mSimulationRunning;
+
+    bool mShowMessage = false;
+    std::string mMessage;
+    ImVec4 mMessageColor = MESSAGE_COL;
 
     SDL_Window* mWindow;
     SDL_GLContext mGlContext{};
@@ -64,6 +73,10 @@ private:
     int mFileLoadIndex;
     int mFileLoadCount;
     bool mIsOverwritingFile;
+
+    const ImVec4 MESSAGE_COL = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    const ImVec4 MESSAGE_WARN_COL = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+    const ImVec4 MESSAGE_ERROR_COL = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 };
 
 

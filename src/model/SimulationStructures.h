@@ -111,7 +111,8 @@ public:
 
     const std::vector<std::unique_ptr<AtomType>>& getAtomTypes() const;
 
-    [[nodiscard]] const unsigned int& getAtomCount() const;
+    [[nodiscard]] int getAtomCount() const;
+    [[nodiscard]] unsigned int getAtomTypeCount() const;
 
     void clearInteractions();
     void setInteraction(unsigned int aId, unsigned int bId, float interaction);
