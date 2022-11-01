@@ -94,10 +94,12 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
     float scaleY = static_cast<float>(height) / mHandler.getHeight();
     float atomSize = std::max(3.0 * scaleX, 3.0);
 
-    for (const Atom& atom : mHandler.getAtoms()) {
-        Color c = atom.mAtomType->getColor();
-        float x = startX + atom.mX * scaleX;
-        float y = startY + atom.mY * scaleY;
+    auto& atoms = mHandler.getAtoms();
+    for (int i = 0; i < mHandler.getActualAtomCount(); i++) {
+        const Atom& atom = atoms[i];
+        Color c = mHandler.getAtomTypeColor(atom.atomType);
+        float x = startX + atom.x * scaleX;
+        float y = startY + atom.y * scaleY;
         drawList->AddCircleFilled(
             ImVec2(x, y), atomSize,
             ImColor(ImVec4(c.r, c.g, c.b, 1.0f))

@@ -7,23 +7,19 @@
 #include "ComputeShader.h"
 
 #include "glad/glad.h"
-#include <array>
-#else
-#include <vector>
 #endif
+
+#include <array>
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
 const unsigned int MAX_ATOMS = 10000;
-const unsigned int MAX_ATOM_TYPES = 50;
 #else
 const unsigned int MAX_ATOMS = 3000;
-const unsigned int MAX_ATOM_TYPES = 8;
 #endif
+const unsigned int MAX_ATOM_TYPES = 50;
 const unsigned int MAX_INTERACTIONS = MAX_ATOM_TYPES * MAX_ATOM_TYPES;
 
-#ifdef ITERATE_ON_COMPUTE_SHADER
-#define INTERACTION_INDEX(aId, bId) aId == bId ? aId * aId : (aId < bId ? bId * bId + aId * 2 + 1 : aId * aId + bId * 2 + 2)
-#endif
+#define INTERACTION_INDEX(aId, bId) (aId == bId ? aId * aId : (aId < bId ? bId * bId + aId * 2 + 1 : aId * aId + bId * 2 + 2))
 
 class SimulationHandler {
 public:
@@ -39,16 +35,16 @@ public:
     [[nodiscard]] float getHeight() const;
 
     void setDt(float dt);
-    [[nodiscard]] inline const float& getDt() const { return mDt; }
+    [[nodiscard]] inline float getDt() const { return mDt; }
 
     void setDrag(float drag);
-    [[nodiscard]] inline const float& getDrag() const { return mDrag; }
+    [[nodiscard]] inline float getDrag() const { return mDrag; }
 
     void setInteractionRange(float interactionRange);
-    [[nodiscard]] inline const float& getInteractionRange() const { return mInteractionRange; }
+    [[nodiscard]] inline float getInteractionRange() const { return mInteractionRange; }
 
     void setCollisionForce(float collisionForce);
-    [[nodiscard]] inline const float& getCollisionForce() const { return mCollisionForce; }
+    [[nodiscard]] inline float getCollisionForce() const { return mCollisionForce; }
 
     void clearAtoms();
     void initSimulation();
@@ -80,9 +76,7 @@ public:
     [[nodiscard]] unsigned int getActualAtomCount() const;
     [[nodiscard]] unsigned int getAtomTypeCount() const;
 
-#ifndef ITERATE_ON_COMPUTE_SHADER
-    const std::vector<Atom>& getAtoms();
-#endif
+    const std::array<Atom, MAX_ATOMS>& getAtoms();
 private:
     float mSimWidth;
     float mSimHeight;
@@ -93,14 +87,6 @@ private:
     float mInteractionRange2;
     float mCollisionForce;
 
-#ifdef ITERATE_ON_COMPUTE_SHADER
-    ComputeShader mIterationComputePass1;
-    ComputeShader mIterationComputePass2;
-
-    GLuint mAtomTypesBufferID;
-    GLuint mAtomsBufferID;
-    GLuint mInteractionsBufferID;
-
     size_t mAtomTypeCount;
     size_t mAtomCount;
     size_t mInteractionCount;
@@ -110,15 +96,20 @@ private:
     std::array<Atom, MAX_ATOMS> mAtomsBuffer;
     std::array<float, MAX_INTERACTIONS> mInteractionsBuffer;
 
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    ComputeShader mIterationComputePass1;
+    ComputeShader mIterationComputePass2;
+
+    GLuint mAtomTypesBufferID;
+    GLuint mAtomsBufferID;
+    GLuint mInteractionsBufferID;
+
     const std::string SIMULATION_BOUNDS_UNIFORM = "simulationBounds";
     const std::string INTERACTION_RANGE2_UNIFORM = "interactionRange2";
     const std::string ATOM_DIAMETER_UNIFORM = "atomDiameter";
     const std::string COLLISION_FORCE_UNIFORM = "collisionForce";
     const std::string DRAG_FORCE_UNIFORM = "dragForce";
     const std::string DT_UNIFORM = "dt";
-#else
-    std::vector<Atom> mAtoms;
-    SimulationRules mLSRules;
 #endif
 };
 #endif //LIFESIMULATIONC_LIFESIMULATIONHANDLER_H
