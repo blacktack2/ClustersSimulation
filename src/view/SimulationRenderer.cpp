@@ -92,7 +92,7 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
 
     float scaleX = static_cast<float>(width) / mHandler.getWidth();
     float scaleY = static_cast<float>(height) / mHandler.getHeight();
-    float atomSize = std::max(3.0 * scaleX, 3.0);
+    float atomSize = std::max(mHandler.getAtomDiameter() * scaleX, 3.0f);
 
     auto& atoms = mHandler.getAtoms();
     for (int i = 0; i < mHandler.getActualAtomCount(); i++) {

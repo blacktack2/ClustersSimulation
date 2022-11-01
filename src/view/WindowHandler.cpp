@@ -315,8 +315,14 @@ void WindowHandler::drawIOPanel() {
     ImGui::Text("Simulation Scale");
     float simScale = mSimulationHandler.getWidth();
     if (ImGui::InputFloat("##Simulation Scale", &simScale, 1.0f, 10.0f, "%.0f")) {
-        simScale = std::max(std::min(simScale, 1000000.0f), 1.0f);
+        simScale = std::max(std::min(simScale, 1000000.0f), 10.0f);
         mSimulationHandler.setBounds(simScale, simScale);
+    }
+    ImGui::Text("Atom Diameter");
+    float atomDiameter = mSimulationHandler.getAtomDiameter();
+    if (ImGui::InputFloat("##Atom Diameter", &atomDiameter, 1.0f, 10.0f, "%.0f")) {
+        atomDiameter = std::max(std::min(atomDiameter, simScale / 2.0f), 1.0f);
+        mSimulationHandler.setAtomDiameter(atomDiameter);
     }
     ImGui::Text("Time Delta (dt)");
     float dt = mSimulationHandler.getDt();

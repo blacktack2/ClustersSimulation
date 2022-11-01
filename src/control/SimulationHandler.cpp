@@ -9,7 +9,7 @@
 
 SimulationHandler::SimulationHandler() :
 mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f),
-mInteractionRange(80), mInteractionRange2(6400), mCollisionForce(1.0f)
+mInteractionRange(80), mInteractionRange2(6400), mCollisionForce(1.0f), mAtomDiameter(3.0f)
 #ifdef ITERATE_ON_COMPUTE_SHADER
 , mIterationComputePass1("IterationPass1.comp"), mIterationComputePass2("IterationPass2.comp"),
 mAtomTypesBufferID(), mAtomsBufferID(), mInteractionsBufferID()
@@ -86,6 +86,13 @@ void SimulationHandler::setCollisionForce(float collisionForce) {
 #endif
 }
 
+void SimulationHandler::setAtomDiameter(float atomDiameter) {
+    mAtomDiameter = atomDiameter;
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    BaseShader::setUniform(ATOM_DIAMETER_UNIFORM, mAtomDiameter);
+#endif
+}
+
 void SimulationHandler::clearAtoms() {
     mAtomCount = 0;
 }
@@ -111,8 +118,6 @@ void SimulationHandler::iterateSimulation() {
     mIterationComputePass1.run(mAtomCount, mAtomCount, 1);
     mIterationComputePass2.run(mAtomCount, 1, 1);
 #else
-    float atomRadius = 3.0f;
-    float atomDiameter = atomRadius * 2;
     for (int i = 0; i < mAtomCount; i++) {
         Atom& atomA = mAtomsBuffer[i];
         for (int j = 0; j < mAtomCount; j++) {
@@ -139,7 +144,7 @@ void SimulationHandler::iterateSimulation() {
             if (d2 < mInteractionRange2) {
                 float d = std::sqrt(d2);
                 float f = g / d;
-                f += (d < atomDiameter) ? (atomDiameter - d) * mCollisionForce / atomDiameter : 0.0f;
+                f += (d < mAtomDiameter) ? (mAtomDiameter - d) * mCollisionForce / mAtomDiameter : 0.0f;
                 atomA.fx += f * dX;
                 atomA.fy += f * dY;
             }

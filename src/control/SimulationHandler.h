@@ -46,6 +46,9 @@ public:
     void setCollisionForce(float collisionForce);
     [[nodiscard]] inline float getCollisionForce() const { return mCollisionForce; }
 
+    void setAtomDiameter(float atomDiameter);
+    [[nodiscard]] inline float getAtomDiameter() const { return mAtomDiameter; }
+
     void clearAtoms();
     void initSimulation();
     void iterateSimulation();
@@ -86,6 +89,7 @@ private:
     float mInteractionRange;
     float mInteractionRange2;
     float mCollisionForce;
+    float mAtomDiameter;
 
     size_t mAtomTypeCount;
     size_t mAtomCount;

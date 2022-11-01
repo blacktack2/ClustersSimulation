@@ -121,12 +121,13 @@ performance decrease).
 | Entity | Min | Max | Notes |
 | ------ |:---:|:-----:| ----- |
 | Atoms (total) | 0 | (3000 CPU, 10000 GPU) |  |
-| Atom Types | 0 | (8 CPU, 50 GPU) |  |
-| Interactions | 0 | AtomTypes\^2 |  |
-| Scale | 1.0 | 1000000.0 | Small values may not render correctly |
+| Atom Types | 0 | 50 |  |
+| Interactions | 0 | **Atom Types**\^2 |  |
+| Scale | 10.0 | 1000000.0 |  |
+| Atom Diameter | 1.0 | **Scale** / 2 | Will always render with a minimum diameter of 3.<br>Collisions will still use the assinged value either way. |
 | dt | 0.01 | 10.00 | Small values may be imperceptibly slow |
 | Drag | 0.0 | 1.0 |  |
-| I-Range | 1.0 | **Scaled** | Max scales with **Simulation Scale** parameter |
+| I-Range | 1.0 | sqrt\(**Width**\^2+**Height**\^2\) |  |
 | Collision | 0.00 | 10.00 |  |
 
 ## License
@@ -164,7 +165,6 @@ help distinguish buttons)
 display)
 - Possibly try to improve speed of simulation's Compute Shader (was expecting
 it to perform significantly faster)
-- Add atom size parameter
 - Atom type name parameter should be set to it's default if empty
 - Remove trivial getters/setters in SimulationHandler
 - Add proper error checking and edge-case handling for file reading/writing
