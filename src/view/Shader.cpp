@@ -21,12 +21,12 @@ void Shader::setVAO(const float* vertices, const unsigned int size, const unsign
 
 void Shader::draw() const {
     glBindVertexArray(mVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
     glBindVertexArray(0);
 }
 
 void Shader::drawInstanced(unsigned int instanceCount) const {
     glBindVertexArray(mVAO);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instanceCount);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, instanceCount);
     glBindVertexArray(0);
 }

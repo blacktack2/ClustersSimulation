@@ -44,15 +44,12 @@ bool SimulationRenderer::init() { // NOLINT(readability-convert-member-functions
 
     const float quadVertices[] = {
         -1.0f, -1.0f,
-        -1.0f,  1.0f,
          1.0f, -1.0f,
-
+        -1.0f,  1.0f,
          1.0f,  1.0f,
-        -1.0f,  1.0f,
-         1.0f, -1.0f,
     };
     mShader.init();
-    mShader.setVAO(&quadVertices[0], 12, 0);
+    mShader.setVAO(&quadVertices[0], 8, 0);
 #endif
     return true;
 }
