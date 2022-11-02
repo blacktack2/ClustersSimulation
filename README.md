@@ -177,7 +177,6 @@ in their absence
 this functionality in the Shader class)
 - Improve handling of uniforms to avoid constantly looking up the same name,
 and prevent assigning values to programs which don't need them.
-- Change quad to use a triangle strip/fan instead of two separate triangles
 - Better organise log outputs
     + Implement printing to a log file
 - Use typedefs to improve type clarity
