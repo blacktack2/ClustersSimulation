@@ -1,9 +1,7 @@
-#ifndef LIFESIMULATIONC_WINDOWHANDLER_H
-#define LIFESIMULATIONC_WINDOWHANDLER_H
-
+#pragma once
+#include "../control/SaveAndLoad.h"
 #include "../control/SimulationHandler.h"
 #include "SimulationRenderer.h"
-#include "../control/SaveAndLoad.h"
 
 #include "../../imgui/imgui.h"
 
@@ -78,6 +76,3 @@ private:
     const ImVec4 MESSAGE_WARN_COL = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
     const ImVec4 MESSAGE_ERROR_COL = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 };
-
-
-#endif //LIFESIMULATIONC_WINDOWHANDLER_H

@@ -1,6 +1,4 @@
-#ifndef LIFESIMULATIONC_SAVEANDLOAD_H
-#define LIFESIMULATIONC_SAVEANDLOAD_H
-
+#pragma once
 #include <regex>
 
 #include "SimulationHandler.h"
@@ -16,5 +14,3 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler);
 
 bool parseFloat(const std::string& s, float& f);
 bool parseUint(const std::string&, unsigned int& i);
-
-#endif //LIFESIMULATIONC_SAVEANDLOAD_H

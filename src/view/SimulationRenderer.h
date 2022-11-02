@@ -1,6 +1,4 @@
-#ifndef LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
-#define LIFESIMULATIONC_LIFESIMULATIONRENDERER_H
-
+#pragma once
 #include "Shader.h"
 #include "../control/SimulationHandler.h"
 
@@ -22,6 +20,3 @@ private:
     float imageWidth = 500.0f, imageHeight = 500.0f;
 #endif
 };
-
-
-#endif //LIFESIMULATIONC_LIFESIMULATIONRENDERER_H

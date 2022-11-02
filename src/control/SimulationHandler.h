@@ -1,6 +1,4 @@
-#ifndef LIFESIMULATIONC_LIFESIMULATIONHANDLER_H
-#define LIFESIMULATIONC_LIFESIMULATIONHANDLER_H
-
+#pragma once
 #include "GLUtilities.h"
 #include "../model/SimulationStructures.h"
 #ifdef ITERATE_ON_COMPUTE_SHADER
@@ -116,4 +114,3 @@ private:
     const std::string DT_UNIFORM = "dt";
 #endif
 };
-#endif //LIFESIMULATIONC_LIFESIMULATIONHANDLER_H

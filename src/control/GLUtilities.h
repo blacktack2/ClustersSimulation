@@ -1,6 +1,4 @@
-#ifndef LIFESIMULATIONC_GLUTILITIES_H
-#define LIFESIMULATIONC_GLUTILITIES_H
-
+#pragma once
 #include "glad/glad.h"
 
 void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity,
@@ -8,5 +6,3 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
 
 GLenum glCheckError_(const char* file, int line);
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
-
-#endif //LIFESIMULATIONC_GLUTILITIES_H

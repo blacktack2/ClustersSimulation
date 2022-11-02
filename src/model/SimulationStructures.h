@@ -1,9 +1,6 @@
-#ifndef CLUSTERSSIMULATION_LIFESIMULATIONSTRUCTURES_H
-#define CLUSTERSSIMULATION_LIFESIMULATIONSTRUCTURES_H
-
+#pragma once
 #include <string>
 #include <vector>
-#include <optional>
 #include <memory>
 
 struct Color {
@@ -45,5 +42,3 @@ struct Atom {
 };
 
 Color hslToColor(float h, float s, float l);
-
-#endif //CLUSTERSSIMULATION_LIFESIMULATIONSTRUCTURES_H

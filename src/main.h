@@ -1,6 +1,3 @@
-#ifndef LIFESIMULATIONC_H
-#define LIFESIMULATIONC_H
+#pragma once
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* args[]);
-
-#endif
