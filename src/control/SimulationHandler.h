@@ -41,6 +41,14 @@ const float MAX_INTERACTION = 1.0f;
 
 #define INTERACTION_INDEX(aId, bId) (aId == bId ? aId * aId : (aId < bId ? bId * bId + aId * 2 + 1 : aId * aId + bId * 2 + 2))
 
+enum StartCondition {
+    StartConditionRandom,
+    StartConditionEquidistant,
+    StartConditionRandomEquidistant,
+    StartConditionRings,
+    StartConditionMax
+};
+
 class SimulationHandler {
 public:
     SimulationHandler();
@@ -70,7 +78,7 @@ public:
     [[nodiscard]] inline float getAtomDiameter() const { return mAtomDiameter; }
 
     void clearAtoms();
-    void initSimulation();
+    void initSimulation(StartCondition startCondition);
     void iterateSimulation();
 
     unsigned int newAtomType();
@@ -91,7 +99,6 @@ public:
     [[nodiscard]] float getInteraction(unsigned int aId, unsigned int bId) const;
     void setInteraction(unsigned int aId, unsigned int bId, float value);
 
-    void shuffleAtomPositions();
     void shuffleAtomInteractions();
     void zeroAtomInteractions();
 
@@ -101,6 +108,11 @@ public:
 
     const std::array<Atom, MAX_ATOMS>& getAtoms();
 private:
+    void initAtomPositionsRandom();
+    void initAtomPositionsEquidistant();
+    void initAtomPositionsRandomEquidistant();
+    void initAtomPositionsRings();
+
     float mSimWidth;
     float mSimHeight;
 

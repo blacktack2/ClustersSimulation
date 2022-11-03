@@ -1,6 +1,7 @@
 #include "SimulationHandler.h"
 
 #include <algorithm>
+#include <iterator>
 #include <random>
 #ifdef ITERATE_ON_COMPUTE_SHADER
 #include <climits>
@@ -97,9 +98,8 @@ void SimulationHandler::clearAtoms() {
     mAtomCount = 0;
 }
 
-void SimulationHandler::initSimulation() {
+void SimulationHandler::initSimulation(StartCondition startCondition) {
     clearAtoms();
-
     for (int at = 0; at < mAtomTypeCount; at++) {
         for (int a = 0; a < mAtomTypes[at].quantity; a++) {
             if (mAtomCount >= MAX_ATOMS)
@@ -110,7 +110,19 @@ void SimulationHandler::initSimulation() {
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
 #endif
-    shuffleAtomPositions();
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    BaseShader::readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
+#endif
+    switch (startCondition) {
+        default:
+        case StartConditionRandom:            initAtomPositionsRandom();            break;
+        case StartConditionEquidistant:       initAtomPositionsEquidistant();       break;
+        case StartConditionRandomEquidistant: initAtomPositionsRandomEquidistant(); break;
+        case StartConditionRings:             initAtomPositionsRings();             break;
+    }
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    BaseShader::writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
+#endif
 }
 
 void SimulationHandler::iterateSimulation() {
@@ -333,26 +345,6 @@ void SimulationHandler::setInteraction(unsigned int aId, unsigned int bId, float
 #endif
 }
 
-void SimulationHandler::shuffleAtomPositions() {
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> rangeX(0, mSimWidth);
-    std::uniform_real_distribution<float> rangeY(0, mSimHeight);
-
-#ifdef ITERATE_ON_COMPUTE_SHADER
-    BaseShader::readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
-#endif
-
-    for (int i = 0; i < mAtomCount; i++) {
-        mAtomsBuffer[i].x = rangeX(mt);
-        mAtomsBuffer[i].y = rangeY(mt);
-    }
-
-#ifdef ITERATE_ON_COMPUTE_SHADER
-    BaseShader::writeBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
-#endif
-}
-
 void SimulationHandler::shuffleAtomInteractions() {
     std::random_device rd;
     std::mt19937 mt(rd());
@@ -390,4 +382,79 @@ unsigned int SimulationHandler::getAtomTypeCount() const {
 
 const std::array<Atom, MAX_ATOMS>& SimulationHandler::getAtoms() {
     return mAtomsBuffer;
+}
+
+void SimulationHandler::initAtomPositionsRandom() {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> rangeX(0, mSimWidth);
+    std::uniform_real_distribution<float> rangeY(0, mSimHeight);
+
+    for (int i = 0; i < mAtomCount; i++) {
+        mAtomsBuffer[i].x = rangeX(mt);
+        mAtomsBuffer[i].y = rangeY(mt);
+    }
+}
+
+void SimulationHandler::initAtomPositionsEquidistant() {
+    int rootCount = std::ceil(std::sqrt(mAtomCount));
+    unsigned int delta = rootCount * rootCount - (unsigned int) mAtomCount;
+    unsigned int halfD = delta / 2;
+    unsigned int d1 = halfD / 2;
+    unsigned int d2 = halfD - d1;
+    unsigned int d3 = (delta - halfD) / 2;
+    unsigned int d4 = (delta - halfD) - d3;
+    unsigned int index = 0;
+    for (int i = 0; i < rootCount; i++) {
+        for (int j = 0; j < rootCount; j++) {
+            if (((i == 0) && (j < d1 || j >= rootCount - d2)) || ((i == rootCount - 1) && (j < d3 || j >= rootCount - d4))) continue;
+            mAtomsBuffer[index].x = (j + 1) * mSimWidth / (rootCount + 1);
+            mAtomsBuffer[index++].y = (i + 1) * mSimHeight / (rootCount + 1);
+        }
+    }
+}
+
+void SimulationHandler::initAtomPositionsRandomEquidistant() {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_int_distribution<int> range(0, mAtomCount - 1);
+
+    unsigned int rootCount = std::ceil(std::sqrt(mAtomCount));
+    unsigned int delta = rootCount * rootCount - (unsigned int) mAtomCount;
+    unsigned int halfD = delta / 2;
+    unsigned int d1 = halfD / 2;
+    unsigned int d2 = halfD - d1;
+    unsigned int d3 = (delta - halfD) / 2;
+    unsigned int d4 = (delta - halfD) - d3;
+
+    std::vector<unsigned int> randSequence(mAtomCount);
+    for (int i = 0; i < mAtomCount; i++)
+        randSequence[i] = i;
+    for (unsigned int i = 0; i < mAtomCount; i++) {
+        unsigned int swap = range(mt);
+        unsigned int temp = randSequence[i];
+        randSequence[i] = randSequence[swap];
+        randSequence[swap] = temp;
+    }
+    unsigned int index = 0;
+    for (int i = 0; i < rootCount; i++) {
+        for (int j = 0; j < rootCount; j++) {
+            if (((i == 0) && (j < d1 || j >= rootCount - d2)) || ((i == rootCount - 1) && (j < d3 || j >= rootCount - d4))) continue;
+            mAtomsBuffer[randSequence[index  ]].x = (j + 1) * mSimWidth / (rootCount + 1);
+            mAtomsBuffer[randSequence[index++]].y = (i + 1) * mSimHeight / (rootCount + 1);
+        }
+    }
+}
+
+void SimulationHandler::initAtomPositionsRings() {
+    float ringDist = std::min(mSimWidth, mSimHeight) / (2.0f * (mAtomTypeCount + 1));
+    unsigned int index = 0;
+    for (int at = 0; at < mAtomTypeCount; at++) {
+        AtomType& atomType = mAtomTypes[at];
+        for (int i = 0; i < atomType.quantity; i++) {
+            float theta = i * (2.0f * 3.141592653589f) / atomType.quantity;
+            mAtomsBuffer[index  ].x = std::cos(theta) * ringDist * (at + 1) + mSimWidth / 2;
+            mAtomsBuffer[index++].y = std::sin(theta) * ringDist * (at + 1) + mSimHeight / 2;
+        }
+    }
 }
