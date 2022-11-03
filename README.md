@@ -170,7 +170,6 @@ SOFTWARE.
 
 ### Additions
 
-- Add VSync toggle to Debug panel (should be saved across executions)
 - Possibly try to improve speed of simulation's Compute Shader (was expecting
 it to perform significantly faster)
 - Remove trivial getters/setters in SimulationHandler

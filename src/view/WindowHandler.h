@@ -61,6 +61,11 @@ private:
     float mTimeElapsed = 0.0f;
     unsigned int mIterationCount = 0;
 
+    bool mEnableVsync = false;
+    bool mVsyncAdaptive = false;
+    bool mAllowVsync = false;
+    bool mAllowAdaptive = false;
+
     bool mShowMessage = false;
     std::string mMessage;
     ImVec4 mMessageColor = MESSAGE_COL;

@@ -89,7 +89,10 @@ bool WindowHandler::init() {
     SDL_SetWindowMinimumSize(mWindow, 800, 600);
     mGlContext = SDL_GL_CreateContext(mWindow);
 
-    SDL_GL_SetSwapInterval(1);
+    if (mAllowVsync = !SDL_GL_SetSwapInterval(1))
+        mAllowAdaptive = !SDL_GL_SetSwapInterval(-1);
+
+    SDL_GL_SetSwapInterval((mEnableVsync = mAllowVsync) ? ((mVsyncAdaptive = mAllowAdaptive) ? -1 : 1) : 0);
 
     if (!gladLoadGLLoader((GLADloadproc) SDL_GL_GetProcAddress)) {
         fprintf(stderr, "Failed to initialize glad!");
@@ -320,6 +323,20 @@ void WindowHandler::drawDebugPanel(const float& mspf) {
         debugTextColor,
         "No. Atom Types: %u", mSimulationHandler.getAtomTypeCount()
     );
+
+    if (mAllowVsync) {
+        if (ImGui::Checkbox("Enable VSync", &mEnableVsync))
+            if (SDL_GL_SetSwapInterval(mEnableVsync ? (mVsyncAdaptive ? -1 : 1) : 0))
+                messageError("Failed to set VSync");
+
+        if (mAllowAdaptive) {
+            ImGui::BeginDisabled(!mEnableVsync);
+            if (ImGui::Checkbox("Adaptive VSync", &mVsyncAdaptive))
+                if (SDL_GL_SetSwapInterval(mEnableVsync ? (mVsyncAdaptive ? -1 : 1) : 0))
+                    messageError("Failed to set adaptive VSync");
+            ImGui::EndDisabled();
+        }
+    }
 }
 
 void WindowHandler::drawIOPanel() {
@@ -470,7 +487,6 @@ void WindowHandler::drawIOPanel() {
         mSimulationHandler.setCollisionForce(collisionForce);
 
     ImGui::EndTable();
-
     
     ImGui::Separator();
 
