@@ -42,8 +42,8 @@ void SimulationHandler::initComputeShaders() {
 #endif
 
 void SimulationHandler::setBounds(float simWidth, float simHeight) {
-    mSimWidth = simWidth;
-    mSimHeight = simHeight;
+    mSimWidth  = std::min(std::max(simWidth , MIN_SIM_WIDTH) , MAX_SIM_WIDTH);
+    mSimHeight = std::min(std::max(simHeight, MIN_SIM_HEIGHT), MAX_SIM_HEIGHT);
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::setUniform(SIMULATION_BOUNDS_UNIFORM, mSimWidth, mSimHeight);
 #endif
@@ -58,21 +58,21 @@ float SimulationHandler::getHeight() const {
 }
 
 void SimulationHandler::setDt(float dt) {
-    mDt = dt;
+    mDt = std::min(std::max(dt, MIN_DT), MAX_DT);
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::setUniform(DT_UNIFORM, mDt);
 #endif
 }
 
 void SimulationHandler::setDrag(float drag) {
-    mDrag = drag;
+    mDrag = std::min(std::max(drag, MIN_DRAG), MAX_DRAG);
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::setUniform(DRAG_FORCE_UNIFORM, mDrag);
 #endif
 }
 
 void SimulationHandler::setInteractionRange(float interactionRange) {
-    mInteractionRange = interactionRange;
+    mInteractionRange = std::max(interactionRange, MIN_INTERACTION_RANGE);
     mInteractionRange2 = mInteractionRange * mInteractionRange;
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::setUniform(INTERACTION_RANGE2_UNIFORM, mInteractionRange2);
@@ -80,14 +80,14 @@ void SimulationHandler::setInteractionRange(float interactionRange) {
 }
 
 void SimulationHandler::setCollisionForce(float collisionForce) {
-    mCollisionForce = collisionForce;
+    mCollisionForce = std::min(std::max(collisionForce, MIN_COLLISION_FORCE), MAX_COLLISION_FORCE);
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::setUniform(COLLISION_FORCE_UNIFORM, mCollisionForce);
 #endif
 }
 
 void SimulationHandler::setAtomDiameter(float atomDiameter) {
-    mAtomDiameter = atomDiameter;
+    mAtomDiameter = std::max(atomDiameter, MIN_ATOM_DIAMETER);
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::setUniform(ATOM_DIAMETER_UNIFORM, mAtomDiameter);
 #endif
@@ -337,7 +337,7 @@ void SimulationHandler::shuffleAtomPositions() {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> rangeX(0, mSimWidth);
-    std::uniform_real_distribution<float> rangeY(0, mSimWidth);
+    std::uniform_real_distribution<float> rangeY(0, mSimHeight);
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));

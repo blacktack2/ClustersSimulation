@@ -17,6 +17,28 @@ const unsigned int MAX_ATOMS = 3000;
 const unsigned int MAX_ATOM_TYPES = 50;
 const unsigned int MAX_INTERACTIONS = MAX_ATOM_TYPES * MAX_ATOM_TYPES;
 
+const float MIN_SIM_WIDTH = 10.0f;
+const float MAX_SIM_WIDTH = 1000000.0f;
+
+const float MIN_SIM_HEIGHT = 10.0f;
+const float MAX_SIM_HEIGHT = 1000000.0f;
+
+const float MIN_DT = 0.01f;
+const float MAX_DT = 10.0f;
+
+const float MIN_DRAG = 0.0f;
+const float MAX_DRAG = 1.0f;
+
+const float MIN_INTERACTION_RANGE = 1.0f;
+
+const float MIN_COLLISION_FORCE = 0.0f;
+const float MAX_COLLISION_FORCE = 10.0f;
+
+const float MIN_ATOM_DIAMETER = 1.0f;
+
+const float MIN_INTERACTION = -1.0f;
+const float MAX_INTERACTION = 1.0f;
+
 #define INTERACTION_INDEX(aId, bId) (aId == bId ? aId * aId : (aId < bId ? bId * bId + aId * 2 + 1 : aId * aId + bId * 2 + 2))
 
 class SimulationHandler {

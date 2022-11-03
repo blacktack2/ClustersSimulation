@@ -66,8 +66,9 @@ executable to a separate directory without this.
 ### Running
 
 The program should start with a default simulation layed out for you with
-6 atom types and a total of 1200 atoms. You can run the simulation by either
-pressing **space bar** or the **Play**/**Pause** button in the parameters panel.
+6 atom types and a total of 1200 atoms (or your previously loaded
+configuration). You can run the simulation by either pressing **space bar**
+or the **Play**/**Pause** button in the parameters panel.
 
 ### General Parameters
 
@@ -75,33 +76,44 @@ At the top of the parameters panel you will find buttons to apply general
 operations to all atom types as well as numeric inputs for the simulation.
 
 - **Play**/**Pause** - Start/stop the simulation (can also be done using the
-**space bar**)
-- **Single Iteration** - Perform a single iteration on the simulation
-- **Re-generate Atoms** - Re-initialize the simulation with new atoms and
+**SPACE** button)
+- **Iterate** - Perform a single iteration on the simulation
+- **Atoms**
+    - **Generate** - Re-initialize the simulation with new atoms and
 randomize their positions. You will have to press this if you change the
 number of atoms in the simulation, or if you add an atom type, in order to
 update the simulation (this may be changed).
-- **Clear Atoms** - Remove all atoms from the simulation
-- **Clear Atom Types** - Remove all atom types and atoms from the simulation
-- **Randomize Positions** - Randomly set the positions of *all* loaded atoms
-- **Zero Interactions** - Set *all* atom type interactions to 0
-- **Shuffle Interactions** - Set *all* atom type interactions to a random value
+    - **Clear** - Remove all atoms from the simulation
+- **Atom Types**
+    - **Clear** - Remove all atom types and atoms from the simulation
+    - **Add New** - Add a new atom type to the simulation (appended)
+- **Interactions**
+    - **Zero** - Set *all* atom type interactions to 0
+    - **Shuffle** - Set *all* atom type interactions to a random value
 
 ---
 
-- **Simulation Scale** - How large the simulation is (both directions)
+- **Width**/**Height** - How large the simulation is (both directions)
+- **Range** - How far (radius) the atoms must be from each other
+in order to interact (same units as **Simulation Scale**)
+- **Atom Diameter** - Diameter of each atom (used in both rendering and
+- collisions), using the same units as **Width** and **Height**
 - **Time Delta (dt)** - Lower values will make the simulation more technically
 accurate, but may result in the simulation appearing to slow down
-- **Drag Force** - How fast the atoms will lose velocity over time (0 will
+- **Drag Frc.** - How fast the atoms will lose velocity over time (0 will
 stop them entirely, 1 will be no drag force)
-- **Max Interaction Range** - How far (radius) the atoms must be from each other
-in order to interact (same units as **Simulation Scale**)
-- **Collision Force** - How strongly atoms will repel from each other when
+- **Collision Frc.** - How strongly atoms will repel from each other when
 overlapping (0 will result in no collisions)
+
+---
+
+- **Save** - Save the current configuration to the name specified in the
+neighbouring text-box
+- **Load** - Load a pre-existing configuration from the selected file
 
 ### Atom Parameters
 
-- **Name** - What the atom will be called (shown above each interaction)
+- **Display Name** - What the atom will be called (shown above each interaction)
 - **Colour** - The colour the atom will be displayed as
 - **Quantity** - How many atoms of this type should be created
 - ***a*->*b*** - How strongly does atom ***a*** attract (negative) or repel
@@ -158,14 +170,10 @@ SOFTWARE.
 
 ### Additions
 
-- Improve parameters UI (make cleaner and more intuitive, and add colours to
-help distinguish buttons)
+- Add delete button for configurations
 - Add VSync toggle to Debug panel (should be saved across executions)
-- Make simulation scale able to handle different width and height (and correctly
-display)
 - Possibly try to improve speed of simulation's Compute Shader (was expecting
 it to perform significantly faster)
-- Atom type name parameter should be set to it's default if empty
 - Remove trivial getters/setters in SimulationHandler
 - Add proper error checking and edge-case handling for file reading/writing
 (should allow for edge cases such as files/directories being deleted at runtime)
@@ -184,7 +192,6 @@ and prevent assigning values to programs which don't need them.
 
 ### Fixes
 
-- Fix interaction sliders to fill the remaining panel width
 - Remove magic numbers in ImGui layout
 - Remove Herobrine?
 

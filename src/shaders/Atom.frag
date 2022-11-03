@@ -29,6 +29,6 @@ layout(binding = 0) uniform sampler2D inTexture;
 layout(location = 0) out vec4 fragColor;
 
 void main() {
-	float dist = sqrt(dot(IN.uv, IN.uv));
-	fragColor = vec4(IN.color, clamp(1.0 - dist, 0.0, 1.0));
+	float dist = dot(IN.uv, IN.uv);
+	fragColor = vec4(IN.color, clamp(1.0 - dist * dist, 0.0, 1.0));
 }

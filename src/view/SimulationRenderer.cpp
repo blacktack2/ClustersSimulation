@@ -71,8 +71,7 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    unsigned int count = mHandler.getActualAtomCount();
-    mShader.drawInstanced(count);
+    mShader.drawInstanced(mHandler.getActualAtomCount());
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -81,12 +80,15 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
     ImGui::Image((ImTextureID) (uintptr_t) mTexture, ImVec2(width, height));
 #else
     ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 clipMin = ImVec2(startX, startY);
+    ImVec2 clipMax = ImVec2(clipMin.x + width, clipMin.y + height);
 
     drawList->AddRectFilled(
-        ImVec2(startX, startY), ImVec2(startX + width, startY + height),
+        clipMin, clipMax,
         ImColor(0.2f, 0.2f, 0.2f)
     );
 
+    ImGui::PushClipRect(clipMin, clipMax, true);
     float scaleX = static_cast<float>(width) / mHandler.getWidth();
     float scaleY = static_cast<float>(height) / mHandler.getHeight();
     float atomSize = std::max(mHandler.getAtomDiameter() * scaleX, 3.0f);
@@ -95,8 +97,8 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
     for (int i = 0; i < mHandler.getActualAtomCount(); i++) {
         const Atom& atom = atoms[i];
         Color c = mHandler.getAtomTypeColor(atom.atomType);
-        float x = startX + atom.x * scaleX;
-        float y = startY + atom.y * scaleY;
+        float x = clipMin.x + atom.x * scaleX;
+        float y = clipMin.y + atom.y * scaleY;
         drawList->AddCircleFilled(
             ImVec2(x, y), atomSize,
             ImColor(ImVec4(c.r, c.g, c.b, 1.0f))
@@ -107,5 +109,7 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
             0, 2.0f
         );
     }
+
+    ImGui::PopClipRect();
 #endif
 }

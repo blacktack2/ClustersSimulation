@@ -135,9 +135,14 @@ void WindowHandler::mainloop() {
     auto lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     int frameCounter = 0;
 
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
+
     while (mRunning) {
         auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         delta += (float) (currentTime - lastTime);
+        if (mSimulationRunning)
+            mTimeElapsed += (float)(currentTime - lastTime);
         lastTime = currentTime;
         if (delta > 1000.0f) {
             mspf = delta / (float) frameCounter;
@@ -175,7 +180,8 @@ void WindowHandler::mainloop() {
             ImVec2 bounds = ImGui::GetContentRegionAvail();
             ImVec2 messagePanelBounds = ImVec2(bounds.x, 30.0f);
             ImVec2 debugPanelBounds   = ImVec2(bounds.x * 2.0f / 7.0f, (bounds.y - messagePanelBounds.y) * 1.0f / 5.0f);
-            ImVec2 ioPanelBounds      = ImVec2(debugPanelBounds.x, bounds.y - debugPanelBounds.y - messagePanelBounds.y);
+            ImVec2 ioPanelBounds      = ImVec2(debugPanelBounds.x, (bounds.y - messagePanelBounds.y) * 2.0f / 5.0f);
+            ImVec2 interPanelBounds   = ImVec2(debugPanelBounds.x, bounds.y - debugPanelBounds.y - ioPanelBounds.y - messagePanelBounds.y);
             ImVec2 simPanelBounds     = ImVec2(bounds.x - debugPanelBounds.x, bounds.y - messagePanelBounds.y);
 
             ImGui::BeginGroup();
@@ -184,22 +190,35 @@ void WindowHandler::mainloop() {
             drawDebugPanel(mspf);
             ImGui::EndChild();
 
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 4); // Not a good solution (magic number)
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3); // Not a good solution (magic number)
 
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
             ImGui::BeginChild("Parameters", ioPanelBounds, true);
-            ImGui::PopStyleVar(1);
             drawIOPanel();
+            ImGui::EndChild();
+
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3); // Not a good solution (magic number)
+
+            ImGui::BeginChild("AtomTypes", ioPanelBounds, true);
+            drawInteractionsPanel();
             ImGui::EndChild();
 
             ImGui::EndGroup();
             ImGui::SameLine(0, 0);
 
             ImGui::BeginChild("Simulation", simPanelBounds, true);
-            ImVec2 simBounds = ImGui::GetContentRegionAvail();
-            ImVec2 simPos = ImGui::GetContentRegionMax();
+            ImVec2 panelBounds = ImGui::GetContentRegionAvail();
+            ImVec2 panelPos = ImGui::GetContentRegionMax();
+
+            ImVec2 simBounds = ImVec2(mSimulationHandler.getWidth(), mSimulationHandler.getHeight());
+
+            float scale = std::min(panelBounds.x / simBounds.x, panelBounds.y / simBounds.y);
+            simBounds.x *= scale;
+            simBounds.y *= scale;
+
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (panelBounds.x - simBounds.x) / 2.0f);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (panelBounds.y - simBounds.y) / 2.0f);
+
             glViewport(0, 0, simBounds.x, simBounds.y);
-            // Not a good solution for setting x and y parameters (magic number)
             mSimulationRenderer.drawSimulation(
                 debugPanelBounds.x + ImGui::GetCursorPosX() + 8, ImGui::GetCursorPosY() + 8, simBounds.x, simBounds.y
             );
@@ -223,6 +242,7 @@ void WindowHandler::mainloop() {
 
         if (mSimulationRunning) {
             mSimulationHandler.iterateSimulation();
+            mIterationCount++;
         }
     }
 }
@@ -273,169 +293,190 @@ void WindowHandler::drawDebugPanel(const float& mspf) {
         debugTextColor,
         "[FPS: %.2f | %.2fms]", mspf == 0 ? INFINITY : 1000.0 / mspf, mspf
     );
+
+    ImGui::Separator();
+
     ImGui::TextColored(
         debugTextColor,
-        "Atom Count: %u", mSimulationHandler.getAtomCount()
+        "Runtime: %fs", mTimeElapsed / 1000.0f
     );
     ImGui::TextColored(
         debugTextColor,
-        "Current Atom Count: %u", mSimulationHandler.getActualAtomCount()
+        "Iterations: %d", mIterationCount
+    );
+
+    ImGui::Separator();
+
+    ImGui::TextColored(
+        debugTextColor,
+        "Total Atom Quantity: %u", mSimulationHandler.getAtomCount()
+    );
+
+    ImGui::TextColored(
+        debugTextColor,
+        "No. Generated Atoms: %u", mSimulationHandler.getActualAtomCount()
     );
     ImGui::TextColored(
         debugTextColor,
-        "Atom Types: %u", mSimulationHandler.getAtomTypeCount()
+        "No. Atom Types: %u", mSimulationHandler.getAtomTypeCount()
     );
 }
 
 void WindowHandler::drawIOPanel() {
     std::string label;
     float width = ImGui::GetContentRegionAvail().x;
+    static const ImVec2 REMAINING_WIDTH = ImVec2(-FLT_MIN, 0);
+    ImVec2 HALF_WIDTH = ImVec2(width / 2.0f, 0);
+    ImGui::PushItemWidth(-FLT_MIN);
 
-    mSimulationRunning = mSimulationRunning ?
-        !ImGui::Button("Pause##PlayPause", ImVec2(width, 0)) :
-        ImGui::Button("Play##PlayPause", ImVec2(width, 0));
-    if (ImGui::Button("Single Iteration", ImVec2(width, 0))) {
+    label = (mSimulationRunning ? "Pause" : "Play") + std::string("##PlayPause");
+    mSimulationRunning = ImGui::Button(label.c_str(), HALF_WIDTH) ? !mSimulationRunning : mSimulationRunning;
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip(((mSimulationRunning ? "Pause" : "Play") + std::string(" the simulation [SPACE].")).c_str());
+    ImGui::SameLine(0, 0);
+    if (ImGui::Button("Iterate", REMAINING_WIDTH)) {
         mSimulationRunning = false;
         mSimulationHandler.iterateSimulation();
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Perform a single iteration of the simulation.");
 
-    if (ImGui::Button("Re-generate Atoms", ImVec2(width, 0)))
+    ImGui::Separator();
+    ImGui::Text("Atoms");
+    if (ImGui::Button("Generate", HALF_WIDTH)) {
         mSimulationHandler.initSimulation();
-    if (ImGui::Button("Clear Atoms", ImVec2(width, 0)))
+        mTimeElapsed = 0.0f;
+        mIterationCount = 0;
+    }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Generate new atoms according to the set parameters, and position them randomly.");
+    ImGui::SameLine(0, 0);
+    if (ImGui::Button("Clear##Clear Atoms", REMAINING_WIDTH))
         mSimulationHandler.clearAtoms();
-    if (ImGui::Button("Clear Atom Types", ImVec2(width, 0)))
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Clear all atoms from the simulation.");
+
+    ImGui::Separator();
+    ImGui::Text("Atom Types");
+    if (ImGui::Button("Clear##Clear Atom Types", HALF_WIDTH))
         mSimulationHandler.clearAtomTypes();
-    if (ImGui::Button("Randomize Positions", ImVec2(width, 0)))
-        mSimulationHandler.shuffleAtomPositions();
-    if (ImGui::Button("Zero Interactions", ImVec2(width, 0)))
-        mSimulationHandler.zeroAtomInteractions();
-    if (ImGui::Button("Shuffle Interactions", ImVec2(width, 0)))
-        mSimulationHandler.shuffleAtomInteractions();
-
-    ImGui::Text("Simulation Scale");
-    float simScale = mSimulationHandler.getWidth();
-    if (ImGui::InputFloat("##Simulation Scale", &simScale, 1.0f, 10.0f, "%.0f")) {
-        simScale = std::max(std::min(simScale, 1000000.0f), 10.0f);
-        mSimulationHandler.setBounds(simScale, simScale);
-    }
-    ImGui::Text("Atom Diameter");
-    float atomDiameter = mSimulationHandler.getAtomDiameter();
-    if (ImGui::InputFloat("##Atom Diameter", &atomDiameter, 1.0f, 10.0f, "%.0f")) {
-        atomDiameter = std::max(std::min(atomDiameter, simScale / 2.0f), 1.0f);
-        mSimulationHandler.setAtomDiameter(atomDiameter);
-    }
-    ImGui::Text("Time Delta (dt)");
-    float dt = mSimulationHandler.getDt();
-    if (ImGui::InputFloat("##Time Delta", &dt, 0.01f, 0.1f, "%.2f")) {
-        dt = std::max(std::min(dt, 10.0f), 0.01f);
-        mSimulationHandler.setDt(dt);
-    }
-    ImGui::Text("Drag Force");
-    float drag = mSimulationHandler.getDrag();
-    if (ImGui::InputFloat("##Drag Force", &drag, 0.01f, 0.1f, "%.2f")) {
-        drag = std::max(std::min(drag, 1.0f), 0.0f);
-        mSimulationHandler.setDrag(drag);
-    }
-    ImGui::Text("Max Interaction Range");
-    float interactionRange = mSimulationHandler.getInteractionRange();
-    if (ImGui::InputFloat("##Max Interaction Range", &interactionRange, 1.0f, 10.0f, "%.0f")) {
-        interactionRange = std::max(std::min(interactionRange, std::sqrt(simScale * simScale + simScale * simScale) / 2.0f), 1.0f);
-        mSimulationHandler.setInteractionRange(interactionRange);
-    }
-    ImGui::Text("Collision Force");
-    float collisionForce = mSimulationHandler.getCollisionForce();
-    if (ImGui::InputFloat("##Collision Force", &collisionForce, 0.01f, 0.1f, "%.2f")) {
-        collisionForce = std::max(std::min(collisionForce, 10.0f), 0.00f);
-        mSimulationHandler.setCollisionForce(collisionForce);
-    }
-
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Clear all atom types from the current configuration.");
+    ImGui::SameLine(0, 0);
     unsigned int atomTypeCount = mSimulationHandler.getAtomTypeCount();
     ImGui::BeginDisabled(atomTypeCount >= MAX_ATOM_TYPES);
-    if (ImGui::Button("Add Atom Type", ImVec2(width, 0)))
+    if (ImGui::Button("Add New", REMAINING_WIDTH))
         mSimulationHandler.newAtomType();
     ImGui::EndDisabled();
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Add a new atom type to the configuration.");
 
-    std::vector<unsigned int> atomTypes = mSimulationHandler.getAtomTypeIds();
-    for (unsigned int atomTypeId : atomTypes) {
-        ImGui::Separator();
-        std::string atomIdStr = std::to_string(atomTypeId);
-        Color c = mSimulationHandler.getAtomTypeColor(atomTypeId);
+    ImGui::Separator();
+    ImGui::Text("Interactions");
+    if (ImGui::Button("Zero", HALF_WIDTH))
+        mSimulationHandler.zeroAtomInteractions();
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Set all interaction values to 0.");
+    ImGui::SameLine(0, 0);
+    if (ImGui::Button("Shuffle", REMAINING_WIDTH))
+        mSimulationHandler.shuffleAtomInteractions();
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Set all interaction values randomly.");
 
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(c.r, c.g, c.b, 1.0));
-        std::string friendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId);
-        label = "##FriendlyNameText-" + atomIdStr;
-        if (ImGui::InputText(label.c_str(), &friendlyName)) {
-            mSimulationHandler.setAtomTypeFriendlyName(atomTypeId, friendlyName);
-        }
-        ImGui::PopStyleColor(1);
+    ImGui::Separator();
+    ImGui::Checkbox("Lock Aspect", &mLockRatio);
 
-        ImGui::SameLine();
-        ImGui::Text("%s", atomIdStr.c_str());
+    ImGui::BeginTable("Inputs", 2, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX | ImGuiTableFlags_SizingStretchSame, ImVec2(width, 0));
 
-        float r = c.r;
-        float g = c.g;
-        float b = c.b;
-        ImGui::PushItemWidth((width - ImGui::GetStyle().ColumnsMinSpacing * 2) / 3);
-        label = "##ColorRedSlider-" + atomIdStr;
-        if (ImGui::SliderFloat(label.c_str(), &r, 0.0f, 1.0f)) {
-            mSimulationHandler.setAtomTypeColorR(atomTypeId, r);
-        }
-        ImGui::SameLine();
-        label = "##ColorGreenSlider-" + atomIdStr;
-        if (ImGui::SliderFloat(label.c_str(), &g, 0.0f, 1.0f)) {
-            mSimulationHandler.setAtomTypeColorG(atomTypeId, g);
-        }
-        ImGui::SameLine();
-        label = "##ColorBlueSlider-" + atomIdStr;
-        if (ImGui::SliderFloat(label.c_str(), &b, 0.0f, 1.0f)) {
-            mSimulationHandler.setAtomTypeColorB(atomTypeId, b);
-        }
-        ImGui::PopItemWidth();
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Width");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("Height");
 
-        int quantity = (int) mSimulationHandler.getAtomTypeQuantity(atomTypeId);
-        label = "Quantity##QuantityInt-" + atomIdStr;
-        if (ImGui::InputInt(label.c_str(), &quantity)) {
-            int count = mSimulationHandler.getAtomCount();
-            mSimulationHandler.setAtomTypeQuantity(atomTypeId, std::min((unsigned int)quantity, MAX_ATOMS));
-            int newCount = mSimulationHandler.getAtomCount();
-            if (newCount > MAX_ATOMS)
-                messageWarn("Too many atoms defined (max: " + std::to_string(MAX_ATOMS) + " | you have " + std::to_string(newCount) + ")");
-            else if (count > MAX_ATOMS)
-                messageClear();
-        }
-
-        ImGui::PushItemWidth(width * 3 / 4);
-        for (unsigned int atomTypeId2 : atomTypes) {
-            std::string atom2IdStr = std::to_string(atomTypeId2);
-            Color atom2Color = mSimulationHandler.getAtomTypeColor(atomTypeId2);
-            std::string atom2FriendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId2);
-            ImGui::TextColored(ImVec4(r, g, b, 1.0f), "%s", friendlyName.c_str());
-            ImGui::SameLine();
-            ImGui::Text("->");
-            ImGui::SameLine();
-            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), "%s", atom2FriendlyName.c_str());
-            label = std::string().append("0##ZeroButton-").append(atomIdStr).append("-").append(atom2IdStr);
-            if (ImGui::Button(label.c_str())) {
-                mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, 0);
-            }
-            ImGui::SameLine();
-            float interaction = mSimulationHandler.getInteraction(atomTypeId, atomTypeId2);
-            label = std::string().append("##InteractionSlider-").append(atomIdStr).append("-").append(atom2IdStr);
-            if (ImGui::SliderFloat(label.c_str(), &interaction, -1.0f, 1.0f)) {
-                mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, interaction);
-            }
-        }
-        label = std::string().append("Delete Atom Type [").append(friendlyName).append("]##DeleteButton-").append(atomIdStr);
-        if (ImGui::Button(label.c_str(), ImVec2(width, 0))) {
-            mSimulationHandler.removeAtomType(atomTypeId);
-        }
-        ImGui::PopItemWidth();
+    ImGui::TableNextRow();
+    float simWidth = mSimulationHandler.getWidth();
+    float simHeight = mSimulationHandler.getHeight();
+    float simWidthMin  = std::max(MIN_SIM_WIDTH , simHeight / 10.0f);
+    float simHeightMin = std::max(MIN_SIM_HEIGHT, simWidth  / 10.0f);
+    ImGui::TableSetColumnIndex(0);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    bool changeW = ImGui::DragScalar("##Simulation Width", ImGuiDataType_Float, &simWidth, 10.0f, &simWidthMin, &MAX_SIM_WIDTH, "%.0f");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    bool changeH = ImGui::DragScalar("##Simulation Height", ImGuiDataType_Float, &simHeight, 10.0f, &simHeightMin, &MAX_SIM_HEIGHT, "%.0f") && !changeW;
+    if (changeW || changeH) {
+        simWidth  = std::max(simWidth , simWidthMin );
+        simHeight = std::max(simHeight, simHeightMin);
+        mSimulationHandler.setBounds(
+            changeW ? simWidth  : (mLockRatio ? simWidth  * simHeight / mSimulationHandler.getHeight() : simWidth ),
+            changeH ? simHeight : (mLockRatio ? simHeight * simWidth  / mSimulationHandler.getWidth()  : simHeight)
+        );
     }
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Range");
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Maximum distance which two atoms can interact from.");
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    float interactionRangeMax = std::sqrt(simWidth * simWidth + simHeight * simHeight) / 2.0f;
+    float interactionRange = mSimulationHandler.getInteractionRange();
+    if (ImGui::DragScalar("##Max Interaction Range", ImGuiDataType_Float, &interactionRange, 1.0f, &MIN_INTERACTION_RANGE, &interactionRangeMax, "%.0f"))
+        mSimulationHandler.setInteractionRange(std::min(interactionRange, interactionRangeMax));
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Atom Diameter");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("Time Delta");
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    float atomDiameterMax = std::min(simWidth, simHeight) / 2.0f;
+    float atomDiameter = mSimulationHandler.getAtomDiameter();
+    if (ImGui::DragScalar("##Atom Diameter", ImGuiDataType_Float, &atomDiameter, 1.0f, &MIN_ATOM_DIAMETER, &atomDiameterMax, "%.0f"))
+        mSimulationHandler.setAtomDiameter(std::min(atomDiameter, atomDiameterMax));
+
+    ImGui::TableSetColumnIndex(1);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    float dt = mSimulationHandler.getDt();
+    if (ImGui::DragScalar("##Time Delta", ImGuiDataType_Float, &dt, 0.01f, &MIN_DT, &MAX_DT, "%.2f"))
+        mSimulationHandler.setDt(dt);
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Drag Frc.");
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("0 = no drag, 1 = max drag.");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("Collision Frc.");
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    float drag = 1.0f - mSimulationHandler.getDrag();
+    if (ImGui::DragScalar("##Drag Force", ImGuiDataType_Float, &drag, 0.01f, &MIN_DRAG, &MAX_DRAG, "%.2f"))
+        mSimulationHandler.setDrag(1.0f - drag);
+
+    ImGui::TableSetColumnIndex(1);
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    float collisionForce = mSimulationHandler.getCollisionForce();
+    if (ImGui::DragScalar("##Collision Force", ImGuiDataType_Float, &collisionForce, 0.01f, &MIN_COLLISION_FORCE, &MAX_COLLISION_FORCE, "%.2f"))
+        mSimulationHandler.setCollisionForce(collisionForce);
+
+    ImGui::EndTable();
+
+    
     ImGui::Separator();
 
     std::string fileSaveLocation = CONFIG_FILE_LOCATION + std::string("/") + mFileSaveLocation + std::string(".") + CONFIG_FILE_EXTENSION;
     if (mIsOverwritingFile) {
-        ImGui::Text("%s", ("Config '" + mFileSaveLocation + "' exists.\nOverwrite?").c_str());
+        ImGui::Text("%s", ("Config '" + std::string(mFileSaveLocation) + "' exists.\nOverwrite?").c_str());
         if (ImGui::Button("Yes")) {
             saveToFile(fileSaveLocation, mSimulationHandler);
             mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
@@ -455,12 +496,14 @@ void WindowHandler::drawIOPanel() {
             }
         }
         ImGui::SameLine();
-        ImGui::InputText("##Save Location", &mFileSaveLocation);
+        ImGui::InputText("##Save Location", mFileSaveLocation, 20);
     }
 
     if (ImGui::Button("Load")) {
         loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mSimulationHandler);
         mSimulationHandler.initSimulation();
+        mTimeElapsed = 0.0f;
+        mIterationCount = 0;
     }
     ImGui::SameLine();
     struct Funcs { static bool ItemGetter(void* data, int n, const char** out_str) { *out_str = ((std::string*)data)[n].c_str(); return true; } };
@@ -470,6 +513,79 @@ void WindowHandler::drawIOPanel() {
         mFileLoadLocations,
         mFileLoadCount
     );
+
+    ImGui::PopItemWidth();
+}
+
+void WindowHandler::drawInteractionsPanel() {
+    std::string label;
+    float width = ImGui::GetContentRegionAvail().x;
+    static const ImVec2 REMAINING_WIDTH = ImVec2(-FLT_MIN, 0);
+    ImVec2 HALF_WIDTH = ImVec2(width / 2.0f, 0);
+    ImGui::PushItemWidth(-FLT_MIN);
+
+    std::vector<unsigned int> atomTypes = mSimulationHandler.getAtomTypeIds();
+    for (unsigned int atomTypeId : atomTypes) {
+        ImGui::Separator();
+        std::string atomIdStr = std::to_string(atomTypeId);
+        Color c = mSimulationHandler.getAtomTypeColor(atomTypeId);
+
+        ImVec4 imC = ImVec4(c.r, c.g, c.b, 1.0f);
+
+        ImGui::Text(("ID: " + atomIdStr).c_str());
+        ImGui::PushStyleColor(ImGuiCol_Border, imC);
+        std::string friendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId);
+        label = "##FriendlyNameText-" + atomIdStr;
+        if (ImGui::InputText(label.c_str(), &friendlyName))
+            mSimulationHandler.setAtomTypeFriendlyName(atomTypeId, friendlyName);
+        ImGui::PopStyleColor(1);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Display name of this atom type.");
+
+        ImGui::Text("Color");
+        label = "##ColorSlider-" + atomIdStr;
+        if (ImGui::ColorEdit3(label.c_str(), (float*) &imC))
+            mSimulationHandler.setAtomTypeColor(atomTypeId, {imC.x, imC.y, imC.z});
+
+        ImGui::Text("Quantity");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("How many of this atom type should be present.\nMust press {generate} to update.");
+        int quantity = (int) mSimulationHandler.getAtomTypeQuantity(atomTypeId);
+        label = "##QuantityInt-" + atomIdStr;
+        if (ImGui::InputInt(label.c_str(), &quantity, 0)) {
+            int count = mSimulationHandler.getAtomCount();
+            mSimulationHandler.setAtomTypeQuantity(atomTypeId, std::min((unsigned int)quantity, MAX_ATOMS));
+            int newCount = mSimulationHandler.getAtomCount();
+            if (newCount > MAX_ATOMS)
+                messageWarn("Too many atoms defined (max: " + std::to_string(MAX_ATOMS) + " | you have " + std::to_string(newCount) + ")");
+            else if (count > MAX_ATOMS)
+                messageClear();
+        }
+
+        for (unsigned int atomTypeId2 : atomTypes) {
+            std::string atom2IdStr = std::to_string(atomTypeId2);
+            Color atom2Color = mSimulationHandler.getAtomTypeColor(atomTypeId2);
+            std::string atom2FriendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId2);
+            ImGui::TextColored(imC, "%s", friendlyName.c_str());
+            ImGui::SameLine();
+            ImGui::Text("->");
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(atom2Color.r, atom2Color.g, atom2Color.b, 1.0f), "%s", atom2FriendlyName.c_str());
+            label = std::string().append("0##ZeroButton-").append(atomIdStr).append("-").append(atom2IdStr);
+            if (ImGui::Button(label.c_str()))
+                mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, 0);
+            ImGui::SameLine(0, 0);
+            float interaction = mSimulationHandler.getInteraction(atomTypeId, atomTypeId2);
+            label = std::string().append("##InteractionSlider-").append(atomIdStr).append("-").append(atom2IdStr);
+            if (ImGui::SliderFloat(label.c_str(), &interaction, MIN_INTERACTION, MAX_INTERACTION))
+                mSimulationHandler.setInteraction(atomTypeId, atomTypeId2, interaction);
+        }
+        label = std::string().append("Delete Atom Type [").append(friendlyName).append("]##DeleteButton-").append(atomIdStr);
+        ImGui::PushStyleColor(ImGuiCol_Border, imC);
+        if (ImGui::Button(label.c_str(), REMAINING_WIDTH))
+            mSimulationHandler.removeAtomType(atomTypeId);
+        ImGui::PopStyleColor(1);
+    }
 }
 
 void WindowHandler::messageInfo(std::string message) {

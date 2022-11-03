@@ -43,6 +43,7 @@ private:
 
     void drawDebugPanel(const float& fps);
     void drawIOPanel();
+    void drawInteractionsPanel();
 
     void messageInfo(std::string message);
     void messageWarn(std::string message);
@@ -55,6 +56,11 @@ private:
     bool mRunning;
     bool mSimulationRunning;
 
+    bool mLockRatio = true;
+
+    float mTimeElapsed = 0.0f;
+    unsigned int mIterationCount = 0;
+
     bool mShowMessage = false;
     std::string mMessage;
     ImVec4 mMessageColor = MESSAGE_COL;
@@ -66,7 +72,7 @@ private:
     SimulationHandler mSimulationHandler;
     SimulationRenderer mSimulationRenderer;
 
-    std::string mFileSaveLocation;
+    char mFileSaveLocation[20];
     std::string mFileLoadLocations[MAX_FILE_COUNT];
     int mFileLoadIndex;
     int mFileLoadCount;

@@ -76,6 +76,12 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 	static const std::regex atomDiameterRegex = std::regex("^AtomDiameter:([0-9]+(\\.[0-9]+)?)\r?$");
 
 	handler.clearAtomTypes();
+	handler.setBounds(1000.0f, 1000.0f);
+	handler.setDt(1.0f);
+	handler.setDrag(0.5f);
+	handler.setInteractionRange(80.0f);
+	handler.setCollisionForce(1.0f);
+	handler.setAtomDiameter(3.0f);
 
 	std::string line;
 	std::ifstream file;
