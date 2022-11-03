@@ -11,6 +11,7 @@ bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count);
 
 bool saveToFile(const std::string& location, const SimulationHandler& handler);
 bool loadFromFile(const std::string& location, SimulationHandler& handler);
+bool deleteFile(const std::string& location);
 
 bool parseFloat(const std::string& s, float& f);
 bool parseUint(const std::string&, unsigned int& i);

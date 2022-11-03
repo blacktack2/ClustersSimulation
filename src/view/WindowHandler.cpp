@@ -482,7 +482,7 @@ void WindowHandler::drawIOPanel() {
             mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
             mIsOverwritingFile = false;
         }
-        ImGui::SameLine();
+        ImGui::SameLine(0, 0);
         if (ImGui::Button("No")) {
             mIsOverwritingFile = false;
         }
@@ -495,24 +495,36 @@ void WindowHandler::drawIOPanel() {
                 mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
             }
         }
-        ImGui::SameLine();
+        ImGui::SameLine(0, 0);
         ImGui::InputText("##Save Location", mFileSaveLocation, 20);
     }
 
-    if (ImGui::Button("Load")) {
+    float wid = ImGui::CalcTextSize("Delete ").x;
+    if (ImGui::Button("Load", ImVec2(wid, 0))) {
         loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mSimulationHandler);
         mSimulationHandler.initSimulation();
         mTimeElapsed = 0.0f;
         mIterationCount = 0;
     }
-    ImGui::SameLine();
+    ImGui::SameLine(0, 0);
     struct Funcs { static bool ItemGetter(void* data, int n, const char** out_str) { *out_str = ((std::string*)data)[n].c_str(); return true; } };
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - wid);
     ImGui::Combo(
         "##Loadable Files", &mFileLoadIndex,
         &Funcs::ItemGetter,
         mFileLoadLocations,
         mFileLoadCount
     );
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip(mFileLoadLocations[mFileLoadIndex].c_str());
+    ImGui::SameLine(0, 0);
+    if (ImGui::Button("Delete", ImVec2(wid, 0))) {
+        deleteFile((CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex].c_str() + std::string(".") + CONFIG_FILE_EXTENSION));
+        for (int i = mFileLoadIndex; i < mFileLoadCount - 1; i++)
+            mFileLoadLocations[i] = mFileLoadLocations[i + 1];
+        mFileLoadCount--;
+        mFileLoadIndex = 0;
+    }
 
     ImGui::PopItemWidth();
 }

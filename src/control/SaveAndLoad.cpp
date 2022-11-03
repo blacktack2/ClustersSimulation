@@ -186,6 +186,19 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 	return true;
 }
 
+bool deleteFile(const std::string& location) {
+	try {
+		if (!std::filesystem::remove(location)) {
+			fprintf(stderr, "Failed to find file %s!\n", location.c_str());
+			return false;
+		}
+	} catch(const std::filesystem::filesystem_error& err) {
+		fprintf(stderr, "Filesystem error: %s", err.what());
+		return false;
+	}
+	return true;;
+}
+
 bool parseFloat(const std::string& s, float& f) {
 	std::size_t pos{};
 	try {

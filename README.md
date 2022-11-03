@@ -170,7 +170,6 @@ SOFTWARE.
 
 ### Additions
 
-- Add delete button for configurations
 - Add VSync toggle to Debug panel (should be saved across executions)
 - Possibly try to improve speed of simulation's Compute Shader (was expecting
 it to perform significantly faster)
@@ -189,6 +188,7 @@ and prevent assigning values to programs which don't need them.
     + Implement printing to a log file
 - Use typedefs to improve type clarity
 - Add different starting conditions to the simulation
+- Add bulk operations for setting atom type quantity and distributing colours
 
 ### Fixes
 
