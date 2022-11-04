@@ -560,8 +560,35 @@ void WindowHandler::drawInteractionsPanel() {
     static const ImVec2 REMAINING_WIDTH = ImVec2(-FLT_MIN, 0);
     ImVec2 HALF_WIDTH = ImVec2(width / 2.0f, 0);
     ImGui::PushItemWidth(-FLT_MIN);
+    static std::vector<bool> bulkLock(MAX_ATOM_TYPES, false);
+    static int bulkQuantity = 200;
 
     std::vector<unsigned int> atomTypes = mSimulationHandler.getAtomTypeIds();
+
+    if (ImGui::Button("Lock All", HALF_WIDTH))
+        for (unsigned int atomTypeId : atomTypes)
+            bulkLock[atomTypeId] = true;
+    ImGui::SameLine(0, 0);
+    if (ImGui::Button("Unlock All", REMAINING_WIDTH))
+        for (unsigned int atomTypeId : atomTypes)
+            bulkLock[atomTypeId] = false;
+
+    ImGui::Text("Quantity");
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Set the quantity for all unlocked atom types.");
+    label = "##BulkQuantity";
+    if (ImGui::InputInt(label.c_str(), &bulkQuantity, 0)) {
+        int count = mSimulationHandler.getAtomCount();
+        for (unsigned int atomTypeId : atomTypes)
+            if (!bulkLock[atomTypeId])
+                mSimulationHandler.setAtomTypeQuantity(atomTypeId, std::min((unsigned int)bulkQuantity, MAX_ATOMS));
+        int newCount = mSimulationHandler.getAtomCount();
+        if (newCount > MAX_ATOMS)
+            messageWarn("Too many atoms defined (max: " + std::to_string(MAX_ATOMS) + " | you have " + std::to_string(newCount) + ")");
+        else if (count > MAX_ATOMS)
+            messageClear();
+    }
+
     for (unsigned int atomTypeId : atomTypes) {
         ImGui::Separator();
         std::string atomIdStr = std::to_string(atomTypeId);
@@ -570,6 +597,20 @@ void WindowHandler::drawInteractionsPanel() {
         ImVec4 imC = ImVec4(c.r, c.g, c.b, 1.0f);
 
         ImGui::Text(("ID: " + atomIdStr).c_str());
+
+        ImGui::PushStyleColor(ImGuiCol_Border, bulkLock[atomTypeId] ?
+            ImVec4(0.8f, 0.8f, 0.8f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.0);
+        label = "Lock##QuantityLock-" + atomIdStr;
+        if (ImGui::Button(label.c_str()))
+            bulkLock[atomTypeId] = !bulkLock[atomTypeId];
+        ImGui::PopStyleVar(1);
+        ImGui::PopStyleColor(1);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Lock this atom type from bulk assignments.");
+
+        ImGui::SameLine(0, 0);
+
         ImGui::PushStyleColor(ImGuiCol_Border, imC);
         std::string friendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId);
         label = "##FriendlyNameText-" + atomIdStr;
@@ -587,6 +628,7 @@ void WindowHandler::drawInteractionsPanel() {
         ImGui::Text("Quantity");
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("How many of this atom type should be present.\nMust press {generate} to update.");
+
         int quantity = (int) mSimulationHandler.getAtomTypeQuantity(atomTypeId);
         label = "##QuantityInt-" + atomIdStr;
         if (ImGui::InputInt(label.c_str(), &quantity, 0)) {

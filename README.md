@@ -186,7 +186,6 @@ and prevent assigning values to programs which don't need them.
 - Better organise log outputs
     + Implement printing to a log file
 - Use typedefs to improve type clarity
-- Add bulk operations for setting atom type quantity and distributing colours
 
 ### Fixes
 
