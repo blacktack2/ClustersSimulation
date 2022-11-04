@@ -375,7 +375,7 @@ void WindowHandler::drawIOPanel() {
         mIterationCount = 0;
     }
     if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Generate new atoms according to the set parameters, and position them randomly.");
+        ImGui::SetTooltip("Generate new atoms according to the set parameters.");
     ImGui::SameLine(0, 0);
     if (ImGui::Button("Clear##Clear Atoms", REMAINING_WIDTH))
         mSimulationHandler.clearAtoms();
