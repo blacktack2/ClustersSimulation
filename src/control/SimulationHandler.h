@@ -78,7 +78,7 @@ public:
     [[nodiscard]] inline float getAtomDiameter() const { return mAtomDiameter; }
 
     void clearAtoms();
-    void initSimulation(StartCondition startCondition);
+    void initSimulation();
     void iterateSimulation();
 
     unsigned int newAtomType();
@@ -107,6 +107,8 @@ public:
     [[nodiscard]] unsigned int getAtomTypeCount() const;
 
     const std::array<Atom, MAX_ATOMS>& getAtoms();
+
+    StartCondition startCondition;
 private:
     void initAtomPositionsRandom();
     void initAtomPositionsEquidistant();

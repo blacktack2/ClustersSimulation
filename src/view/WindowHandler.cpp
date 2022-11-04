@@ -124,7 +124,7 @@ bool WindowHandler::init() {
     }
     loadFromFile("resources/current.csdat", mSimulationHandler);
 
-    mSimulationHandler.initSimulation(mCurrentStartCond);
+    mSimulationHandler.initSimulation();
 
     return true;
 }
@@ -365,12 +365,12 @@ void WindowHandler::drawIOPanel() {
         "Random Equidistant",
         "Rings",
     };
-    ImGui::Combo("##Start Condition", (int*)&mCurrentStartCond, START_CONDITION_NAMES, (int)StartConditionMax);
+    ImGui::Combo("##Start Condition", (int*)&mSimulationHandler.startCondition, START_CONDITION_NAMES, (int)StartConditionMax);
 
     ImGui::Separator();
     ImGui::Text("Atoms");
     if (ImGui::Button("Generate", HALF_WIDTH)) {
-        mSimulationHandler.initSimulation(mCurrentStartCond);
+        mSimulationHandler.initSimulation();
         mTimeElapsed = 0.0f;
         mIterationCount = 0;
     }
@@ -527,7 +527,7 @@ void WindowHandler::drawIOPanel() {
     float wid = ImGui::CalcTextSize("Delete ").x;
     if (ImGui::Button("Load", ImVec2(wid, 0))) {
         loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mSimulationHandler);
-        mSimulationHandler.initSimulation(mCurrentStartCond);
+        mSimulationHandler.initSimulation();
         mTimeElapsed = 0.0f;
         mIterationCount = 0;
     }

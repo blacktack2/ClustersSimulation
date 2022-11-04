@@ -77,8 +77,6 @@ private:
     SimulationHandler mSimulationHandler;
     SimulationRenderer mSimulationRenderer;
 
-    StartCondition mCurrentStartCond = StartConditionRandom;
-
     char mFileSaveLocation[20];
     std::string mFileLoadLocations[MAX_FILE_COUNT];
     int mFileLoadIndex;

@@ -9,6 +9,7 @@
 #endif
 
 SimulationHandler::SimulationHandler() :
+startCondition(StartConditionRandom),
 mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f),
 mInteractionRange(80), mInteractionRange2(6400), mCollisionForce(1.0f), mAtomDiameter(3.0f)
 #ifdef ITERATE_ON_COMPUTE_SHADER
@@ -98,7 +99,7 @@ void SimulationHandler::clearAtoms() {
     mAtomCount = 0;
 }
 
-void SimulationHandler::initSimulation(StartCondition startCondition) {
+void SimulationHandler::initSimulation() {
     clearAtoms();
     for (int at = 0; at < mAtomTypeCount; at++) {
         for (int a = 0; a < mAtomTypes[at].quantity; a++) {

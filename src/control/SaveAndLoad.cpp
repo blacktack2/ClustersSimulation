@@ -37,6 +37,7 @@ bool saveToFile(const std::string& location, const SimulationHandler& handler) {
 	data += "Range:" + std::to_string(handler.getInteractionRange()) + "\n";
 	data += "CollisionForce:" + std::to_string(handler.getCollisionForce()) + "\n";
 	data += "AtomDiameter:" + std::to_string(handler.getAtomDiameter()) + "\n";
+	data += "StartCondition:" + std::to_string(handler.startCondition) + "\n";
 
 	std::vector<unsigned int> atomTypeIds = handler.getAtomTypeIds();
 	for (unsigned int atomTypeId : atomTypeIds) {
@@ -74,6 +75,7 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 	static const std::regex interactionRangeRegex = std::regex("^Range:([0-9]+(\\.[0-9]+)?)\r?$");
 	static const std::regex collisionForceRegex = std::regex("^CollisionForce:([0-9]+(\\.[0-9]+)?)\r?$");
 	static const std::regex atomDiameterRegex = std::regex("^AtomDiameter:([0-9]+(\\.[0-9]+)?)\r?$");
+	static const std::regex startConditionRegex = std::regex("^StartCondition:([0-9]+)\r?$");
 
 	handler.clearAtomTypes();
 	handler.setBounds(1000.0f, 1000.0f);
@@ -82,6 +84,8 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 	handler.setInteractionRange(80.0f);
 	handler.setCollisionForce(1.0f);
 	handler.setAtomDiameter(3.0f);
+
+	handler.startCondition = StartConditionRandom;
 
 	std::string line;
 	std::ifstream file;
@@ -141,6 +145,13 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
 			} else {
 				handler.setAtomDiameter(atomDiameter);
+			}
+		} else if (std::regex_search(line, matches, startConditionRegex)) {
+			unsigned int startCondition;
+			if (!parseUint(matches[1], startCondition)) {
+				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+			} else {
+				handler.startCondition = (StartCondition) startCondition;
 			}
 		}
 	}
