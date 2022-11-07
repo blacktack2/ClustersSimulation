@@ -177,8 +177,6 @@ it to perform significantly faster)
 copied into a local directory
     + Also implement error checking to make sure the program correctly exits
 in their absence
-- Create mesh class for handling and drawing vertices (instead of embedding
-this functionality in the Shader class)
 - Improve handling of uniforms to avoid constantly looking up the same name,
 and prevent assigning values to programs which don't need them.
 - Better organise log outputs
