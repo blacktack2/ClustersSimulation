@@ -173,8 +173,6 @@ SOFTWARE.
 - Possibly try to improve speed of simulation's Compute Shader (was expecting
 it to perform significantly faster)
 - Remove trivial getters/setters in SimulationHandler
-- Add proper error checking and edge-case handling for file reading/writing
-(should allow for edge cases such as files/directories being deleted at runtime)
 - See if shader files can be included in the executable itself, rather than
 copied into a local directory
     + Also implement error checking to make sure the program correctly exits
