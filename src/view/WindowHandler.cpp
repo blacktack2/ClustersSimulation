@@ -518,8 +518,10 @@ void WindowHandler::drawIOPanel() {
             } else if (std::filesystem::exists(fileSaveLocation)) {
                 mIsOverwritingFile = true;
             } else {
-                saveToFile(fileSaveLocation, mSimulationHandler);
-                mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
+                if (saveToFile(fileSaveLocation, mSimulationHandler))
+                    mFileLoadLocations[mFileLoadCount++] = mFileSaveLocation;
+                else
+                    messageError("Failed to save file '" + std::string(mFileSaveLocation) + "'");
             }
         }
         ImGui::SameLine(0, 0);
@@ -531,10 +533,13 @@ void WindowHandler::drawIOPanel() {
         if (mFileLoadCount == 0) {
             messageError("No config files found. Save a configuration to be able to load.");
         } else {
-            loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mSimulationHandler);
-            mSimulationHandler.initSimulation();
-            mTimeElapsed = 0.0f;
-            mIterationCount = 0;
+            if (loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mSimulationHandler)) {
+                mSimulationHandler.initSimulation();
+                mTimeElapsed = 0.0f;
+                mIterationCount = 0;
+            } else {
+                messageError("Failed to load file '" + std::string(mFileSaveLocation) + "'");
+            }
         }
     }
     ImGui::SameLine(0, 0);
@@ -550,11 +555,14 @@ void WindowHandler::drawIOPanel() {
         ImGui::SetTooltip(mFileLoadLocations[mFileLoadIndex].c_str());
     ImGui::SameLine(0, 0);
     if (ImGui::Button("Delete", ImVec2(wid, 0))) {
-        deleteFile((CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex].c_str() + std::string(".") + CONFIG_FILE_EXTENSION));
-        for (int i = mFileLoadIndex; i < mFileLoadCount - 1; i++)
-            mFileLoadLocations[i] = mFileLoadLocations[i + 1];
-        mFileLoadCount--;
-        mFileLoadIndex = 0;
+        if (deleteFile((CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex].c_str() + std::string(".") + CONFIG_FILE_EXTENSION))) {
+            for (int i = mFileLoadIndex; i < mFileLoadCount - 1; i++)
+                mFileLoadLocations[i] = mFileLoadLocations[i + 1];
+            mFileLoadCount--;
+            mFileLoadIndex = 0;
+        } else {
+            messageError("Failed to delete file '" + std::string(mFileSaveLocation) + "'");
+        }
     }
 
     ImGui::PopItemWidth();

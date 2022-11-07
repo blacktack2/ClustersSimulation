@@ -5,19 +5,20 @@
 #include <map>
 #include <string>
 
-const std::regex& getConfigFileRegex() {
-    static const std::regex CONFIG_FILE_REGEX(CONFIG_FILE_LOCATION + std::string(R"([/\\]([a-zA-Z0-9_-]+)\.)") + CONFIG_FILE_EXTENSION);
-    return CONFIG_FILE_REGEX;
-}
-
 bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
-	std::filesystem::create_directory(CONFIG_FILE_LOCATION);
+	const std::regex CONFIG_FILE_REGEX(CONFIG_FILE_LOCATION + std::string(R"([/\\]([a-zA-Z0-9_-]+)\.)") + CONFIG_FILE_EXTENSION);
+	try {
+		std::filesystem::create_directory(CONFIG_FILE_LOCATION);
+	} catch (const std::filesystem::filesystem_error& e) {
+		fprintf(stderr, "Failed to create config directory '%s'. Filesystem Error: %s", CONFIG_FILE_LOCATION, e.what());
+		return false;
+	}
 
 	count = 0;
 	for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(CONFIG_FILE_LOCATION)) {
 		std::string filepath = std::string(entry.path().u8string());
 		std::smatch matches;
-		if (std::regex_search(filepath, matches, getConfigFileRegex())) {
+		if (std::regex_search(filepath, matches, CONFIG_FILE_REGEX)) {
 			files[count++] = matches[1];
 			if (count >= MAX_FILE_COUNT) {
 				break;
@@ -55,13 +56,18 @@ bool saveToFile(const std::string& location, const SimulationHandler& handler) {
 	}
 
 	std::ofstream file;
-	file.open(location);
-	if (!file) {
-		fprintf(stderr, "Failed to open file %s!\n", location.c_str());
+	try {
+		file.open(location);
+		if (!file) {
+			fprintf(stderr, "Failed to open file %s!\n", location.c_str());
+			return false;
+		}
+		file << data;
+		file.close();
+	} catch (const std::fstream::failure& e) {
+		fprintf(stderr, "Failed to read file '%s'. Filesystem Error: %s", location.c_str(), e.what());
 		return false;
 	}
-	file << data;
-	file.close();
 
 	return true;
 }
@@ -89,73 +95,78 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 
 	std::string line;
 	std::ifstream file;
-	file.open(location);
-
-	if (!file.is_open()) {
-		fprintf(stderr, "Failed to open file %s!\n", location.c_str());
-		return false;
-	}
 	std::vector<std::string> atomTypes{};
 	std::vector<std::string> interactions{};
-	while (getline(file, line)) {
-		std::smatch matches;
-		if (std::regex_match(line, atomTypeRegex)) {
-			atomTypes.push_back(line);
-		} else if (std::regex_match(line, interactionRegex)) {
-			interactions.push_back(line);
-		} else if (std::regex_search(line, matches, sizeRegex)) {
-			float width;
-			float height;
-			if (!parseFloat(matches[1], width) || !parseFloat(matches[3], height)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-			} else {
-				handler.setBounds(width, height);
-			}
-		} else if (std::regex_search(line, matches, dtRegex)) {
-			float dt;
-			if (!parseFloat(matches[1], dt)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-			} else {
-				handler.setDt(dt);
-			}
-		} else if (std::regex_search(line, matches, dragRegex)) {
-			float drag;
-			if (!parseFloat(matches[1], drag)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-			} else {
-				handler.setDrag(drag);
-			}
-		} else if (std::regex_search(line, matches, interactionRangeRegex)) {
-			float interactionRange;
-			if (!parseFloat(matches[1], interactionRange)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-			} else {
-				handler.setInteractionRange(interactionRange);
-			}
-		} else if (std::regex_search(line, matches, collisionForceRegex)) {
-			float collisionForce;
-			if (!parseFloat(matches[1], collisionForce)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-			} else {
-				handler.setCollisionForce(collisionForce);
-			}
-		} else if (std::regex_search(line, matches, atomDiameterRegex)) {
-			float atomDiameter;
-			if (!parseFloat(matches[1], atomDiameter)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-			} else {
-				handler.setAtomDiameter(atomDiameter);
-			}
-		} else if (std::regex_search(line, matches, startConditionRegex)) {
-			unsigned int startCondition;
-			if (!parseUint(matches[1], startCondition)) {
-				fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-			} else {
-				handler.startCondition = (StartCondition) startCondition;
+	try {
+		file.open(location);
+
+		if (!file.is_open()) {
+			fprintf(stderr, "Failed to open file %s!\n", location.c_str());
+			return false;
+		}
+		while (getline(file, line)) {
+			std::smatch matches;
+			if (std::regex_match(line, atomTypeRegex)) {
+				atomTypes.push_back(line);
+			} else if (std::regex_match(line, interactionRegex)) {
+				interactions.push_back(line);
+			} else if (std::regex_search(line, matches, sizeRegex)) {
+				float width;
+				float height;
+				if (!parseFloat(matches[1], width) || !parseFloat(matches[3], height)) {
+					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+				} else {
+					handler.setBounds(width, height);
+				}
+			} else if (std::regex_search(line, matches, dtRegex)) {
+				float dt;
+				if (!parseFloat(matches[1], dt)) {
+					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+				} else {
+					handler.setDt(dt);
+				}
+			} else if (std::regex_search(line, matches, dragRegex)) {
+				float drag;
+				if (!parseFloat(matches[1], drag)) {
+					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+				} else {
+					handler.setDrag(drag);
+				}
+			} else if (std::regex_search(line, matches, interactionRangeRegex)) {
+				float interactionRange;
+				if (!parseFloat(matches[1], interactionRange)) {
+					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+				} else {
+					handler.setInteractionRange(interactionRange);
+				}
+			} else if (std::regex_search(line, matches, collisionForceRegex)) {
+				float collisionForce;
+				if (!parseFloat(matches[1], collisionForce)) {
+					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+				} else {
+					handler.setCollisionForce(collisionForce);
+				}
+			} else if (std::regex_search(line, matches, atomDiameterRegex)) {
+				float atomDiameter;
+				if (!parseFloat(matches[1], atomDiameter)) {
+					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+				} else {
+					handler.setAtomDiameter(atomDiameter);
+				}
+			} else if (std::regex_search(line, matches, startConditionRegex)) {
+				unsigned int startCondition;
+				if (!parseUint(matches[1], startCondition)) {
+					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
+				} else {
+					handler.startCondition = (StartCondition)startCondition;
+				}
 			}
 		}
+		file.close();
+	} catch (const std::fstream::failure& e) {
+		fprintf(stderr, "Failed to write to file '%s'. Filesystem Error %s", location.c_str(), e.what());
+		return false;
 	}
-	file.close();
 
 	std::map<unsigned int, unsigned int> idMap;
 	for (auto& l : atomTypes) {
@@ -204,7 +215,7 @@ bool deleteFile(const std::string& location) {
 			return false;
 		}
 	} catch(const std::filesystem::filesystem_error& err) {
-		fprintf(stderr, "Filesystem error: %s", err.what());
+		fprintf(stderr, "Failed to delete file '%s'. Filesystem error: %s", location.c_str(), err.what());
 		return false;
 	}
 	return true;;
