@@ -24,7 +24,9 @@ out Vector {
 	vec2 uv;
 } OUT;
 
-layout(location = 0) in vec2 position;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec4 color;
+layout(location = 2) in vec2 texCoords;
 
 layout(location = 1) uniform vec2 simulationBounds = vec2(1000.0, 1000.0);
 layout(location = 2) uniform vec2 screenBounds = vec2(500.0, 500.0);
@@ -32,8 +34,8 @@ layout(location = 5) uniform float atomDiameter = 3.0;
 
 void main() {
 	Atom atom = atoms[gl_InstanceID];
-	gl_Position = vec4(position * max(atomDiameter * screenBounds / simulationBounds, vec2(6.0)) / screenBounds + vec2(atom.x, atom.y) * 2.0 / simulationBounds - vec2(1.0), 0.0, 1.0);
+	gl_Position = vec4(position.xy * max(atomDiameter * screenBounds / simulationBounds, vec2(6.0)) / screenBounds + vec2(atom.x, atom.y) * 2.0 / simulationBounds - vec2(1.0), 0.0, 1.0);
 	AtomType at = atomTypes[atom.atomType];
 	OUT.color = vec3(at.r, at.g, at.b);
-	OUT.uv = position;
+	OUT.uv = position.xy;
 }

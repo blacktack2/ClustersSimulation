@@ -49,12 +49,13 @@ include_directories(
 
 file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "src/*.h" "src/*.cpp")
 file(GLOB_RECURSE IMGUI_SRC CONFIGURE_DEPENDS "imgui/*.h" "imgui/*.cpp")
+file(GLOB_RECURSE GLM_SRC CONFIGURE_DEPENDS "glm/*.h" "glm/*.hpp")
 
 set(EXECUTABLES ${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_NAME}_GPU)
 foreach (executable IN LISTS EXECUTABLES)
     message("Creating executable: " ${executable}.exe)
     if (WIN32)
-        add_executable(${executable} WIN32 ${SRC} ${IMGUI_SRC})
+        add_executable(${executable} WIN32 ${SRC} ${IMGUI_SRC} ${GLM_SRC})
         target_link_libraries(${executable}
                 "glad"
                 ${SDL}
@@ -62,7 +63,7 @@ foreach (executable IN LISTS EXECUTABLES)
                 ${OPENGL_gl_LIBRARY}
                 )
     else()
-        add_executable(${executable} ${SRC} ${IMGUI_SRC})
+        add_executable(${executable} ${SRC} ${IMGUI_SRC} ${GLM_SRC})
         target_link_libraries(${executable}
                 "glad"
                 ${OPENGL_gl_LIBRARY}

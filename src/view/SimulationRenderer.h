@@ -1,6 +1,9 @@
 #pragma once
 #include "Shader.h"
 #include "../control/SimulationHandler.h"
+#ifdef ITERATE_ON_COMPUTE_SHADER
+#include "../model/Mesh.h"
+#endif
 
 class SimulationRenderer {
 public:
@@ -16,6 +19,8 @@ private:
     Shader mShader;
     GLuint mFrameBuffer;
     GLuint mTexture;
+
+    Mesh* mQuad;
 
     float imageWidth = 500.0f, imageHeight = 500.0f;
 #endif

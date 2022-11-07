@@ -8,14 +8,4 @@
 class Shader : public BaseShader {
 public:
 	Shader(const char* vertex, const char* fragment);
-
-	void setVAO(const float* vertices, unsigned int size, unsigned int stride);
-
-	void draw() const;
-	void drawInstanced(unsigned int instanceCount) const;
-private:
-	GLuint mVAO;
-	GLuint mVBO;
-
-	unsigned int mStride;
 };

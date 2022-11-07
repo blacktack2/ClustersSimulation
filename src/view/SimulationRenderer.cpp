@@ -9,16 +9,23 @@
 SimulationRenderer::SimulationRenderer(SimulationHandler& handler) :
 mHandler(handler)
 #ifdef ITERATE_ON_COMPUTE_SHADER
-, mShader("Atom.vert", "Atom.frag"), mFrameBuffer(0), mTexture(0)
+, mShader("Atom.vert", "Atom.frag"), mFrameBuffer(0), mTexture(0), mQuad(nullptr)
 #endif
 {
 
 }
 
-SimulationRenderer::~SimulationRenderer() = default;
+SimulationRenderer::~SimulationRenderer() {
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    if (mQuad != nullptr)
+        delete mQuad;
+#endif
+}
 
 bool SimulationRenderer::init() { // NOLINT(readability-convert-member-functions-to-static)
 #ifdef ITERATE_ON_COMPUTE_SHADER
+    mQuad = Mesh::generateQuad();
+
     glGenFramebuffers(1, &mFrameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffer);
 
@@ -42,14 +49,7 @@ bool SimulationRenderer::init() { // NOLINT(readability-convert-member-functions
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    const float quadVertices[] = {
-        -1.0f, -1.0f,
-         1.0f, -1.0f,
-        -1.0f,  1.0f,
-         1.0f,  1.0f,
-    };
     mShader.init();
-    mShader.setVAO(&quadVertices[0], 8, 0);
 #endif
     return true;
 }
@@ -71,7 +71,7 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    mShader.drawInstanced(mHandler.getActualAtomCount());
+    mQuad->drawInstanced(mHandler.getActualAtomCount());
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
