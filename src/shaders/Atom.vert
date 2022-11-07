@@ -1,3 +1,4 @@
+R"(
 #version 460 core
 
 struct AtomType {
@@ -39,3 +40,4 @@ void main() {
 	OUT.color = vec3(at.r, at.g, at.b);
 	OUT.uv = position.xy;
 }
+)";

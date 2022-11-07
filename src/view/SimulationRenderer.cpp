@@ -6,10 +6,17 @@
 #include "glad/glad.h"
 #endif
 
+const char* SHADER_CODE_VERT =
+#include "../shaders/Atom.vert"
+;
+const char* SHADER_CODE_FRAG =
+#include "../shaders/Atom.frag"
+;
+
 SimulationRenderer::SimulationRenderer(SimulationHandler& handler) :
 mHandler(handler)
 #ifdef ITERATE_ON_COMPUTE_SHADER
-, mShader("Atom.vert", "Atom.frag"), mFrameBuffer(0), mTexture(0), mQuad(nullptr)
+, mShader(SHADER_CODE_VERT, SHADER_CODE_FRAG), mFrameBuffer(0), mTexture(0), mQuad(nullptr)
 #endif
 {
 
@@ -50,6 +57,10 @@ bool SimulationRenderer::init() { // NOLINT(readability-convert-member-functions
     glBindTexture(GL_TEXTURE_2D, 0);
 
     mShader.init();
+    if (!mShader.isValid()) {
+        fprintf(stderr, "Failed to initialize shader!\n");
+        return false;
+    }
 #endif
     return true;
 }

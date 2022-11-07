@@ -23,15 +23,15 @@ public:
 	static void readBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size);
 	static void writeBuffer(GLuint bufferID, GLvoid* data, GLsizeiptr size);
 protected:
-	void readFile(const char* filename, GLuint type);
-
 	GLuint mProgramID;
 	std::vector<GLuint> mShaders;
 
 	bool mIsValid = true;
 
 	struct ShaderPass {
-		std::string code;
+		ShaderPass(const char* c, GLuint t) : code(c), type(t) {}
+
+		const char* code;
 		GLuint type;
 	};
 	std::vector<ShaderPass> mShaderPasses;

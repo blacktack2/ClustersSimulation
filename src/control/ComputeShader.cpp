@@ -2,8 +2,8 @@
 
 #include "GLUtilities.h"
 
-ComputeShader::ComputeShader(const char* filename) : BaseShader() {
-    readFile(filename, GL_COMPUTE_SHADER);
+ComputeShader::ComputeShader(const char* code) : BaseShader() {
+    mShaderPasses.emplace_back(code, GL_COMPUTE_SHADER);
 }
 
 void ComputeShader::run(GLuint x, GLuint y, GLuint z) {

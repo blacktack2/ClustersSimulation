@@ -21,7 +21,7 @@ void BaseShader::init() {
     char infoLog[512];
     for (auto& shaderPass : mShaderPasses) {
         GLuint shader = mShaders.emplace_back(glCreateShader(shaderPass.type));
-        const char* code_c = shaderPass.code.c_str();
+        const char* code_c = shaderPass.code;
         glShaderSource(shader, 1, &code_c, nullptr);
         glCompileShader(shader);
 
@@ -107,21 +107,4 @@ void BaseShader::writeBuffer(const GLuint bufferID, GLvoid* data, const GLsizeip
 #ifdef _DEBUG
     glCheckError();
 #endif
-}
-
-void BaseShader::readFile(const char* filename, const GLuint type) {
-    std::string code;
-    try {
-        std::ifstream file;
-        file.open(SHADER_DIR + filename);
-        std::stringstream stream;
-        stream << file.rdbuf();
-        file.close();
-        code = stream.str();
-    } catch (std::ifstream::failure& e) {
-        fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ\n");
-        mIsValid = false;
-        return;
-    }
-    mShaderPasses.push_back({ code, type });
 }

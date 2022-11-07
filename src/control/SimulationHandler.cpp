@@ -8,12 +8,19 @@
 #include <iostream>
 #endif
 
+const char* SHADER_CODE_PASS1 =
+#include "../shaders/IterationPass1.comp"
+;
+const char* SHADER_CODE_PASS2 =
+#include "../shaders/IterationPass2.comp"
+;
+
 SimulationHandler::SimulationHandler() :
 startCondition(StartConditionRandom),
 mSimWidth(0), mSimHeight(0), mDt(1.0f), mDrag(0.5f),
 mInteractionRange(80), mInteractionRange2(6400), mCollisionForce(1.0f), mAtomDiameter(3.0f)
 #ifdef ITERATE_ON_COMPUTE_SHADER
-, mIterationComputePass1("IterationPass1.comp"), mIterationComputePass2("IterationPass2.comp"),
+, mIterationComputePass1(SHADER_CODE_PASS1), mIterationComputePass2(SHADER_CODE_PASS2),
 mAtomTypesBufferID(), mAtomsBufferID(), mInteractionsBufferID()
 #endif
 , mAtomCount(0), mAtomTypeCount(0), mInteractionCount(0),
@@ -29,12 +36,12 @@ SimulationHandler::~SimulationHandler() {
 void SimulationHandler::initComputeShaders() {
     mIterationComputePass1.init();
     if (!mIterationComputePass1.isValid()) {
-        fprintf(stderr, "Failed to create Compute Shader\n");
+        fprintf(stderr, "Failed to initialize Compute Shader! (Pass 1)\n");
         return;
     }
     mIterationComputePass2.init();
     if (!mIterationComputePass2.isValid()) {
-        fprintf(stderr, "Failed to create Compute Shader\n");
+        fprintf(stderr, "Failed to initialize Compute Shader! (Pass 1)\n");
         return;
     }
     mAtomTypesBufferID    = BaseShader::createBuffer(mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer), 1);

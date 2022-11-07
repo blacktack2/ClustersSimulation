@@ -1,3 +1,4 @@
+R"(
 #version 460 core
 
 struct AtomType {
@@ -32,3 +33,4 @@ void main() {
 	float dist = dot(IN.uv, IN.uv);
 	fragColor = vec4(IN.color, clamp(1.0 - dist * dist, 0.0, 1.0));
 }
+)";

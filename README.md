@@ -173,10 +173,6 @@ SOFTWARE.
 - Possibly try to improve speed of simulation's Compute Shader (was expecting
 it to perform significantly faster)
 - Remove trivial getters/setters in SimulationHandler
-- See if shader files can be included in the executable itself, rather than
-copied into a local directory
-    + Also implement error checking to make sure the program correctly exits
-in their absence
 - Improve handling of uniforms to avoid constantly looking up the same name,
 and prevent assigning values to programs which don't need them.
 - Better organise log outputs
