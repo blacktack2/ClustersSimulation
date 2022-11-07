@@ -513,7 +513,9 @@ void WindowHandler::drawIOPanel() {
         }
     } else {
         if (ImGui::Button("Save")) {
-            if (std::filesystem::exists(fileSaveLocation)) {
+            if (mFileLoadCount == MAX_FILE_COUNT) {
+                messageError("Maximum config file count reached [" + std::to_string(MAX_FILE_COUNT) + "]. Delete something to make room for more.");
+            } else if (std::filesystem::exists(fileSaveLocation)) {
                 mIsOverwritingFile = true;
             } else {
                 saveToFile(fileSaveLocation, mSimulationHandler);
@@ -526,10 +528,14 @@ void WindowHandler::drawIOPanel() {
 
     float wid = ImGui::CalcTextSize("Delete ").x;
     if (ImGui::Button("Load", ImVec2(wid, 0))) {
-        loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mSimulationHandler);
-        mSimulationHandler.initSimulation();
-        mTimeElapsed = 0.0f;
-        mIterationCount = 0;
+        if (mFileLoadCount == 0) {
+            messageError("No config files found. Save a configuration to be able to load.");
+        } else {
+            loadFromFile(CONFIG_FILE_LOCATION + std::string("/") + mFileLoadLocations[mFileLoadIndex] + std::string(".") + CONFIG_FILE_EXTENSION, mSimulationHandler);
+            mSimulationHandler.initSimulation();
+            mTimeElapsed = 0.0f;
+            mIterationCount = 0;
+        }
     }
     ImGui::SameLine(0, 0);
     struct Funcs { static bool ItemGetter(void* data, int n, const char** out_str) { *out_str = ((std::string*)data)[n].c_str(); return true; } };
