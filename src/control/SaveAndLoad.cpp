@@ -230,7 +230,7 @@ bool parseFloat(const std::string& s, float& f) {
 		return false;
 	} catch (std::out_of_range const& ex) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll('%llu'); pos: %lu\n", ex.what(), ll, pos);
+		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll('%llu'); pos: %llu\n", ex.what(), ll, pos);
 		return false;
 	}
 	return true;
@@ -249,7 +249,7 @@ bool parseUint(const std::string& s, unsigned int& i) {
 		return false;
 	} catch (std::out_of_range const& ex) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll(\'%llu\'); pos: %lu\n", ex.what(), ll, pos);
+		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll(\'%llu\'); pos: %llu\n", ex.what(), ll, pos);
 		return false;
 	}
 	return true;
