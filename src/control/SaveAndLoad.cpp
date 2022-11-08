@@ -1,4 +1,5 @@
 #include "SaveAndLoad.h"
+#include "../view/Logger.h"
 
 #include <filesystem>
 #include <fstream>
@@ -6,11 +7,15 @@
 #include <string>
 
 bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
+	Logger::getLogger().logMessage("Loading available config files");
 	const std::regex CONFIG_FILE_REGEX(CONFIG_FILE_LOCATION + std::string(R"([/\\]([a-zA-Z0-9_-]+)\.)") + CONFIG_FILE_EXTENSION);
 	try {
 		std::filesystem::create_directory(CONFIG_FILE_LOCATION);
 	} catch (const std::filesystem::filesystem_error& e) {
-		fprintf(stderr, "Failed to create config directory '%s'. Filesystem Error: %s", CONFIG_FILE_LOCATION, e.what());
+		Logger::getLogger().logError(
+			std::string("Failed to create config directory '").append(CONFIG_FILE_LOCATION)
+			.append("' - Filesystem Error: ").append(e.what())
+		);
 		return false;
 	}
 
@@ -20,9 +25,8 @@ bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
 		std::smatch matches;
 		if (std::regex_search(filepath, matches, CONFIG_FILE_REGEX)) {
 			files[count++] = matches[1];
-			if (count >= MAX_FILE_COUNT) {
+			if (count >= MAX_FILE_COUNT)
 				break;
-			}
 		}
 	}
 
@@ -30,6 +34,7 @@ bool getLoadableFiles(std::string (&files)[MAX_FILE_COUNT], int& count) {
 }
 
 bool saveToFile(const std::string& location, const SimulationHandler& handler) {
+	Logger::getLogger().logMessage(std::string("Saving current state to config file '").append(location).append("'"));
 	std::string data;
 
 	data += "Width:" + std::to_string(handler.getWidth()) + " Height:" + std::to_string(handler.getHeight()) + "\n";
@@ -49,23 +54,25 @@ bool saveToFile(const std::string& location, const SimulationHandler& handler) {
 		data += "R:" + std::to_string(color.r) + " G:" + std::to_string(color.g) + " B:" + std::to_string(color.b) + "\n";
 	}
 
-	for (unsigned int aId : atomTypeIds) {
-		for (unsigned int bId : atomTypeIds) {
-			data += "Aid:" + std::to_string(aId) + " Bid:" + std::to_string(bId) + " Value:" + std::to_string(handler.getInteraction(aId, bId)) + "\n";
-		}
-	}
+	for (unsigned int aId : atomTypeIds)
+		for (unsigned int bId : atomTypeIds)
+			data += "Aid:" + std::to_string(aId) + " Bid:" + std::to_string(bId) +
+				" Value:" + std::to_string(handler.getInteraction(aId, bId)) + "\n";
 
 	std::ofstream file;
 	try {
 		file.open(location);
 		if (!file) {
-			fprintf(stderr, "Failed to open file %s!\n", location.c_str());
+			Logger::getLogger().logError(std::string("Failed to open file '").append(location).append("'"));
 			return false;
 		}
 		file << data;
 		file.close();
 	} catch (const std::fstream::failure& e) {
-		fprintf(stderr, "Failed to read file '%s'. Filesystem Error: %s", location.c_str(), e.what());
+		Logger::getLogger().logError(
+			std::string("Failed to read file '").append(location)
+			.append("' - Filesystem Error: ").append(e.what())
+		);
 		return false;
 	}
 
@@ -73,6 +80,7 @@ bool saveToFile(const std::string& location, const SimulationHandler& handler) {
 }
 
 bool loadFromFile(const std::string& location, SimulationHandler& handler) {
+	Logger::getLogger().logMessage(std::string("Reading contents of config file '").append(location).append("'"));
 	static const std::regex atomTypeRegex = std::regex("^ID:([0-9]+) Name:([A-Za-z0-9_-]*) Quantity:([0-9]+) R:([0-9]+(\\.[0-9]+)?) G:([0-9]+(\\.[0-9]+)?) B:([0-9]+(\\.[0-9]+)?)\r?$");
 	static const std::regex interactionRegex = std::regex("^Aid:([0-9]+) Bid:([0-9]+) Value:(-?[0-9]+(\\.[0-9]+)?)\r?$");
 	static const std::regex sizeRegex = std::regex("^Width:([0-9]+(\\.[0-9]+)?) Height:([0-9]+(\\.[0-9]+)?)\r?$");
@@ -101,7 +109,7 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 		file.open(location);
 
 		if (!file.is_open()) {
-			fprintf(stderr, "Failed to open file %s!\n", location.c_str());
+			Logger::getLogger().logError(std::string("Failed to open file '").append(location).append("' for writing"));
 			return false;
 		}
 		while (getline(file, line)) {
@@ -113,58 +121,54 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 			} else if (std::regex_search(line, matches, sizeRegex)) {
 				float width;
 				float height;
-				if (!parseFloat(matches[1], width) || !parseFloat(matches[3], height)) {
-					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-				} else {
+				if (!parseFloat(matches[1], width) || !parseFloat(matches[3], height))
+					Logger::getLogger().logError(std::string("Failed to parse float on line: ").append(matches.str(0)));
+				else
 					handler.setBounds(width, height);
-				}
 			} else if (std::regex_search(line, matches, dtRegex)) {
 				float dt;
-				if (!parseFloat(matches[1], dt)) {
-					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-				} else {
+				if (!parseFloat(matches[1], dt))
+					Logger::getLogger().logError(std::string("Failed to parse float on line: ").append(matches.str(0)));
+				else
 					handler.setDt(dt);
-				}
 			} else if (std::regex_search(line, matches, dragRegex)) {
 				float drag;
-				if (!parseFloat(matches[1], drag)) {
-					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-				} else {
+				if (!parseFloat(matches[1], drag))
+					Logger::getLogger().logError(std::string("Failed to parse float on line: ").append(matches.str(0)));
+				else
 					handler.setDrag(drag);
-				}
 			} else if (std::regex_search(line, matches, interactionRangeRegex)) {
 				float interactionRange;
-				if (!parseFloat(matches[1], interactionRange)) {
-					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-				} else {
+				if (!parseFloat(matches[1], interactionRange))
+					Logger::getLogger().logError(std::string("Failed to parse float on line: ").append(matches.str(0)));
+				else
 					handler.setInteractionRange(interactionRange);
-				}
 			} else if (std::regex_search(line, matches, collisionForceRegex)) {
 				float collisionForce;
-				if (!parseFloat(matches[1], collisionForce)) {
-					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-				} else {
+				if (!parseFloat(matches[1], collisionForce))
+					Logger::getLogger().logError(std::string("Failed to parse float on line: ").append(matches.str(0)));
+				else
 					handler.setCollisionForce(collisionForce);
-				}
 			} else if (std::regex_search(line, matches, atomDiameterRegex)) {
 				float atomDiameter;
-				if (!parseFloat(matches[1], atomDiameter)) {
-					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-				} else {
+				if (!parseFloat(matches[1], atomDiameter))
+					Logger::getLogger().logError(std::string("Failed to parse float on line: ").append(matches.str(0)));
+				else
 					handler.setAtomDiameter(atomDiameter);
-				}
 			} else if (std::regex_search(line, matches, startConditionRegex)) {
 				unsigned int startCondition;
-				if (!parseUint(matches[1], startCondition)) {
-					fprintf(stderr, "Failed to parse float! Line: %s", matches.str(0).c_str());
-				} else {
+				if (!parseUint(matches[1], startCondition))
+					Logger::getLogger().logError(std::string("Failed to parse float on line: ").append(matches.str(0)));
+				else
 					handler.startCondition = (StartCondition)startCondition;
-				}
 			}
 		}
 		file.close();
 	} catch (const std::fstream::failure& e) {
-		fprintf(stderr, "Failed to write to file '%s'. Filesystem Error %s", location.c_str(), e.what());
+		Logger::getLogger().logError(
+			std::string("Failed to write to file '").append(location)
+			.append("' - Filesystem Error: ").append(e.what())
+		);
 		return false;
 	}
 
@@ -180,7 +184,7 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 			float b;
 			if (!parseUint(matches[1], id) || !parseUint(matches[3], quantity) ||
 				!parseFloat(matches[4], r) || !parseFloat(matches[6], g) || !parseFloat(matches[8], b)) {
-				fprintf(stderr, "Failed to parse AtomType values! Line: %s", matches.str(0).c_str());
+				Logger::getLogger().logError(std::string("Failed to parse values on line: ").append(matches.str(0)));
 			} else {
 				unsigned int newId = handler.newAtomType();
 				idMap.emplace(id, newId);
@@ -197,11 +201,10 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 			unsigned int aId;
 			unsigned int bId;
 			float value;
-			if (!parseUint(matches[1], aId) || !parseUint(matches[2], bId) || !parseFloat(matches[3], value)) {
-				fprintf(stderr, "Failed to parse interaction values! Line: %s", matches.str(0).c_str());
-			} else {
+			if (!parseUint(matches[1], aId) || !parseUint(matches[2], bId) || !parseFloat(matches[3], value))
+				Logger::getLogger().logError(std::string("Failed to parse interaction values on line: ").append(matches.str(0)));
+			else
 				handler.setInteraction(idMap[aId], idMap[bId], value);
-			}
 		}
 	}
 
@@ -209,13 +212,17 @@ bool loadFromFile(const std::string& location, SimulationHandler& handler) {
 }
 
 bool deleteFile(const std::string& location) {
+	Logger::getLogger().logMessage(std::string("Deleting config file '").append(location).append("'"));
 	try {
 		if (!std::filesystem::remove(location)) {
-			fprintf(stderr, "Failed to find file %s!\n", location.c_str());
+			Logger::getLogger().logError(std::string("Failed to find file '").append(location).append("' - Unable to delete"));
 			return false;
 		}
-	} catch(const std::filesystem::filesystem_error& err) {
-		fprintf(stderr, "Failed to delete file '%s'. Filesystem error: %s", location.c_str(), err.what());
+	} catch(const std::filesystem::filesystem_error& e) {
+		Logger::getLogger().logError(
+			std::string("Failed to delete file '").append(location)
+			.append("' Filesystem Error: ").append(e.what())
+		);
 		return false;
 	}
 	return true;;
@@ -225,12 +232,16 @@ bool parseFloat(const std::string& s, float& f) {
 	std::size_t pos{};
 	try {
 		f = std::stof(s, &pos);
-	} catch (std::invalid_argument const& ex) {
-		fprintf(stderr, "std::invalid_argument::what():%s\n", ex.what());
+	} catch (std::invalid_argument const& e) {
+		Logger::getLogger().logError(std::string("Error parsing float (Invalid Argument) - stof error: ").append(e.what()));
 		return false;
-	} catch (std::out_of_range const& ex) {
+	} catch (std::out_of_range const& e) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll('%llu'); pos: %llu\n", ex.what(), ll, pos);
+		Logger::getLogger().logError(
+			std::string("Error parsing float (Out of Range) - std::stoll('")
+			.append(std::to_string(ll)).append("'); pos: ").append(std::to_string(pos))
+			.append("stof error: ").append(e.what())
+		);
 		return false;
 	}
 	return true;
@@ -240,16 +251,19 @@ bool parseUint(const std::string& s, unsigned int& i) {
 	std::size_t pos{};
 	try {
 		unsigned long l = std::stoul(s, &pos);
-		if (l > std::numeric_limits<unsigned int>::max()) {
-			fprintf(stderr, "Uint value out of range: %s", s.c_str());
-		}
+		if (l > std::numeric_limits<unsigned int>::max())
+			Logger::getLogger().logError(std::string("Error parsing uint (Out of Range)"));
 		i = l;
-	} catch (std::invalid_argument const& ex) {
-		fprintf(stderr, "std::invalid_argument::what():%s\n", ex.what());
+	} catch (std::invalid_argument const& e) {
+		Logger::getLogger().logError(std::string("Error parsing uint (Invalid Argument) - stof error: ").append(e.what()));
 		return false;
-	} catch (std::out_of_range const& ex) {
+	} catch (std::out_of_range const& e) {
 		const long long ll {std::stoll(s, &pos)};
-		fprintf(stderr, "std::out_of_range::what():%s\nstd::stoll(\'%llu\'); pos: %llu\n", ex.what(), ll, pos);
+		Logger::getLogger().logError(
+			std::string("Error parsing uint (Out of Range) - std::stoll('")
+			.append(std::to_string(ll)).append("'); pos: ").append(std::to_string(pos))
+			.append("stof error: ").append(e.what())
+		);
 		return false;
 	}
 	return true;

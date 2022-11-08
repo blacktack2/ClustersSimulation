@@ -1,6 +1,7 @@
 #include "BaseShader.h"
 
 #include "GLUtilities.h"
+#include "../view/Logger.h"
 
 #include <iostream>
 #include <fstream>
@@ -21,30 +22,29 @@ void BaseShader::init() {
     char infoLog[512];
     for (auto& shaderPass : mShaderPasses) {
         GLuint shader = mShaders.emplace_back(glCreateShader(shaderPass.type));
-        const char* code_c = shaderPass.code;
-        glShaderSource(shader, 1, &code_c, nullptr);
+        Logger::getLogger().logMessage("Compiling shader\nShader code:");
+        Logger::getLogger().logCode(shaderPass.code);
+        glShaderSource(shader, 1, &shaderPass.code, nullptr);
         glCompileShader(shader);
 
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if(success != GL_TRUE) {
             glGetShaderInfoLog(shader, 512, nullptr, infoLog);
-            fprintf(stderr, "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n%s\n", infoLog);
+            Logger::getLogger().logError(std::string("Failed to compile shader\nglInfoLog:\n").append(infoLog));
             mIsValid = false;
             return;
         }
         glAttachShader(mProgramID, shader);
 
         glDeleteShader(shader);
-#ifdef _DEBUG
         glCheckError();
-#endif
     }
     glLinkProgram(mProgramID);
 
     glGetProgramiv(mProgramID, GL_LINK_STATUS, &success);
     if(success != GL_TRUE) {
         glGetProgramInfoLog(mProgramID, 512, nullptr, infoLog);
-        fprintf(stderr, "ERROR::SHADER::COMPUTE::LINKING_FAILED\n%s\n", infoLog);
+        Logger::getLogger().logError(std::string("Failed to link shader\nglInfoLog:\n").append(infoLog));
         mIsValid = false;
         return;
     }

@@ -4,9 +4,10 @@
 #include <iterator>
 #include <random>
 #ifdef ITERATE_ON_COMPUTE_SHADER
+#include "../view/Logger.h"
+
 #include <climits>
 #include <iostream>
-#endif
 
 const char* SHADER_CODE_PASS1 =
 #include "../shaders/IterationPass1.comp"
@@ -14,6 +15,7 @@ const char* SHADER_CODE_PASS1 =
 const char* SHADER_CODE_PASS2 =
 #include "../shaders/IterationPass2.comp"
 ;
+#endif
 
 SimulationHandler::SimulationHandler() :
 startCondition(StartConditionRandom),
@@ -26,22 +28,25 @@ mAtomTypesBufferID(), mAtomsBufferID(), mInteractionsBufferID()
 , mAtomCount(0), mAtomTypeCount(0), mInteractionCount(0),
 mAtomTypes(), mAtomTypesBuffer(), mAtomsBuffer(), mInteractionsBuffer()
 {
+    Logger::getLogger().logMessage("Constructing Handler");
 }
 
 SimulationHandler::~SimulationHandler() {
+    Logger::getLogger().logMessage("Destroying Handler");
     clearAtoms();
 }
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
 void SimulationHandler::initComputeShaders() {
+    Logger::getLogger().logMessage("Initializing Handler Compute Shaders");
     mIterationComputePass1.init();
     if (!mIterationComputePass1.isValid()) {
-        fprintf(stderr, "Failed to initialize Compute Shader! (Pass 1)\n");
+        Logger::getLogger().logError(std::string("Failed to initialize Compute Shader Pass1"));
         return;
     }
     mIterationComputePass2.init();
     if (!mIterationComputePass2.isValid()) {
-        fprintf(stderr, "Failed to initialize Compute Shader! (Pass 1)\n");
+        Logger::getLogger().logError(std::string("Failed to initialize Compute Shader Pass2"));
         return;
     }
     mAtomTypesBufferID    = BaseShader::createBuffer(mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer), 1);
@@ -107,6 +112,7 @@ void SimulationHandler::clearAtoms() {
 }
 
 void SimulationHandler::initSimulation() {
+    Logger::getLogger().logMessage("Initializing Simulation");
     clearAtoms();
     for (int at = 0; at < mAtomTypeCount; at++) {
         for (int a = 0; a < mAtomTypes[at].quantity; a++) {

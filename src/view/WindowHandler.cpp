@@ -1,5 +1,7 @@
 #include "WindowHandler.h"
 
+#include "Logger.h"
+
 #include "../../imgui/imgui_impl_sdl.h"
 #include "../../imgui/imgui_impl_opengl3.h"
 #include "../../imgui/imgui_stdlib.h"
@@ -15,10 +17,11 @@ WindowHandler::WindowHandler() :
 mWindowWidth(0), mWindowHeight(0), mRunning(false), mSimulationRunning(false),
 mWindow(nullptr), mSimulationHandler(), mSimulationRenderer(mSimulationHandler),
 mFileSaveLocation("sampleFile"), mFileLoadLocations(), mFileLoadIndex(0), mFileLoadCount(0), mIsOverwritingFile(false) {
-
+    Logger::getLogger().logMessage("Constructing Window");
 }
 
 WindowHandler::~WindowHandler() {
+    Logger::getLogger().logMessage("Destroying Window");
     saveToFile("resources/current.csdat", mSimulationHandler);
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -36,8 +39,9 @@ WindowHandler::~WindowHandler() {
 }
 
 bool WindowHandler::init() {
+    Logger::getLogger().logMessage("Initializing Window");
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+        Logger::getLogger().logError(std::string("Failed to initialize SDL - SDL Error: ").append(SDL_GetError()));
         return false;
     }
 
@@ -82,7 +86,7 @@ bool WindowHandler::init() {
             windowFlags);
 
     if (mWindow == nullptr) {
-        fprintf(stderr, "Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        Logger::getLogger().logError(std::string("Failed to create Window - SDL Error").append(SDL_GetError()));
         return false;
     }
 
@@ -95,7 +99,7 @@ bool WindowHandler::init() {
     SDL_GL_SetSwapInterval((mEnableVsync = mAllowVsync) ? ((mVsyncAdaptive = mAllowAdaptive) ? -1 : 1) : 0);
 
     if (!gladLoadGLLoader((GLADloadproc) SDL_GL_GetProcAddress)) {
-        fprintf(stderr, "Failed to initialize glad!");
+        Logger::getLogger().logError(std::string("Failed to initialize OpenGL"));
         return false;
     }
 
@@ -110,16 +114,25 @@ bool WindowHandler::init() {
     ImGui_ImplSDL2_InitForOpenGL(mWindow, mGlContext);
     ImGui_ImplOpenGL3_Init(glslVersion.c_str());
 
+    GLint flags;
+    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
+        glDebugMessageCallback(glDebugOutput, nullptr);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
+
 #ifdef ITERATE_ON_COMPUTE_SHADER
     mSimulationHandler.initComputeShaders();
 #endif
     if (!mSimulationRenderer.init()) {
-        fprintf(stderr, "Failed to initialize simulation renderer!\n");
+        Logger::getLogger().logError(std::string("Failed to initialize Renderer"));
         return false;
     }
 
     if (!getLoadableFiles(mFileLoadLocations, mFileLoadCount)) {
-        fprintf(stderr, "Failed to read config files!\n");
+        Logger::getLogger().logError(std::string("Failed to read config files"));
         return false;
     }
     loadFromFile("resources/current.csdat", mSimulationHandler);
@@ -347,7 +360,10 @@ void WindowHandler::drawIOPanel() {
     ImGui::PushItemWidth(-FLT_MIN);
 
     label = (mSimulationRunning ? "Pause" : "Play") + std::string("##PlayPause");
-    mSimulationRunning = ImGui::Button(label.c_str(), HALF_WIDTH) ? !mSimulationRunning : mSimulationRunning;
+    if (ImGui::Button(label.c_str(), HALF_WIDTH)) {
+        mSimulationRunning = !mSimulationRunning;
+        Logger::getLogger().logMessage(mSimulationRunning ? "Starting Simulation" : "Stopping Simulation");
+    }
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip(((mSimulationRunning ? "Pause" : "Play") + std::string(" the simulation [SPACE].")).c_str());
     ImGui::SameLine(0, 0);

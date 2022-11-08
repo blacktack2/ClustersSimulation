@@ -1,5 +1,7 @@
 #include "SimulationRenderer.h"
 
+#include "Logger.h"
+
 #include "../../imgui/imgui.h"
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
@@ -19,10 +21,11 @@ mHandler(handler)
 , mShader(SHADER_CODE_VERT, SHADER_CODE_FRAG), mFrameBuffer(0), mTexture(0), mQuad(nullptr)
 #endif
 {
-
+    Logger::getLogger().logMessage("Constructing Renderer");
 }
 
 SimulationRenderer::~SimulationRenderer() {
+    Logger::getLogger().logMessage("Destroying Renderer");
 #ifdef ITERATE_ON_COMPUTE_SHADER
     if (mQuad != nullptr)
         delete mQuad;
@@ -30,6 +33,7 @@ SimulationRenderer::~SimulationRenderer() {
 }
 
 bool SimulationRenderer::init() { // NOLINT(readability-convert-member-functions-to-static)
+    Logger::getLogger().logMessage("Initializing Renderer");
 #ifdef ITERATE_ON_COMPUTE_SHADER
     mQuad = Mesh::generateQuad();
 
@@ -48,7 +52,7 @@ bool SimulationRenderer::init() { // NOLINT(readability-convert-member-functions
 #ifdef _DEBUG
     GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "Framebuffer error. Status: %u\n", status);
+        Logger::getLogger().logError(std::string("OpenGL Framebuffer error - Status: ").append(std::to_string(status)));
         return false;
     }
 #endif
@@ -58,7 +62,7 @@ bool SimulationRenderer::init() { // NOLINT(readability-convert-member-functions
 
     mShader.init();
     if (!mShader.isValid()) {
-        fprintf(stderr, "Failed to initialize shader!\n");
+        Logger::getLogger().logError(std::string("Failed to initialize shader"));
         return false;
     }
 #endif

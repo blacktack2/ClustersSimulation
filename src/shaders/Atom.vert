@@ -1,5 +1,4 @@
-R"(
-#version 460 core
+R"(#version 460 core
 
 struct AtomType {
 	float r;

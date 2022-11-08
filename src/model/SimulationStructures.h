@@ -9,8 +9,6 @@ struct Color {
     float b;
 };
 
-struct vec2 { float x; float y; };
-
 struct AtomType {
     AtomType();
     explicit AtomType(unsigned int id);

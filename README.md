@@ -175,8 +175,6 @@ it to perform significantly faster)
 - Remove trivial getters/setters in SimulationHandler
 - Improve handling of uniforms to avoid constantly looking up the same name,
 and prevent assigning values to programs which don't need them.
-- Better organise log outputs
-    + Implement printing to a log file
 - Use typedefs to improve type clarity
 
 ### Fixes
