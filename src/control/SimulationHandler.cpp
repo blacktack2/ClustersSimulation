@@ -1,11 +1,13 @@
 #include "SimulationHandler.h"
 
+#include "../view/Logger.h"
+
+#include "../../glm/vec3.hpp"
+
 #include <algorithm>
 #include <iterator>
 #include <random>
 #ifdef ITERATE_ON_COMPUTE_SHADER
-#include "../view/Logger.h"
-
 #include <climits>
 #include <iostream>
 
@@ -59,7 +61,8 @@ void SimulationHandler::setBounds(float simWidth, float simHeight) {
     mSimWidth  = std::min(std::max(simWidth , MIN_SIM_WIDTH) , MAX_SIM_WIDTH);
     mSimHeight = std::min(std::max(simHeight, MIN_SIM_HEIGHT), MAX_SIM_HEIGHT);
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    BaseShader::setUniform(SIMULATION_BOUNDS_UNIFORM, mSimWidth, mSimHeight);
+    mIterationComputePass1.setUniform(SIMULATION_BOUNDS_UNIFORM, mSimWidth, mSimHeight);
+    mIterationComputePass2.setUniform(SIMULATION_BOUNDS_UNIFORM, mSimWidth, mSimHeight);
 #endif
 }
 
@@ -74,14 +77,14 @@ float SimulationHandler::getHeight() const {
 void SimulationHandler::setDt(float dt) {
     mDt = std::min(std::max(dt, MIN_DT), MAX_DT);
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    BaseShader::setUniform(DT_UNIFORM, mDt);
+    mIterationComputePass2.setUniform(DT_UNIFORM, mDt);
 #endif
 }
 
 void SimulationHandler::setDrag(float drag) {
     mDrag = std::min(std::max(drag, MIN_DRAG), MAX_DRAG);
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    BaseShader::setUniform(DRAG_FORCE_UNIFORM, mDrag);
+    mIterationComputePass2.setUniform(DRAG_FORCE_UNIFORM, mDrag);
 #endif
 }
 
@@ -89,21 +92,21 @@ void SimulationHandler::setInteractionRange(float interactionRange) {
     mInteractionRange = std::max(interactionRange, MIN_INTERACTION_RANGE);
     mInteractionRange2 = mInteractionRange * mInteractionRange;
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    BaseShader::setUniform(INTERACTION_RANGE2_UNIFORM, mInteractionRange2);
+    mIterationComputePass1.setUniform(INTERACTION_RANGE2_UNIFORM, mInteractionRange2);
 #endif
 }
 
 void SimulationHandler::setCollisionForce(float collisionForce) {
     mCollisionForce = std::min(std::max(collisionForce, MIN_COLLISION_FORCE), MAX_COLLISION_FORCE);
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    BaseShader::setUniform(COLLISION_FORCE_UNIFORM, mCollisionForce);
+    mIterationComputePass1.setUniform(COLLISION_FORCE_UNIFORM, mCollisionForce);
 #endif
 }
 
 void SimulationHandler::setAtomDiameter(float atomDiameter) {
     mAtomDiameter = std::max(atomDiameter, MIN_ATOM_DIAMETER);
 #ifdef ITERATE_ON_COMPUTE_SHADER
-    BaseShader::setUniform(ATOM_DIAMETER_UNIFORM, mAtomDiameter);
+    mIterationComputePass1.setUniform(ATOM_DIAMETER_UNIFORM, mAtomDiameter);
 #endif
 }
 
@@ -280,7 +283,7 @@ std::vector<unsigned int> SimulationHandler::getAtomTypeIds() const {
     return ids;
 }
 
-void SimulationHandler::setAtomTypeColor(unsigned int atomTypeId, Color color) {
+void SimulationHandler::setAtomTypeColor(unsigned int atomTypeId, glm::vec3 color) {
     if (atomTypeId < mAtomTypeCount) {
         mAtomTypes[atomTypeId].r = color.r;
         mAtomTypes[atomTypeId].g = color.g;
@@ -322,8 +325,8 @@ void SimulationHandler::setAtomTypeColorB(unsigned int atomTypeId, float b) {
 #endif
 }
 
-Color SimulationHandler::getAtomTypeColor(unsigned int atomTypeId) const {
-    return atomTypeId >= mAtomTypeCount ? Color{ 0.0f, 0.0f, 0.0f } : Color{ mAtomTypes[atomTypeId].r, mAtomTypes[atomTypeId].g, mAtomTypes[atomTypeId].b};
+glm::vec3 SimulationHandler::getAtomTypeColor(unsigned int atomTypeId) const {
+    return atomTypeId >= mAtomTypeCount ? glm::vec3{ 0.0f, 0.0f, 0.0f } : glm::vec3{ mAtomTypes[atomTypeId].r, mAtomTypes[atomTypeId].g, mAtomTypes[atomTypeId].b};
 }
 
 void SimulationHandler::setAtomTypeQuantity(unsigned int atomTypeId, unsigned int quantity) {

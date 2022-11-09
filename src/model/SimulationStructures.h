@@ -1,13 +1,9 @@
 #pragma once
+#include "../../glm/vec3.hpp"
+
 #include <string>
 #include <vector>
 #include <memory>
-
-struct Color {
-    float r;
-    float g;
-    float b;
-};
 
 struct AtomType {
     AtomType();
@@ -39,4 +35,4 @@ struct Atom {
     unsigned int atomType;
 };
 
-Color hslToColor(float h, float s, float l);
+glm::vec3 hslToColor(float h, float s, float l);

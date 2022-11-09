@@ -48,15 +48,13 @@ extensions that appear, though it should work without (not tested!).
 ## Usage
 
 Compiling using cmake should create two executables (ClustersSimulation
-and ClustersSimulation_GPU). The GPU version uses Compute Shaders to execute
+and ClustersSimulation_GPU). The GPU version uses Shaders to execute
 and render the simulation faster (the exact improvement depends on your
 hardware but I've seen an improvement of ~10x).
 
-The application will expect to find the `resources` directory and the `shaders`
-directory in the same working directory as the executable. Some features may
-not work correctly if the `resources` directory is missing (but the application
-should still run) and the application will break if the `shaders` directory is
-missing.
+The application will expect to find the `resources` directory in the same
+working directory as the executable. Some features may not work correctly
+if the `resources` directory is missing (but the application should still run).
 
 The application also expects to find the `SimConfigs` directory in its working
 directory (but will create it if not found). If you are missing any config files
@@ -170,11 +168,6 @@ SOFTWARE.
 
 ### Additions
 
-- Possibly try to improve speed of simulation's Compute Shader (was expecting
-it to perform significantly faster)
-- Remove trivial getters/setters in SimulationHandler
-- Improve handling of uniforms to avoid constantly looking up the same name,
-and prevent assigning values to programs which don't need them.
 - Use typedefs to improve type clarity
 
 ### Fixes
@@ -184,6 +177,8 @@ and prevent assigning values to programs which don't need them.
 
 ### 'Maybe' additions
 
+- Improve speed of simulation's Second Pass Compute Shader (perhaps using
+a quadtree-like system to reduce computations to only the neccessary ones)
 - Use threading to separate simulation execution from window handling (to
 prevent a low fps from hanging the application)
 - Include different shapes/textures to render different atom types with

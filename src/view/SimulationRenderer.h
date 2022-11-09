@@ -10,6 +10,8 @@ public:
     explicit SimulationRenderer(SimulationHandler& handler);
     ~SimulationRenderer();
 
+    void updateParameters();
+
     bool init();
 
     void drawSimulation([[maybe_unused]] float startX, [[maybe_unused]] float startY, float width, float height);
@@ -23,5 +25,9 @@ private:
     Mesh* mQuad;
 
     float imageWidth = 500.0f, imageHeight = 500.0f;
+
+    const std::string SCREEN_BOUNDS_UNIFORM = "screenBounds";
+    const std::string SIMULATION_BOUNDS_UNIFORM = "simulationBounds";
+    const std::string ATOM_DIAMETER_UNIFORM = "atomDiameter";
 #endif
 };

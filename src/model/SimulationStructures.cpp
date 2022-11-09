@@ -17,7 +17,7 @@ AtomType::AtomType() :
     std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
     std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
 
-    Color color = hslToColor(rangeH(mt), rangeS(mt), rangeL(mt));
+    glm::vec3 color = hslToColor(rangeH(mt), rangeS(mt), rangeL(mt));
     r = color.r;
     g = color.g;
     b = color.b;
@@ -33,7 +33,7 @@ id(id_), r(0.0f), g(0.0f), b(0.0f), friendlyName(std::to_string(id)), quantity(2
     std::uniform_real_distribution<float> rangeS(1.0f, 1.0f);
     std::uniform_real_distribution<float> rangeL(0.5f, 0.5f);
 
-    Color color = hslToColor(rangeH(mt), rangeS(mt), rangeL(mt));
+    glm::vec3 color = hslToColor(rangeH(mt), rangeS(mt), rangeL(mt));
     r = color.r;
     g = color.g;
     b = color.b;
@@ -57,7 +57,7 @@ atomType(atomType_), x(0), y(0), vx(0), vy(0), fx(0), fy(0) {
 
 }
 
-Color hslToColor(float h, float s, float l) {
+glm::vec3 hslToColor(float h, float s, float l) {
     float c = (1 - std::abs(2 * l - 1)) * s;
     float x = c * (1 - std::abs(fmodf(h / 60, 2) - 1));
     float m = l - c / 2;
@@ -92,5 +92,5 @@ Color hslToColor(float h, float s, float l) {
         b = x;
     }
 
-    return {r + m, g + m, b + m};
+    return glm::vec3{r + m, g + m, b + m};
 }

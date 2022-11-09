@@ -86,11 +86,11 @@ public:
     void clearAtomTypes();
 
     [[nodiscard]] std::vector<unsigned int> getAtomTypeIds() const;
-    void setAtomTypeColor(unsigned int atomTypeId, Color color);
+    void setAtomTypeColor(unsigned int atomTypeId, glm::vec3 color);
     void setAtomTypeColorR(unsigned int atomTypeId, float r);
     void setAtomTypeColorG(unsigned int atomTypeId, float g);
     void setAtomTypeColorB(unsigned int atomTypeId, float b);
-    [[nodiscard]] Color getAtomTypeColor(unsigned int atomTypeId) const;
+    [[nodiscard]] glm::vec3 getAtomTypeColor(unsigned int atomTypeId) const;
     void setAtomTypeQuantity(unsigned int atomTypeId, unsigned int quantity);
     [[nodiscard]] unsigned int getAtomTypeQuantity(unsigned int atomTypeId) const;
     void setAtomTypeFriendlyName(unsigned int atomTypeId, const std::string& friendlyName);

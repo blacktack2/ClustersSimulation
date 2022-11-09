@@ -2,6 +2,8 @@
 
 #include "Logger.h"
 
+#include "../../glm/vec3.hpp"
+
 #include "../../imgui/imgui_impl_sdl.h"
 #include "../../imgui/imgui_impl_opengl3.h"
 #include "../../imgui/imgui_stdlib.h"
@@ -136,6 +138,7 @@ bool WindowHandler::init() {
         return false;
     }
     loadFromFile("resources/current.csdat", mSimulationHandler);
+    mSimulationRenderer.updateParameters();
 
     mSimulationHandler.initSimulation();
 
@@ -263,16 +266,16 @@ void WindowHandler::mainloop() {
     }
 }
 
-void WindowHandler::setSize(const int& width, const int& height) {
+void WindowHandler::setSize(int width, int height) {
     mWindowWidth = width;
     mWindowHeight = height;
 }
 
-const int& WindowHandler::getWidth() const {
+int WindowHandler::getWidth() const {
     return mWindowWidth;
 }
 
-const int& WindowHandler::getHeight() const {
+int WindowHandler::getHeight() const {
     return mWindowHeight;
 }
 
@@ -302,7 +305,7 @@ void WindowHandler::handleEvent(SDL_Event& e) {
     }
 }
 
-void WindowHandler::drawDebugPanel(const float& mspf) {
+void WindowHandler::drawDebugPanel(float mspf) {
     const ImVec4 debugTextColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
     ImGui::TextColored(
@@ -451,9 +454,10 @@ void WindowHandler::drawIOPanel() {
         simWidth  = std::max(simWidth , simWidthMin );
         simHeight = std::max(simHeight, simHeightMin);
         mSimulationHandler.setBounds(
-            changeW ? simWidth  : (mLockRatio ? simWidth  * simHeight / mSimulationHandler.getHeight() : simWidth ),
+            changeW ? simWidth  : (mLockRatio ? simWidth  * simHeight / mSimulationHandler.getHeight() : simWidth),
             changeH ? simHeight : (mLockRatio ? simHeight * simWidth  / mSimulationHandler.getWidth()  : simHeight)
         );
+        mSimulationRenderer.updateParameters();
     }
 
     ImGui::TableNextRow();
@@ -481,8 +485,10 @@ void WindowHandler::drawIOPanel() {
     ImGui::SetNextItemWidth(-FLT_MIN);
     float atomDiameterMax = std::min(simWidth, simHeight) / 2.0f;
     float atomDiameter = mSimulationHandler.getAtomDiameter();
-    if (ImGui::DragScalar("##Atom Diameter", ImGuiDataType_Float, &atomDiameter, 1.0f, &MIN_ATOM_DIAMETER, &atomDiameterMax, "%.0f"))
+    if (ImGui::DragScalar("##Atom Diameter", ImGuiDataType_Float, &atomDiameter, 1.0f, &MIN_ATOM_DIAMETER, &atomDiameterMax, "%.0f")) {
         mSimulationHandler.setAtomDiameter(std::min(atomDiameter, atomDiameterMax));
+        mSimulationRenderer.updateParameters();
+    }
 
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(-FLT_MIN);
@@ -556,6 +562,7 @@ void WindowHandler::drawIOPanel() {
             } else {
                 messageError("Failed to load file '" + std::string(mFileSaveLocation) + "'");
             }
+            mSimulationRenderer.updateParameters();
         }
     }
     ImGui::SameLine(0, 0);
@@ -622,7 +629,7 @@ void WindowHandler::drawInteractionsPanel() {
     for (unsigned int atomTypeId : atomTypes) {
         ImGui::Separator();
         std::string atomIdStr = std::to_string(atomTypeId);
-        Color c = mSimulationHandler.getAtomTypeColor(atomTypeId);
+        glm::vec3 c = mSimulationHandler.getAtomTypeColor(atomTypeId);
 
         ImVec4 imC = ImVec4(c.r, c.g, c.b, 1.0f);
 
@@ -653,7 +660,7 @@ void WindowHandler::drawInteractionsPanel() {
         ImGui::Text("Color");
         label = "##ColorSlider-" + atomIdStr;
         if (ImGui::ColorEdit3(label.c_str(), (float*) &imC))
-            mSimulationHandler.setAtomTypeColor(atomTypeId, {imC.x, imC.y, imC.z});
+            mSimulationHandler.setAtomTypeColor(atomTypeId, glm::vec3{imC.x, imC.y, imC.z});
 
         ImGui::Text("Quantity");
         if (ImGui::IsItemHovered())
@@ -673,7 +680,7 @@ void WindowHandler::drawInteractionsPanel() {
 
         for (unsigned int atomTypeId2 : atomTypes) {
             std::string atom2IdStr = std::to_string(atomTypeId2);
-            Color atom2Color = mSimulationHandler.getAtomTypeColor(atomTypeId2);
+            glm::vec3 atom2Color = mSimulationHandler.getAtomTypeColor(atomTypeId2);
             std::string atom2FriendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId2);
             ImGui::TextColored(imC, "%s", friendlyName.c_str());
             ImGui::SameLine();

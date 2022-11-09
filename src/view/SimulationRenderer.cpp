@@ -2,6 +2,8 @@
 
 #include "Logger.h"
 
+#include "../../glm/vec3.hpp"
+
 #include "../../imgui/imgui.h"
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
@@ -29,6 +31,13 @@ SimulationRenderer::~SimulationRenderer() {
 #ifdef ITERATE_ON_COMPUTE_SHADER
     if (mQuad != nullptr)
         delete mQuad;
+#endif
+}
+
+void SimulationRenderer::updateParameters() {
+#ifdef ITERATE_ON_COMPUTE_SHADER
+    mShader.setUniform(SIMULATION_BOUNDS_UNIFORM, mHandler.getWidth(), mHandler.getHeight());
+    mShader.setUniform(ATOM_DIAMETER_UNIFORM, mHandler.getAtomDiameter());
 #endif
 }
 
@@ -80,7 +89,7 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
     glBindTexture(GL_TEXTURE_2D, mTexture);
     if (imageWidth != width || imageHeight != height) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, imageWidth = width, imageHeight = height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        BaseShader::setUniform("screenBounds", imageWidth, imageHeight);
+        mShader.setUniform(SCREEN_BOUNDS_UNIFORM, imageWidth, imageHeight);
     }
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -111,7 +120,7 @@ void SimulationRenderer::drawSimulation([[maybe_unused]] float startX, [[maybe_u
     auto& atoms = mHandler.getAtoms();
     for (int i = 0; i < mHandler.getActualAtomCount(); i++) {
         const Atom& atom = atoms[i];
-        Color c = mHandler.getAtomTypeColor(atom.atomType);
+        glm::vec3 c = mHandler.getAtomTypeColor(atom.atomType);
         float x = clipMin.x + atom.x * scaleX;
         float y = clipMin.y + atom.y * scaleY;
         drawList->AddCircleFilled(

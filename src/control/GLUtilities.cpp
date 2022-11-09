@@ -83,6 +83,5 @@ void glCheckError_(const char *file, int line) {
             std::string("OpenGL Error - ").append(error)
             .append(" (").append(file).append(" LINE:").append(std::to_string(line)).append(")")
         );
-        fprintf(stderr, "%s | %s (LINE: %d)\n", error.c_str(), file, line);
     }
 }

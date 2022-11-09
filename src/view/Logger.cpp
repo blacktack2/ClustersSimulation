@@ -20,27 +20,29 @@ Logger::Logger() {
 
 Logger::~Logger() = default;
 
-void Logger::logMessage(std::string message) {
-	std::string msg = message.append("\n");
+void Logger::logMessage(const std::string& message) {
+	std::string msg = std::string(message).append("\n");
 	log("LOG", LOG_FILENAME, msg);
+	log("LOG", ERROR_FILENAME, msg);
 }
 
-void Logger::logWarning(std::string message) {
-	std::string msg = message.append("\n");
+void Logger::logWarning(const std::string& message) {
+	std::string msg = std::string(message).append("\n");
 	log("WARN", LOG_FILENAME, msg);
 	log("WARN", ERROR_FILENAME, msg);
 }
 
-void Logger::logError(std::string message) {
-	std::string msg = message.append("\n");
+void Logger::logError(const std::string& message) {
+	std::string msg = std::string(message).append("\n");
 	log("ERROR", ERROR_FILENAME, msg);
 }
 
-void Logger::logCode(std::string code) {
+void Logger::logCode(const std::string& code) {
 	size_t pos = -1;
 	int counter = 1;
-	while ((pos = code.find("\n", pos + 1)) != std::string::npos)
-		code.replace(pos, 1, "\n {" + std::to_string(++counter) + "} ");
+	std::string formattedCode = std::string(code);
+	while ((pos = formattedCode.find("\n", pos + 1)) != std::string::npos)
+		formattedCode.replace(pos, 1, "\n {" + std::to_string(++counter) + "} ");
 	log("", LOG_FILENAME, std::string(" {1} ").append(code).append("\n"));
 }
 
@@ -49,7 +51,7 @@ Logger& Logger::getLogger() {
 	return logger;
 }
 
-void Logger::log(std::string code, std::string file, std::string message) {
+void Logger::log(const std::string& code, const std::string& file, const std::string& message) {
 	mStream.open(file, std::ios_base::app);
 	if (!mStream)
 		return;

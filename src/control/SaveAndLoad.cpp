@@ -1,6 +1,8 @@
 #include "SaveAndLoad.h"
 #include "../view/Logger.h"
 
+#include "../../glm/vec3.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -50,7 +52,7 @@ bool saveToFile(const std::string& location, const SimulationHandler& handler) {
 		std::string name = handler.getAtomTypeFriendlyName(atomTypeId);
 		unsigned int quantity = handler.getAtomTypeQuantity(atomTypeId);
 		data += "ID:" + std::to_string(atomTypeId) + " Name:" + name + " Quantity:" + std::to_string(quantity) + " ";
-		Color color = handler.getAtomTypeColor(atomTypeId);
+		glm::vec3 color = handler.getAtomTypeColor(atomTypeId);
 		data += "R:" + std::to_string(color.r) + " G:" + std::to_string(color.g) + " B:" + std::to_string(color.b) + "\n";
 	}
 

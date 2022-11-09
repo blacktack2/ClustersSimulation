@@ -59,20 +59,17 @@ void BaseShader::unbind() { // NOLINT(readability-convert-member-functions-to-st
 }
 
 void BaseShader::setUniform(const std::string& location, const GLfloat value) {
-    for (const auto& programID : mPrograms) {
-        glUseProgram(programID);
-        glUniform1f(glGetUniformLocation(programID, location.c_str()), value);
-    }
+    glUseProgram(mProgramID);
+    glUniform1f(glGetUniformLocation(mProgramID, location.c_str()), value);
 #ifdef _DEBUG
     glCheckError();
 #endif
 }
 
 void BaseShader::setUniform(const std::string& location, GLfloat value1, GLfloat value2) {
-    for (const auto& programID : mPrograms) {
-        glUseProgram(programID);
-        glUniform2f(glGetUniformLocation(programID, location.c_str()), value1, value2);
-    }
+    glUseProgram(mProgramID);
+    glUniform2f(glGetUniformLocation(mProgramID, location.c_str()), value1, value2);
+    glCheckError();
 #ifdef _DEBUG
     glCheckError();
 #endif

@@ -7,11 +7,11 @@ class Logger {
 public:
 	~Logger();
 
-	void logMessage(std::string message);
-	void logWarning(std::string message);
-	void logError(std::string message);
+	void logMessage(const std::string& message);
+	void logWarning(const std::string& message);
+	void logError(const std::string& message);
 
-	void logCode(std::string code);
+	void logCode(const std::string& code);
 
 	inline bool isValid() { return mIsValid; }
 
@@ -19,7 +19,7 @@ public:
 private:
 	Logger();
 
-	void log(std::string code, std::string file, std::string message);
+	void log(const std::string& code, const std::string& file, const std::string& message);
 
 	std::ofstream mStream;
 
