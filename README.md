@@ -168,8 +168,6 @@ SOFTWARE.
 
 ### Additions
 
-- Use typedefs to improve type clarity
-
 ### Fixes
 
 - Remove magic numbers in ImGui layout
