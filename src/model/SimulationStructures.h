@@ -5,10 +5,12 @@
 #include <vector>
 #include <memory>
 
+typedef unsigned int atom_type_id;
+
 struct AtomType {
     AtomType();
-    explicit AtomType(unsigned int id);
-    unsigned int id;
+    explicit AtomType(atom_type_id id);
+    atom_type_id id;
 
     float r;
     float g;
@@ -28,11 +30,11 @@ struct AtomTypeRaw {
 
 struct Atom {
     Atom();
-    explicit Atom(unsigned int atomType);
+    explicit Atom(atom_type_id atomType);
 
     float x, y, vx, vy, fx, fy;
 
-    unsigned int atomType;
+    atom_type_id atomType;
 };
 
 glm::vec3 hslToColor(float h, float s, float l);

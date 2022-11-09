@@ -10,12 +10,12 @@
 #include <array>
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
-const unsigned int MAX_ATOMS = 10000;
+const size_t MAX_ATOMS = 10000;
 #else
-const unsigned int MAX_ATOMS = 3000;
+const size_t MAX_ATOMS = 3000;
 #endif
-const unsigned int MAX_ATOM_TYPES = 50;
-const unsigned int MAX_INTERACTIONS = MAX_ATOM_TYPES * MAX_ATOM_TYPES;
+const size_t MAX_ATOM_TYPES = 50;
+const size_t MAX_INTERACTIONS = MAX_ATOM_TYPES * MAX_ATOM_TYPES;
 
 const float MIN_SIM_WIDTH = 10.0f;
 const float MAX_SIM_WIDTH = 1000000.0f;
@@ -81,30 +81,30 @@ public:
     void initSimulation();
     void iterateSimulation();
 
-    unsigned int newAtomType();
-    void removeAtomType(unsigned int atomTypeId);
+    atom_type_id newAtomType();
+    void removeAtomType(atom_type_id atomTypeId);
     void clearAtomTypes();
 
-    [[nodiscard]] std::vector<unsigned int> getAtomTypeIds() const;
-    void setAtomTypeColor(unsigned int atomTypeId, glm::vec3 color);
-    void setAtomTypeColorR(unsigned int atomTypeId, float r);
-    void setAtomTypeColorG(unsigned int atomTypeId, float g);
-    void setAtomTypeColorB(unsigned int atomTypeId, float b);
-    [[nodiscard]] glm::vec3 getAtomTypeColor(unsigned int atomTypeId) const;
-    void setAtomTypeQuantity(unsigned int atomTypeId, unsigned int quantity);
-    [[nodiscard]] unsigned int getAtomTypeQuantity(unsigned int atomTypeId) const;
-    void setAtomTypeFriendlyName(unsigned int atomTypeId, const std::string& friendlyName);
-    [[nodiscard]] std::string getAtomTypeFriendlyName(unsigned int atomTypeId) const;
+    [[nodiscard]] std::vector<atom_type_id> getAtomTypeIds() const;
+    void setAtomTypeColor(atom_type_id atomTypeId, glm::vec3 color);
+    void setAtomTypeColorR(atom_type_id atomTypeId, float r);
+    void setAtomTypeColorG(atom_type_id atomTypeId, float g);
+    void setAtomTypeColorB(atom_type_id atomTypeId, float b);
+    [[nodiscard]] glm::vec3 getAtomTypeColor(atom_type_id atomTypeId) const;
+    void setAtomTypeQuantity(atom_type_id atomTypeId, unsigned int quantity);
+    [[nodiscard]] unsigned int getAtomTypeQuantity(atom_type_id atomTypeId) const;
+    void setAtomTypeFriendlyName(atom_type_id atomTypeId, const std::string& friendlyName);
+    [[nodiscard]] std::string getAtomTypeFriendlyName(atom_type_id atomTypeId) const;
 
-    [[nodiscard]] float getInteraction(unsigned int aId, unsigned int bId) const;
-    void setInteraction(unsigned int aId, unsigned int bId, float value);
+    [[nodiscard]] float getInteraction(atom_type_id aId, atom_type_id bId) const;
+    void setInteraction(atom_type_id aId, atom_type_id bId, float value);
 
     void shuffleAtomInteractions();
     void zeroAtomInteractions();
 
-    [[nodiscard]] unsigned int getAtomCount() const;
-    [[nodiscard]] unsigned int getActualAtomCount() const;
-    [[nodiscard]] unsigned int getAtomTypeCount() const;
+    [[nodiscard]] size_t getAtomCount() const;
+    [[nodiscard]] size_t getActualAtomCount() const;
+    [[nodiscard]] size_t getAtomTypeCount() const;
 
     const std::array<Atom, MAX_ATOMS>& getAtoms();
 

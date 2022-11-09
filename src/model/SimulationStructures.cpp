@@ -23,7 +23,7 @@ AtomType::AtomType() :
     b = color.b;
 }
 
-AtomType::AtomType(unsigned int id_) :
+AtomType::AtomType(atom_type_id id_) :
 id(id_), r(0.0f), g(0.0f), b(0.0f), friendlyName(std::to_string(id)), quantity(200) {
     idCounter = std::max(idCounter, id + 1);
 
@@ -52,7 +52,7 @@ atomType(0), x(0), y(0), vx(0), vy(0), fx(0), fy(0) {
 
 }
 
-Atom::Atom(unsigned int atomType_) :
+Atom::Atom(atom_type_id atomType_) :
 atomType(atomType_), x(0), y(0), vx(0), vy(0), fx(0), fy(0) {
 
 }

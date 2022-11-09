@@ -117,8 +117,8 @@ void SimulationHandler::clearAtoms() {
 void SimulationHandler::initSimulation() {
     Logger::getLogger().logMessage("Initializing Simulation");
     clearAtoms();
-    for (int at = 0; at < mAtomTypeCount; at++) {
-        for (int a = 0; a < mAtomTypes[at].quantity; a++) {
+    for (size_t at = 0; at < mAtomTypeCount; at++) {
+        for (size_t a = 0; a < mAtomTypes[at].quantity; a++) {
             if (mAtomCount >= MAX_ATOMS)
                 break;
             mAtomsBuffer[mAtomCount++] = Atom(mAtomTypes[at].id);
@@ -147,9 +147,9 @@ void SimulationHandler::iterateSimulation() {
     mIterationComputePass1.run(mAtomCount, mAtomCount, 1);
     mIterationComputePass2.run(mAtomCount, 1, 1);
 #else
-    for (int i = 0; i < mAtomCount; i++) {
+    for (size_t i = 0; i < mAtomCount; i++) {
         Atom& atomA = mAtomsBuffer[i];
-        for (int j = 0; j < mAtomCount; j++) {
+        for (size_t j = 0; j < mAtomCount; j++) {
             if (i == j) continue;
             Atom& atomB = mAtomsBuffer[j];
 
@@ -195,15 +195,15 @@ void SimulationHandler::iterateSimulation() {
 #endif
 }
 
-unsigned int SimulationHandler::newAtomType() {
+atom_type_id SimulationHandler::newAtomType() {
     if (mAtomTypeCount >= MAX_ATOM_TYPES)
         return INT_MAX;
 
     int index = mAtomTypeCount++;
-    unsigned int id = (mAtomTypes[index] = AtomType(index)).id;
+    atom_type_id id = (mAtomTypes[index] = AtomType(index)).id;
     mAtomTypesBuffer[index] = AtomTypeRaw(mAtomTypes[index]);
 
-    for (unsigned int id2 : getAtomTypeIds()) {
+    for (atom_type_id id2 : getAtomTypeIds()) {
         if (mInteractionCount >= MAX_INTERACTIONS)
             break;
         mInteractionsBuffer[mInteractionCount++] = 0.0f;
@@ -218,7 +218,7 @@ unsigned int SimulationHandler::newAtomType() {
     return id;
 }
 
-void SimulationHandler::removeAtomType(unsigned int atomTypeId) {
+void SimulationHandler::removeAtomType(atom_type_id atomTypeId) {
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::readBuffer(mAtomsBufferID, mAtomsBuffer.data(), sizeof(mAtomsBuffer));
 #endif
@@ -230,10 +230,10 @@ void SimulationHandler::removeAtomType(unsigned int atomTypeId) {
 
     std::array<unsigned int, MAX_ATOM_TYPES> newIndices{};
     int counter = 0;
-    for (int at = 0; at < mAtomTypeCount; at++)
+    for (size_t at = 0; at < mAtomTypeCount; at++)
         if (mAtomTypes[at].id != atomTypeId)
             newIndices[at] = counter++;
-    for (int a = 0; a < mAtomCount; a++)
+    for (size_t a = 0; a < mAtomCount; a++)
         mAtomsBuffer[a].atomType = newIndices[mAtomsBuffer[a].atomType];
     bool toRemove[MAX_INTERACTIONS]{false };
     for (unsigned int i = atomTypeId * atomTypeId; i < (atomTypeId + 1) * (atomTypeId + 1); i++)
@@ -242,7 +242,7 @@ void SimulationHandler::removeAtomType(unsigned int atomTypeId) {
         toRemove[n * n + 2 * atomTypeId + 1] = true;
         toRemove[n * n + 2 * atomTypeId + 2] = true;
     }
-    int index = 0;
+    unsigned int index = 0;
     mInteractionCount = std::remove_if(mInteractionsBuffer.begin(), mInteractionsBuffer.begin() + mInteractionCount,
         [&index, toRemove](float& in) {
             return toRemove[index++];
@@ -275,15 +275,15 @@ void SimulationHandler::clearAtomTypes() {
 #endif
 }
 
-std::vector<unsigned int> SimulationHandler::getAtomTypeIds() const {
-    std::vector<unsigned int> ids(mAtomTypeCount);
-    for (int i = 0; i < mAtomTypeCount; i++) {
+std::vector<atom_type_id> SimulationHandler::getAtomTypeIds() const {
+    std::vector<atom_type_id> ids(mAtomTypeCount);
+    for (size_t i = 0; i < mAtomTypeCount; i++) {
         ids[i] = mAtomTypes[i].id;
     }
     return ids;
 }
 
-void SimulationHandler::setAtomTypeColor(unsigned int atomTypeId, glm::vec3 color) {
+void SimulationHandler::setAtomTypeColor(atom_type_id atomTypeId, glm::vec3 color) {
     if (atomTypeId < mAtomTypeCount) {
         mAtomTypes[atomTypeId].r = color.r;
         mAtomTypes[atomTypeId].g = color.g;
@@ -295,7 +295,7 @@ void SimulationHandler::setAtomTypeColor(unsigned int atomTypeId, glm::vec3 colo
 #endif
 }
 
-void SimulationHandler::setAtomTypeColorR(unsigned int atomTypeId, float r) {
+void SimulationHandler::setAtomTypeColorR(atom_type_id atomTypeId, float r) {
     if (atomTypeId < mAtomTypeCount) {
         mAtomTypes[atomTypeId].r = r;
         mAtomTypesBuffer[atomTypeId] = AtomTypeRaw(mAtomTypes[atomTypeId]);
@@ -305,7 +305,7 @@ void SimulationHandler::setAtomTypeColorR(unsigned int atomTypeId, float r) {
 #endif
 }
 
-void SimulationHandler::setAtomTypeColorG(unsigned int atomTypeId, float g) {
+void SimulationHandler::setAtomTypeColorG(atom_type_id atomTypeId, float g) {
     if (atomTypeId < mAtomTypeCount) {
         mAtomTypes[atomTypeId].g = g;
         mAtomTypesBuffer[atomTypeId] = AtomTypeRaw(mAtomTypes[atomTypeId]);
@@ -315,7 +315,7 @@ void SimulationHandler::setAtomTypeColorG(unsigned int atomTypeId, float g) {
 #endif
 }
 
-void SimulationHandler::setAtomTypeColorB(unsigned int atomTypeId, float b) {
+void SimulationHandler::setAtomTypeColorB(atom_type_id atomTypeId, float b) {
     if (atomTypeId < mAtomTypeCount) {
         mAtomTypes[atomTypeId].b = b;
         mAtomTypesBuffer[atomTypeId] = AtomTypeRaw(mAtomTypes[atomTypeId]);
@@ -325,37 +325,37 @@ void SimulationHandler::setAtomTypeColorB(unsigned int atomTypeId, float b) {
 #endif
 }
 
-glm::vec3 SimulationHandler::getAtomTypeColor(unsigned int atomTypeId) const {
+glm::vec3 SimulationHandler::getAtomTypeColor(atom_type_id atomTypeId) const {
     return atomTypeId >= mAtomTypeCount ? glm::vec3{ 0.0f, 0.0f, 0.0f } : glm::vec3{ mAtomTypes[atomTypeId].r, mAtomTypes[atomTypeId].g, mAtomTypes[atomTypeId].b};
 }
 
-void SimulationHandler::setAtomTypeQuantity(unsigned int atomTypeId, unsigned int quantity) {
+void SimulationHandler::setAtomTypeQuantity(atom_type_id atomTypeId, unsigned int quantity) {
     if (atomTypeId < mAtomTypeCount) mAtomTypes[atomTypeId].quantity = quantity;
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #endif
 }
 
-unsigned int SimulationHandler::getAtomTypeQuantity(unsigned int atomTypeId) const {
+unsigned int SimulationHandler::getAtomTypeQuantity(atom_type_id atomTypeId) const {
     return atomTypeId >= mAtomTypeCount ? 0u : mAtomTypes[atomTypeId].quantity;
 }
 
-void SimulationHandler::setAtomTypeFriendlyName(unsigned int atomTypeId, const std::string& friendlyName) {
+void SimulationHandler::setAtomTypeFriendlyName(atom_type_id atomTypeId, const std::string& friendlyName) {
     if (atomTypeId < mAtomTypeCount) mAtomTypes[atomTypeId].friendlyName = friendlyName;
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::writeBuffer(mAtomTypesBufferID, mAtomTypesBuffer.data(), sizeof(mAtomTypesBuffer));
 #endif
 }
 
-std::string SimulationHandler::getAtomTypeFriendlyName(unsigned int atomTypeId) const {
+std::string SimulationHandler::getAtomTypeFriendlyName(atom_type_id atomTypeId) const {
     return atomTypeId >= mAtomTypeCount ? std::string() : mAtomTypes[atomTypeId].friendlyName;
 }
 
-float SimulationHandler::getInteraction(unsigned int aId, unsigned int bId) const {
+float SimulationHandler::getInteraction(atom_type_id aId, atom_type_id bId) const {
     return mInteractionsBuffer[INTERACTION_INDEX(aId, bId)];
 }
 
-void SimulationHandler::setInteraction(unsigned int aId, unsigned int bId, float value) {
+void SimulationHandler::setInteraction(atom_type_id aId, atom_type_id bId, float value) {
     mInteractionsBuffer[INTERACTION_INDEX(aId, bId)] = value;
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
@@ -367,7 +367,7 @@ void SimulationHandler::shuffleAtomInteractions() {
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> range(-1.0f, 1.0f);
 
-    for (int i = 0; i < mInteractionCount; i++)
+    for (size_t i = 0; i < mInteractionCount; i++)
         mInteractionsBuffer[i] = range(mt);
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
@@ -375,25 +375,25 @@ void SimulationHandler::shuffleAtomInteractions() {
 }
 
 void SimulationHandler::zeroAtomInteractions() {
-    for (int i = 0; i < mInteractionCount; i++)
+    for (size_t i = 0; i < mInteractionCount; i++)
         mInteractionsBuffer[i] = 0.0f;
 #ifdef ITERATE_ON_COMPUTE_SHADER
     BaseShader::writeBuffer(mInteractionsBufferID, mInteractionsBuffer.data(), sizeof(mInteractionsBuffer));
 #endif
 }
 
-unsigned int SimulationHandler::getAtomCount() const {
-    unsigned int count = 0;
-    for (int i = 0; i < mAtomTypeCount; i++)
+size_t SimulationHandler::getAtomCount() const {
+    size_t count = 0;
+    for (size_t i = 0; i < mAtomTypeCount; i++)
         count += mAtomTypes[i].quantity;
     return count;
 }
 
-unsigned int SimulationHandler::getActualAtomCount() const {
+size_t SimulationHandler::getActualAtomCount() const {
     return mAtomCount;
 }
 
-unsigned int SimulationHandler::getAtomTypeCount() const {
+size_t SimulationHandler::getAtomTypeCount() const {
     return mAtomTypeCount;
 }
 
@@ -407,23 +407,23 @@ void SimulationHandler::initAtomPositionsRandom() {
     std::uniform_real_distribution<float> rangeX(0, mSimWidth);
     std::uniform_real_distribution<float> rangeY(0, mSimHeight);
 
-    for (int i = 0; i < mAtomCount; i++) {
+    for (size_t i = 0; i < mAtomCount; i++) {
         mAtomsBuffer[i].x = rangeX(mt);
         mAtomsBuffer[i].y = rangeY(mt);
     }
 }
 
 void SimulationHandler::initAtomPositionsEquidistant() {
-    int rootCount = std::ceil(std::sqrt(mAtomCount));
-    unsigned int delta = rootCount * rootCount - (unsigned int) mAtomCount;
-    unsigned int halfD = delta / 2;
-    unsigned int d1 = halfD / 2;
-    unsigned int d2 = halfD - d1;
-    unsigned int d3 = (delta - halfD) / 2;
-    unsigned int d4 = (delta - halfD) - d3;
-    unsigned int index = 0;
-    for (int i = 0; i < rootCount; i++) {
-        for (int j = 0; j < rootCount; j++) {
+    size_t rootCount = std::ceil(std::sqrt(mAtomCount));
+    size_t delta = rootCount * rootCount - mAtomCount;
+    size_t halfD = delta / 2;
+    size_t d1 = halfD / 2;
+    size_t d2 = halfD - d1;
+    size_t d3 = (delta - halfD) / 2;
+    size_t d4 = (delta - halfD) - d3;
+    size_t index = 0;
+    for (size_t i = 0; i < rootCount; i++) {
+        for (size_t j = 0; j < rootCount; j++) {
             if (((i == 0) && (j < d1 || j >= rootCount - d2)) || ((i == rootCount - 1) && (j < d3 || j >= rootCount - d4))) continue;
             mAtomsBuffer[index].x = (j + 1) * mSimWidth / (rootCount + 1);
             mAtomsBuffer[index++].y = (i + 1) * mSimHeight / (rootCount + 1);
@@ -436,26 +436,26 @@ void SimulationHandler::initAtomPositionsRandomEquidistant() {
     std::mt19937 mt(rd());
     std::uniform_int_distribution<int> range(0, mAtomCount - 1);
 
-    unsigned int rootCount = std::ceil(std::sqrt(mAtomCount));
-    unsigned int delta = rootCount * rootCount - (unsigned int) mAtomCount;
-    unsigned int halfD = delta / 2;
-    unsigned int d1 = halfD / 2;
-    unsigned int d2 = halfD - d1;
-    unsigned int d3 = (delta - halfD) / 2;
-    unsigned int d4 = (delta - halfD) - d3;
+    size_t rootCount = std::ceil(std::sqrt(mAtomCount));
+    size_t delta = rootCount * rootCount - mAtomCount;
+    size_t halfD = delta / 2;
+    size_t d1 = halfD / 2;
+    size_t d2 = halfD - d1;
+    size_t d3 = (delta - halfD) / 2;
+    size_t d4 = (delta - halfD) - d3;
 
-    std::vector<unsigned int> randSequence(mAtomCount);
-    for (int i = 0; i < mAtomCount; i++)
+    std::vector<size_t> randSequence(mAtomCount);
+    for (size_t i = 0; i < mAtomCount; i++)
         randSequence[i] = i;
-    for (unsigned int i = 0; i < mAtomCount; i++) {
-        unsigned int swap = range(mt);
-        unsigned int temp = randSequence[i];
+    for (size_t i = 0; i < mAtomCount; i++) {
+        size_t swap = range(mt);
+        size_t temp = randSequence[i];
         randSequence[i] = randSequence[swap];
         randSequence[swap] = temp;
     }
-    unsigned int index = 0;
-    for (int i = 0; i < rootCount; i++) {
-        for (int j = 0; j < rootCount; j++) {
+    size_t index = 0;
+    for (size_t i = 0; i < rootCount; i++) {
+        for (size_t j = 0; j < rootCount; j++) {
             if (((i == 0) && (j < d1 || j >= rootCount - d2)) || ((i == rootCount - 1) && (j < d3 || j >= rootCount - d4))) continue;
             mAtomsBuffer[randSequence[index  ]].x = (j + 1) * mSimWidth / (rootCount + 1);
             mAtomsBuffer[randSequence[index++]].y = (i + 1) * mSimHeight / (rootCount + 1);
@@ -465,10 +465,10 @@ void SimulationHandler::initAtomPositionsRandomEquidistant() {
 
 void SimulationHandler::initAtomPositionsRings() {
     float ringDist = std::min(mSimWidth, mSimHeight) / (2.0f * (mAtomTypeCount + 1));
-    unsigned int index = 0;
-    for (int at = 0; at < mAtomTypeCount; at++) {
+    size_t index = 0;
+    for (size_t at = 0; at < mAtomTypeCount; at++) {
         AtomType& atomType = mAtomTypes[at];
-        for (int i = 0; i < atomType.quantity; i++) {
+        for (size_t i = 0; i < atomType.quantity; i++) {
             float theta = i * (2.0f * 3.141592653589f) / atomType.quantity;
             mAtomsBuffer[index  ].x = std::cos(theta) * ringDist * (at + 1) + mSimWidth / 2;
             mAtomsBuffer[index++].y = std::sin(theta) * ringDist * (at + 1) + mSimHeight / 2;

@@ -66,6 +66,9 @@ private:
     bool mAllowVsync = false;
     bool mAllowAdaptive = false;
 
+    std::vector<bool> mBulkLock = std::vector<bool>(MAX_ATOM_TYPES, false);
+    unsigned int mBulkQuantity = 200u;
+
     bool mShowMessage = false;
     std::string mMessage;
     ImVec4 mMessageColor = MESSAGE_COL;
