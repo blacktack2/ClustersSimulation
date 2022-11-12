@@ -598,14 +598,14 @@ void WindowHandler::drawInteractionsPanel() {
     ImVec2 HALF_WIDTH = ImVec2(width / 2.0f, 0);
     ImGui::PushItemWidth(-FLT_MIN);
 
-    std::vector<atom_type_id> atomTypes = mSimulationHandler.getAtomTypeIds();
+    std::vector<atom_type_id> atomTypeIds = mSimulationHandler.getAtomTypeIds();
 
     if (ImGui::Button("Lock All", HALF_WIDTH))
-        for (atom_type_id atomTypeId : atomTypes)
+        for (atom_type_id atomTypeId : atomTypeIds)
             mBulkLock[atomTypeId] = true;
     ImGui::SameLine(0, 0);
     if (ImGui::Button("Unlock All", REMAINING_WIDTH))
-        for (atom_type_id atomTypeId : atomTypes)
+        for (atom_type_id atomTypeId : atomTypeIds)
             mBulkLock[atomTypeId] = false;
 
     ImGui::Text("Quantity");
@@ -614,7 +614,7 @@ void WindowHandler::drawInteractionsPanel() {
     label = "##BulkQuantity";
     if (ImGui::InputInt(label.c_str(), (int*) &mBulkQuantity, 0)) {
         int count = mSimulationHandler.getAtomCount();
-        for (atom_type_id atomTypeId : atomTypes)
+        for (atom_type_id atomTypeId : atomTypeIds)
             if (!mBulkLock[atomTypeId])
                 mSimulationHandler.setAtomTypeQuantity(atomTypeId, std::min(mBulkQuantity, (unsigned int) MAX_ATOMS));
         int newCount = mSimulationHandler.getAtomCount();
@@ -624,7 +624,15 @@ void WindowHandler::drawInteractionsPanel() {
             messageClear();
     }
 
-    for (atom_type_id atomTypeId : atomTypes) {
+    if (ImGui::Button("Equalise Colors")) {
+        float delta = 360.0f / (float)mSimulationHandler.getAtomTypeCount();
+        for (auto atomTypeId : atomTypeIds)
+            mSimulationHandler.setAtomTypeColor(atomTypeId, hslToColor(atomTypeId * delta, 1.0f, 0.5f));
+    }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Evenly distribute the colors of all current atom types.");
+
+    for (atom_type_id atomTypeId : atomTypeIds) {
         ImGui::Separator();
         std::string atomIdStr = std::to_string(atomTypeId);
         glm::vec3 c = mSimulationHandler.getAtomTypeColor(atomTypeId);
@@ -676,7 +684,7 @@ void WindowHandler::drawInteractionsPanel() {
                 messageClear();
         }
 
-        for (atom_type_id atomTypeId2 : atomTypes) {
+        for (atom_type_id atomTypeId2 : atomTypeIds) {
             std::string atom2IdStr = std::to_string(atomTypeId2);
             glm::vec3 atom2Color = mSimulationHandler.getAtomTypeColor(atomTypeId2);
             std::string atom2FriendlyName = mSimulationHandler.getAtomTypeFriendlyName(atomTypeId2);
