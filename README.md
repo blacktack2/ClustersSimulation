@@ -14,6 +14,7 @@ This project makes use of the following dependencies:
 
 - SDL2 - (https://www.libsdl.org/)
 - Dear ImGui - (included in project) (https://github.com/ocornut/imgui)
+- GLM - (included in project) (https://github.com/g-truc/glm)
 - OpenGL (glad) - (download | https://glad.dav1d.de/) (OpenGL docs |
 https://www.khronos.org/)
 
