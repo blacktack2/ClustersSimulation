@@ -5,10 +5,10 @@
 #include "../../glm/vec3.hpp"
 
 #include <algorithm>
+#include <climits>
 #include <iterator>
 #include <random>
 #ifdef ITERATE_ON_COMPUTE_SHADER
-#include <climits>
 #include <iostream>
 
 const char* SHADER_CODE_PASS1 =
