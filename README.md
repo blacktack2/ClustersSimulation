@@ -6,47 +6,9 @@ https://www.ventrella.com/Clusters/)
 Inspired by this YouTube video on the topic (see:
 https://www.youtube.com/watch?v=0Kx4Y9TVMGg)
 
-## Installation
-
-### Dependencies
-
-This project makes use of the following dependencies:
-
-- SDL2 - (https://www.libsdl.org/)
-- Dear ImGui - (included in project) (https://github.com/ocornut/imgui)
-- GLM - (included in project) (https://github.com/g-truc/glm)
-- OpenGL (glad) - (download | https://glad.dav1d.de/) (OpenGL docs |
-https://www.khronos.org/)
-
-### SDL2
-
-#### Linux
-
-Follow the instructions at
-(https://lazyfoo.net/tutorials/SDL/01_hello_SDL/linux/index.php)
-to download SDL2. If you download using `apt-get` SDL2 should be placed in the
-expected directory by default. If you download manually you will have to ensure
-SDL2 is located somewhere CMake can find it, otherwise you may want to edit the
-`CMakeLists.txt` file to look in the correct directory.
-
-#### Windows
-
-Follow the instructions at
-(https://lazyfoo.net/tutorials/SDL/01_hello_SDL/linux/index.php)
-to download SDL2. CMake expects to find SDL2 in the `c:/programs/sdl/`
-directory.
-
-### OpenGL (glad)
-
-glad can be downloaded from (https://glad.dav1d.de/) and should be saved to
-(`~/programs/glad/` on Linux, `c:/programs/glad/` on Windows), otherwise you
-can edit `CMakeLists.txt` to search the directory you placed it in. The
-language should beset to C/C++, the specification set to OpenGL, and the
-profile set to Compatibility. The API should have gl set to version 4.6+,
-and everything else set to None. To be safe you should enable all of the
-extensions that appear, though it should work without (not tested!).
-
 ## Usage
+
+![](images/Application.png)
 
 Compiling using cmake should create two executables (ClustersSimulation
 and ClustersSimulation_GPU). The GPU version uses Shaders to execute
@@ -62,6 +24,21 @@ directory (but will create it if not found). If you are missing any config files
 make sure you didn't accidentally move/delete this directory, or move the
 executable to a separate directory without this.
 
+### Examples
+
+![](videos/InteractionShuffleDemo.gif)
+
+![](videos/InteractionsDemo.gif)
+
+The same configuration being run using different starting conditions:
+
+| a | b |
+| :-: | :-: |
+| ![](videos/StartRandom.gif) | ![](videos/StartEquidistant.gif) |
+| Random | Equidistant |
+| ![](videos/StartRandomEquidistant.gif) | ![](videos/StartRings.gif) |
+| Random+Equidistant | Rings |
+
 ### Running
 
 The program should start with a default simulation layed out for you with
@@ -70,6 +47,8 @@ configuration). You can run the simulation by either pressing **space bar**
 or the **Play**/**Pause** button in the parameters panel.
 
 ### General Parameters
+
+![](images/ParametersPanel.png)
 
 At the top of the parameters panel you will find buttons to apply general
 operations to all atom types as well as numeric inputs for the simulation.
@@ -112,6 +91,8 @@ neighbouring text-box
 
 ### Atom Parameters
 
+![](images/InteractionsPanel.png)
+
 - **Display Name** - What the atom will be called (shown above each interaction)
 - **Colour** - The colour the atom will be displayed as
 - **Quantity** - How many atoms of this type should be created
@@ -140,6 +121,46 @@ performance decrease).
 | Drag | 0.0 | 1.0 |  |
 | I-Range | 1.0 | sqrt\(**Width**\^2+**Height**\^2\) |  |
 | Collision | 0.00 | 10.00 |  |
+
+## Installation
+
+### Dependencies
+
+This project makes use of the following dependencies:
+
+- SDL2 - (https://www.libsdl.org/)
+- Dear ImGui - (included in project) (https://github.com/ocornut/imgui)
+- GLM - (included in project) (https://github.com/g-truc/glm)
+- OpenGL (glad) - (download | https://glad.dav1d.de/) (OpenGL docs |
+https://www.khronos.org/)
+
+### SDL2
+
+#### Linux
+
+Follow the instructions at
+(https://lazyfoo.net/tutorials/SDL/01_hello_SDL/linux/index.php)
+to download SDL2. If you download using `apt-get` SDL2 should be placed in the
+expected directory by default. If you download manually you will have to ensure
+SDL2 is located somewhere CMake can find it, otherwise you may want to edit the
+`CMakeLists.txt` file to look in the correct directory.
+
+#### Windows
+
+Follow the instructions at
+(https://lazyfoo.net/tutorials/SDL/01_hello_SDL/linux/index.php)
+to download SDL2. CMake expects to find SDL2 in the `c:/programs/sdl/`
+directory.
+
+### OpenGL (glad)
+
+glad can be downloaded from (https://glad.dav1d.de/) and should be saved to
+(`~/programs/glad/` on Linux, `c:/programs/glad/` on Windows), otherwise you
+can edit `CMakeLists.txt` to search the directory you placed it in. The
+language should beset to C/C++, the specification set to OpenGL, and the
+profile set to Compatibility. The API should have gl set to version 4.6+,
+and everything else set to None. To be safe you should enable all of the
+extensions that appear, though it should work without (not tested!).
 
 ## License
 
