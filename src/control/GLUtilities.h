@@ -1,3 +1,10 @@
+/**
+ * @file   GLUtilities.h
+ * @brief  Utility functions for OpenGL.
+ * 
+ * @author Stuart Lewis
+ * @date   January 2023
+ */
 #pragma once
 #include "glad/glad.h"
 

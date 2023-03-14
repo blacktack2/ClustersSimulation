@@ -1,3 +1,10 @@
+/**
+ * @file   WindowHandler.h
+ * @brief  Handler for creating and managing the application UI.
+ * 
+ * @author Stuart Lewis
+ * @date   January 2023
+ */
 #pragma once
 #include "../control/SaveAndLoad.h"
 #include "../control/SimulationHandler.h"
@@ -12,25 +19,26 @@
 #endif
 
 /**
- * Handler class for creation and handling of the application window, and user input.
+ * Handler class for creation and handling of the application window and user input.
  */
 class WindowHandler {
 public:
     WindowHandler();
     ~WindowHandler();
+
     /**
-     * Create the window and all relevant media and renderers.
-     * @returns <c>false</c> if initialization failed.
-     *          <c>true</c> if initialization succeeded.
+     * Initialise the window and all relevant media/renderers.
+     * Must be called before see WindowHandler::mainloop.
+     * @returns true if initialization succeeds, otherwise false
      */
     bool init();
     /**
-     * Start the applications main loop.
+     * Starts the application main-loop.
      */
     void mainloop();
 
     /**
-     * Set the default bounds of the application window.
+     * Set the default bounds of the window.
      * @param screenWidth Width (in pixels) of the window.
      * @param screenHeight Height (in pixels) of the window.
      */
@@ -39,10 +47,24 @@ public:
     [[nodiscard]] int getWidth() const;
     [[nodiscard]] int getHeight() const;
 private:
+    /**
+     * Process user input.
+     * @param e Input data to process. Should be aquired using SDL_PollEvent().
+     */
     void handleEvent(SDL_Event& e);
 
+    /**
+     * Draw panel containing debug information to the window.
+     * @param fps Current fps to be displayed.
+     */
     void drawDebugPanel(float fps);
+    /**
+     * Draw panel containing general simulation configuration widgets.
+     */
     void drawIOPanel();
+    /**
+    * Draw panel containing configuration widgets for AtomType interactions.
+    */
     void drawInteractionsPanel();
 
     void messageInfo(std::string message);

@@ -1,3 +1,10 @@
+/**
+ * @file   BaseShader.h
+ * @brief  Base wrapper class for handling shader operations
+ * 
+ * @author Stuart Lewis
+ * @date   January 2023
+ */
 #pragma once
 #include "glad/glad.h"
 
@@ -5,6 +12,9 @@
 #include <unordered_map>
 #include <vector>
 
+/**
+ * Wrapper base class for handling shader operations.
+ */
 class BaseShader {
 public:
 	BaseShader();

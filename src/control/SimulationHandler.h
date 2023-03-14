@@ -1,3 +1,10 @@
+/**
+ * @file   SimulationHandler.h
+ * @brief  Handler class for running the simulation
+ * 
+ * @author Stuart Lewis
+ * @date   January 2023
+ */
 #pragma once
 #include "GLUtilities.h"
 #include "../model/SimulationStructures.h"
@@ -41,20 +48,27 @@ const float MAX_INTERACTION = 1.0f;
 
 #define INTERACTION_INDEX(aId, bId) (aId == bId ? aId * aId : (aId < bId ? bId * bId + aId * 2 + 1 : aId * aId + bId * 2 + 2))
 
+/** Defines the initial positioning of the Atoms. */
 enum StartCondition {
-    StartConditionRandom,
-    StartConditionEquidistant,
-    StartConditionRandomEquidistant,
-    StartConditionRings,
-    StartConditionMax
+    StartConditionRandom,            /** Assign completely random positions to each Atom. */
+    StartConditionEquidistant,       /** Position Atoms equadistantly, in AtomType order. */
+    StartConditionRandomEquidistant, /** Position Atoms equadistantly, but in shuffled order. */
+    StartConditionRings,             /** Position Atoms in concentric rings. */
+    StartConditionMax                /** Max value used for array indexing. */
 };
 
+/**
+ * Handler class for running the simulation.
+ */
 class SimulationHandler {
 public:
     SimulationHandler();
     ~SimulationHandler();
 
 #ifdef ITERATE_ON_COMPUTE_SHADER
+    /**
+     * Initialize OpenGL buffers and shaders.
+     */
     void initComputeShaders();
 #endif
 
